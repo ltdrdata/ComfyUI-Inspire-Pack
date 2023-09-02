@@ -5,7 +5,6 @@ import os
 import torch
 import numpy as np
 import nodes
-from scipy.ndimage import gaussian_filter
 import re
 
 
@@ -174,10 +173,10 @@ class LoraLoaderBlockWeight:
             last_k_unet_num = k_unet_num
 
             new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
-            if inverse:
-                print(f"\t{k_unet} -> inv({ratio}) ")
-            else:
-                print(f"\t{k_unet} -> ({ratio}) ")
+            # if inverse:
+            #     print(f"\t{k_unet} -> inv({ratio}) ")
+            # else:
+            #     print(f"\t{k_unet} -> ({ratio}) ")
 
         # prepare base patch
         ratio = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[0].strip())
@@ -191,10 +190,10 @@ class LoraLoaderBlockWeight:
 
         for k, v, k_unet in others:
             new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
-            if inverse:
-                print(f"\t{k_unet} -> inv({ratio}) ")
-            else:
-                print(f"\t{k_unet} -> ({ratio}) ")
+            # if inverse:
+            #     print(f"\t{k_unet} -> inv({ratio}) ")
+            # else:
+            #     print(f"\t{k_unet} -> ({ratio}) ")
 
         new_clip = clip.clone()
         new_clip.add_patches(loaded, strength_clip)
@@ -274,23 +273,23 @@ class XY_Capsule_LoraBlockWeight:
             image = torch.abs(weighted_image - reference_image)
             self.storage[(self.another_capsule.x, self.y)] = image
         elif self.y == 3:
+            import matplotlib.cm as cm
             # heatmap
-            heatmap = self.storage[(self.another_capsule.x, 2)].squeeze().sum(dim=-1)
             image = self.storage[(self.another_capsule.x, 0)].clone()
 
-            heatmap = heatmap.unsqueeze(0).unsqueeze(-1)
-            heatmap = heatmap.expand(image.shape)
+            diff_image = torch.abs(self.storage[(self.another_capsule.x, 2)])
 
-            # Create a yellow mask based on the blurred heatmap
-            yellow_mask = torch.zeros_like(image)
-            yellow_mask[..., 0] = 1.0  # Set red channel to 1 (full intensity)
-            yellow_mask[..., 1] = 1.0  # Set green channel to 1 (full intensity)
+            heatmap = torch.sum(diff_image, dim=3, keepdim=True)
 
-            # Combine the yellow mask with the blurred heatmap
-            combined_image = image + 0.6 * heatmap * yellow_mask
+            min_val = torch.min(heatmap)
+            max_val = torch.max(heatmap)
+            heatmap = (heatmap - min_val) / (max_val - min_val)
 
-            # Make sure values are within the valid range [0, 1]
-            image = torch.clamp(combined_image, 0, 1)
+            heatmap = torch.from_numpy(cm.viridis(heatmap.squeeze())).unsqueeze(0)
+            heatmap = heatmap[..., :3]
+
+            alpha = 0.8
+            image = alpha * heatmap + (1 - alpha) * image
 
         latent = nodes.VAEEncode().encode(vae, image)[0]
         return (image, latent)
