@@ -244,7 +244,7 @@ class XY_Capsule_LoraBlockWeight:
             self.storage[(self.another_capsule.x, self.y)] = image
 
     def patch_model(self, model, clip):
-        lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B = self.params
+        lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength = self.params
         if self.y == 0:
             target_vector = self.another_capsule.target_vector if self.another_capsule else self.target_vector
             model, clip, _ = LoraLoaderBlockWeight().doit(model, clip, lora_name, strength_model, strength_clip, inverse,
@@ -263,6 +263,8 @@ class XY_Capsule_LoraBlockWeight:
         return model, clip, vae
 
     def get_result(self, model, clip, vae):
+        _, _, _, _, _, _, _, _, heatmap_palette, heatmap_alpha, heatmap_strength = self.params
+
         if self.y < 2:
             return None
 
@@ -284,12 +286,25 @@ class XY_Capsule_LoraBlockWeight:
             min_val = torch.min(heatmap)
             max_val = torch.max(heatmap)
             heatmap = (heatmap - min_val) / (max_val - min_val)
+            heatmap *= heatmap_strength
 
-            heatmap = torch.from_numpy(cm.viridis(heatmap.squeeze())).unsqueeze(0)
+            # viridis / magma / plasma / inferno / cividis
+            if heatmap_palette == "magma":
+                colormap = cm.magma
+            elif heatmap_palette == "plasma":
+                colormap = cm.plasma
+            elif heatmap_palette == "inferno":
+                colormap = cm.inferno
+            elif heatmap_palette == "cividis":
+                colormap = cm.cividis
+            else:
+                # default: viridis
+                colormap = cm.viridis
+
+            heatmap = torch.from_numpy(colormap(heatmap.squeeze())).unsqueeze(0)
             heatmap = heatmap[..., :3]
 
-            alpha = 0.8
-            image = alpha * heatmap + (1 - alpha) * image
+            image = heatmap_alpha * heatmap + (1 - heatmap_alpha) * image
 
         latent = nodes.VAEEncode().encode(vae, image)[0]
         return (image, latent)
@@ -346,6 +361,9 @@ class XYInput_LoraBlockWeight:
                              "B": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "preset": (preset,),
                              "block_vectors": ("STRING", {"multiline": True, "default": default_vectors, "placeholder": "{target vector}/{reference vector}"}),
+                             "heatmap_palette": (["viridis", "magma", "plasma", "inferno", "cividis"], ),
+                             "heatmap_alpha":  ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0, "step": 0.01}),
+                             "heatmap_strength": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 10.0, "step": 0.01}),
                              }}
 
     RETURN_TYPES = ("XY", "XY")
@@ -354,11 +372,11 @@ class XYInput_LoraBlockWeight:
     FUNCTION = "doit"
     CATEGORY = "InspirePack/LoraBlockWeight"
 
-    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors):
+    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors, heatmap_palette, heatmap_alpha, heatmap_strength):
         xy_type = "XY_Capsule"
 
         preset_dict = load_preset_dict()
-        lora_params = lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B
+        common_params = lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength
 
         storage = {}
         x_values = []
@@ -377,7 +395,7 @@ class XYInput_LoraBlockWeight:
                 label, block_vector = XYInput_LoraBlockWeight.resolve_vector_string(target_vector, preset_dict)
                 _, ref_block_vector = XYInput_LoraBlockWeight.resolve_vector_string(ref_vector, preset_dict)
                 if label is not None:
-                    x_item = XY_Capsule_LoraBlockWeight(x_idx, 0, block_vector, label, storage, lora_params)
+                    x_item = XY_Capsule_LoraBlockWeight(x_idx, 0, block_vector, label, storage, common_params)
                     x_idx += 1
 
                 if x_item is not None and ref_block_vector is not None:
@@ -386,10 +404,10 @@ class XYInput_LoraBlockWeight:
                 if x_item is not None:
                     x_values.append(x_item)
 
-        y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, lora_params),
-                    XY_Capsule_LoraBlockWeight(0, 1, '', 'reference', storage, lora_params),
-                    XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, lora_params),
-                    XY_Capsule_LoraBlockWeight(0, 3, '', 'heatmap', storage, lora_params)]
+        y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, common_params),
+                    XY_Capsule_LoraBlockWeight(0, 1, '', 'reference', storage, common_params),
+                    XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, common_params),
+                    XY_Capsule_LoraBlockWeight(0, 3, '', 'heatmap', storage, common_params)]
 
         return ((xy_type, x_values), (xy_type, y_values), )
 
