@@ -6,7 +6,7 @@ import torch
 import numpy as np
 import nodes
 import re
-
+from .libs import utils
 
 def is_numeric_string(input_str):
     return re.match(r'^-?\d+(\.\d+)?$', input_str) is not None
@@ -47,7 +47,7 @@ class LoraLoaderBlockWeight:
                              "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "inverse": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
                              "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                             "A": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                             "A": ("FLOAT", {"default": 4.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "B": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "preset": (preset,),
                              "block_vector": ("STRING", {"multiline": True, "placeholder": "block weight vectors", "default": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1"}),
@@ -116,8 +116,11 @@ class LoraLoaderBlockWeight:
         vector_i = 1
 
         if not LoraLoaderBlockWeight.validate(vector):
-            raise ValueError(f"[LoraLoaderBlockWeight] invalid block_vector '{block_vector}'")
-
+            preset_dict = load_preset_dict()
+            if len(vector) > 0 and vector[0].strip() in preset_dict:
+                vector = preset_dict[vector[0].strip()].split(",")
+            else:
+                raise ValueError(f"[LoraLoaderBlockWeight] invalid block_vector '{block_vector}'")
 
         last_k_unet_num = None
         new_modelpatcher = model.clone()
@@ -244,15 +247,20 @@ class XY_Capsule_LoraBlockWeight:
             self.storage[(self.another_capsule.x, self.y)] = image
 
     def patch_model(self, model, clip):
-        lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength = self.params
-        if self.y == 0:
-            target_vector = self.another_capsule.target_vector if self.another_capsule else self.target_vector
-            model, clip, _ = LoraLoaderBlockWeight().doit(model, clip, lora_name, strength_model, strength_clip, inverse,
-                                                          seed, A, B, "", target_vector)
-        elif self.y == 1:
-            reference_vector = self.another_capsule.reference_vector if self.another_capsule else self.reference_vector
-            model, clip, _ = LoraLoaderBlockWeight().doit(model, clip, lora_name, strength_model, strength_clip, inverse,
-                                                          seed, A, B, "", reference_vector)
+        lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode = self.params
+
+        try:
+            if self.y == 0:
+                target_vector = self.another_capsule.target_vector if self.another_capsule else self.target_vector
+                model, clip, _ = LoraLoaderBlockWeight().doit(model, clip, lora_name, strength_model, strength_clip, inverse,
+                                                              seed, A, B, "", target_vector)
+            elif self.y == 1:
+                reference_vector = self.another_capsule.reference_vector if self.another_capsule else self.reference_vector
+                model, clip, _ = LoraLoaderBlockWeight().doit(model, clip, lora_name, strength_model, strength_clip, inverse,
+                                                              seed, A, B, "", reference_vector)
+        except:
+            self.storage[(self.another_capsule.x, self.y)] = "fail"
+            pass
 
         return model, clip
 
@@ -263,7 +271,7 @@ class XY_Capsule_LoraBlockWeight:
         return model, clip, vae
 
     def get_result(self, model, clip, vae):
-        _, _, _, _, _, _, _, _, heatmap_palette, heatmap_alpha, heatmap_strength = self.params
+        _, _, _, _, _, _, _, _, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode = self.params
 
         if self.y < 2:
             return None
@@ -272,39 +280,50 @@ class XY_Capsule_LoraBlockWeight:
             # diff
             weighted_image = self.storage[(self.another_capsule.x, 0)]
             reference_image = self.storage[(self.another_capsule.x, 1)]
-            image = torch.abs(weighted_image - reference_image)
-            self.storage[(self.another_capsule.x, self.y)] = image
+
+            if weighted_image == "fail" or reference_image == "fail":
+                image = "fail"
+            else:
+                image = torch.abs(weighted_image - reference_image)
+                self.storage[(self.another_capsule.x, self.y)] = image
         elif self.y == 3:
             import matplotlib.cm as cm
             # heatmap
-            image = self.storage[(self.another_capsule.x, 0)].clone()
+            image = self.storage[(self.another_capsule.x, 0)]
 
-            diff_image = torch.abs(self.storage[(self.another_capsule.x, 2)])
-
-            heatmap = torch.sum(diff_image, dim=3, keepdim=True)
-
-            min_val = torch.min(heatmap)
-            max_val = torch.max(heatmap)
-            heatmap = (heatmap - min_val) / (max_val - min_val)
-            heatmap *= heatmap_strength
-
-            # viridis / magma / plasma / inferno / cividis
-            if heatmap_palette == "magma":
-                colormap = cm.magma
-            elif heatmap_palette == "plasma":
-                colormap = cm.plasma
-            elif heatmap_palette == "inferno":
-                colormap = cm.inferno
-            elif heatmap_palette == "cividis":
-                colormap = cm.cividis
+            if image == "fail":
+                image = utils.empty_pil_tensor(8,8)
+                latent = utils.empty_latent()
+                return (image, latent)
             else:
-                # default: viridis
-                colormap = cm.viridis
+                image = image.clone()
 
-            heatmap = torch.from_numpy(colormap(heatmap.squeeze())).unsqueeze(0)
-            heatmap = heatmap[..., :3]
+                diff_image = torch.abs(self.storage[(self.another_capsule.x, 2)])
 
-            image = heatmap_alpha * heatmap + (1 - heatmap_alpha) * image
+                heatmap = torch.sum(diff_image, dim=3, keepdim=True)
+
+                min_val = torch.min(heatmap)
+                max_val = torch.max(heatmap)
+                heatmap = (heatmap - min_val) / (max_val - min_val)
+                heatmap *= heatmap_strength
+
+                # viridis / magma / plasma / inferno / cividis
+                if heatmap_palette == "magma":
+                    colormap = cm.magma
+                elif heatmap_palette == "plasma":
+                    colormap = cm.plasma
+                elif heatmap_palette == "inferno":
+                    colormap = cm.inferno
+                elif heatmap_palette == "cividis":
+                    colormap = cm.cividis
+                else:
+                    # default: viridis
+                    colormap = cm.viridis
+
+                heatmap = torch.from_numpy(colormap(heatmap.squeeze())).unsqueeze(0)
+                heatmap = heatmap[..., :3]
+
+                image = heatmap_alpha * heatmap + (1 - heatmap_alpha) * image
 
         latent = nodes.VAEEncode().encode(vae, image)[0]
         return (image, latent)
@@ -320,9 +339,10 @@ def load_preset_dict():
 
     dict = {}
     for x in preset:
-        item = x.split(':')
-        if len(item) > 1:
-            dict[item[0]] = item[1]
+        if not x.startswith('@'):
+            item = x.split(':')
+            if len(item) > 1:
+                dict[item[0]] = item[1]
 
     return dict
 
@@ -364,6 +384,7 @@ class XYInput_LoraBlockWeight:
                              "heatmap_palette": (["viridis", "magma", "plasma", "inferno", "cividis"], ),
                              "heatmap_alpha":  ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0, "step": 0.01}),
                              "heatmap_strength": ("FLOAT", {"default": 1.5, "min": 0.0, "max": 10.0, "step": 0.01}),
+                             "xyplot_mode": (["Simple", "Diff", "Diff+Heatmap"],),
                              }}
 
     RETURN_TYPES = ("XY", "XY")
@@ -372,11 +393,11 @@ class XYInput_LoraBlockWeight:
     FUNCTION = "doit"
     CATEGORY = "InspirePack/LoraBlockWeight"
 
-    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors, heatmap_palette, heatmap_alpha, heatmap_strength):
+    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode):
         xy_type = "XY_Capsule"
 
         preset_dict = load_preset_dict()
-        common_params = lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength
+        common_params = lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode
 
         storage = {}
         x_values = []
@@ -404,10 +425,17 @@ class XYInput_LoraBlockWeight:
                 if x_item is not None:
                     x_values.append(x_item)
 
-        y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, common_params),
-                    XY_Capsule_LoraBlockWeight(0, 1, '', 'reference', storage, common_params),
-                    XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, common_params),
-                    XY_Capsule_LoraBlockWeight(0, 3, '', 'heatmap', storage, common_params)]
+        if xyplot_mode == "Simple":
+            y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, common_params)]
+        elif xyplot_mode == "Diff":
+            y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, common_params),
+                        XY_Capsule_LoraBlockWeight(0, 1, '', 'reference', storage, common_params),
+                        XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, common_params)]
+        else:
+            y_values = [XY_Capsule_LoraBlockWeight(0, 0, '', 'target', storage, common_params),
+                        XY_Capsule_LoraBlockWeight(0, 1, '', 'reference', storage, common_params),
+                        XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, common_params),
+                        XY_Capsule_LoraBlockWeight(0, 3, '', 'heatmap', storage, common_params)]
 
         return ((xy_type, x_values), (xy_type, y_values), )
 
