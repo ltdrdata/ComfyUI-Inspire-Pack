@@ -37,9 +37,28 @@ app.registerExtension({
 				        const stackTrace = new Error().stack;
                         if(stackTrace.includes('inner_value_change')) {
                             if(value != "Preset") {
-                                if(node.widgets[vector_i].value != "")
+                                if(!value.startsWith('@') && node.widgets[vector_i].value != "")
                                     node.widgets[vector_i].value += "\n";
-                                node.widgets[vector_i].value += `${value}/${value.split(':')[0]}`;
+                                if(value.startsWith('@')) {
+                                    let n = parseInt(value.split(':')[1]);
+                                    node.widgets[vector_i].value = "";
+                                    for(let i=1; i<=n; i++) {
+                                        var temp = "";
+                                        for(let j=1; j<=n; j++) {
+                                            if(temp!='')
+                                                temp += ',';
+                                            if(j==i)
+                                                temp += 'A';
+                                            else
+                                                temp += '0';
+                                        }
+
+                                        node.widgets[vector_i].value += `B${i}:${temp}\n`;
+                                    }
+                                }
+                                else {
+                                    node.widgets[vector_i].value += `${value}/${value.split(':')[0]}`;
+                                }
 	                            if(node.widgets_values) {
 	                                node.widgets_values[vector_i] = node.widgets[preset_i].value;
                                 }
