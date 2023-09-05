@@ -8,7 +8,13 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu"):
     creates random noise given a latent image and a seed.
     optional arg skip can be used to skip and discard x number of noise generations for a given seed
     """
-    generator = torch.cuda.manual_seed(seed)
+
+    if noise_device == "cpu":
+        generator = torch.manual_seed(seed)
+    else:
+        torch.cuda.manual_seed(seed)
+        generator = None
+
     if noise_inds is None:
         return torch.randn(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout,
                            generator=generator, device=noise_device)
