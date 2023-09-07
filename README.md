@@ -28,6 +28,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `positive` and `negative` represent text prompts, while `name` represents the name of the prompt. When loaded from a file using `Load Prompts From File (Inspire)`, the name corresponds to the file name.
   * `Zip Prompt (Inspire)`: Create ZIPPED_PROMPT from positive, negative, and name_opt.
     * If name_opt is omitted, it will be considered as an empty name.
+  * `Prompt Extractor (Inspire)`: This node reads prompt information from the image's metadata. Since it retrieves all the text, you need to directly specify the prompts to be used for `positive` and `negative` as indicated in the info.
 
 
 ## Credits

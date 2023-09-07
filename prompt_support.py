@@ -1,5 +1,13 @@
 import os
 import re
+import json
+import sys
+
+from PIL import Image
+import nodes
+
+import folder_paths
+from server import PromptServer
 
 
 class LoadPromptsFromDir:
@@ -70,13 +78,13 @@ class ZipPrompt:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-                "positive": ("STRING", {"forceInput": True, "multiline": True}),
-                "negative": ("STRING", {"forceInput": True, "multiline": True}),
-                },
+                    "positive": ("STRING", {"forceInput": True, "multiline": True}),
+                    "negative": ("STRING", {"forceInput": True, "multiline": True}),
+                    },
                 "optional": {
                     "name_opt": ("STRING", {"forceInput": True, "multiline": False})
+                    }
                 }
-            }
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
 
@@ -88,13 +96,88 @@ class ZipPrompt:
         return ((positive, negative, name_opt), )
 
 
+class PromptExtractor:
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {"required": {
+                    "image": (sorted(files), {"image_upload": True}),
+                    "positive_id": ("STRING", {}),
+                    "negative_id": ("STRING", {}),
+                    "info": ("STRING", {"multiline": True})
+                    },
+                "hidden": {"unique_id": "UNIQUE_ID"},
+                }
+
+    CATEGORY = "InspirePack/prompt"
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("positive", "negative")
+    FUNCTION = "doit"
+
+    OUTPUT_NODE = True
+
+    def doit(self, image, positive_id, negative_id, info, unique_id):
+        image_path = folder_paths.get_annotated_filepath(image)
+        info = Image.open(image_path).info
+
+        positive = ""
+        negative = ""
+        text = ""
+        prompt_dicts = {}
+        node_inputs = {}
+
+        def get_node_inputs(x):
+            if x in node_inputs:
+                return node_inputs[x]
+            else:
+                node_inputs[x] = None
+
+                obj = nodes.NODE_CLASS_MAPPINGS.get(x, None)
+                if obj is not None:
+                    input_types = obj.INPUT_TYPES()
+                    node_inputs[x] = input_types
+                    return input_types
+                else:
+                    return None
+
+        if isinstance(info, dict) and 'workflow' in info:
+            prompt = json.loads(info['prompt'])
+            for k, v in prompt.items():
+                input_types = get_node_inputs(v['class_type'])
+                if input_types is not None:
+                    inputs = input_types['required'].copy()
+                    if 'optional' in input_types:
+                        inputs.update(input_types['optional'])
+
+                    i = 0
+                    for name, value in inputs.items():
+                        if value[0] == 'STRING' and name in v['inputs']:
+                            prompt_dicts[f"{k}.{name.strip()}"] = v['inputs'][name]
+                        i += 1
+
+            for k, v in prompt_dicts.items():
+                text += f"{k} ==> {v}\n"
+
+            positive = prompt_dicts.get(positive_id.strip(), "")
+            negative = prompt_dicts.get(negative_id.strip(), "")
+        else:
+            text = "There is no prompt information within the image."
+
+        PromptServer.instance.send_sync("inspire-node-feedback", {"id": unique_id, "widget_name": "info", "type": "text", "data": text})
+        return (positive, negative)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "UnzipPrompt //Inspire": UnzipPrompt,
     "ZipPrompt //Inspire": ZipPrompt,
+    "PromptExtractor //Inspire": PromptExtractor,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
     "UnzipPrompt //Inspire": "Unzip Prompt (Inspire)",
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
+    "PromptExtractor //Inspire": "Prompt Extractor (Inspire)"
 }
