@@ -2,7 +2,7 @@ import os
 import re
 
 
-class LoadPromptsFromFile:
+class LoadPromptsFromDir:
     @classmethod
     def INPUT_TYPES(cls):
         try:
@@ -12,7 +12,7 @@ class LoadPromptsFromFile:
         except Exception:
             prompt_dirs = []
 
-        return {"required": {"dir": (prompt_dirs,)}}
+        return {"required": {"prompt_dir": (prompt_dirs,)}}
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -21,9 +21,9 @@ class LoadPromptsFromFile:
 
     CATEGORY = "InspirePack/prompt"
 
-    def doit(self, dir):
+    def doit(self, prompt_dir):
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        prompt_dir = os.path.join(current_directory, "prompts", dir)
+        prompt_dir = os.path.join(current_directory, "prompts", prompt_dir)
         files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
         files.sort()
 
@@ -89,12 +89,12 @@ class ZipPrompt:
 
 
 NODE_CLASS_MAPPINGS = {
-    "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
+    "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "UnzipPrompt //Inspire": UnzipPrompt,
     "ZipPrompt //Inspire": ZipPrompt,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LoadPromptsFromFile //Inspire": "Load Prompts From File (Inspire)",
+    "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
     "UnzipPrompt //Inspire": "Unzip Prompt (Inspire)",
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
 }
