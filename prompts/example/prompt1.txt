@@ -1,0 +1,2 @@
+positive:beautiful scenery nature glass bottle landscape, , purple galaxy bottle,
+negative:text, watermark

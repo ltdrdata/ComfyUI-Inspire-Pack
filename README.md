@@ -21,6 +21,14 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
         * Other point #1 : Please make sure you haven't forgotten to include 'embedding:' in the embedding used in the prompt, like 'embedding:easynegative.'
         * Other point #2 : ComfyUI and A1111 have different interpretations of weighting. To align them, you need to use [BlenderNeko/Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb).
 
+* Prompt Support - These are nodes for supporting prompt processing.
+  * `Load Prompts From File (Inspire)`: It sequentially reads prompt files from the specified directory. The output it returns is ZIPPED_PROMPT.
+    * Specify the directories located under `ComfyUI-Inspire-Pack/prompts/`
+  * `Unzip Prompt (Inspire)`: Separate ZIPPED_PROMPT into `positive`, `negative`, and name components. 
+    * `positive` and `negative` represent text prompts, while `name` represents the name of the prompt. When loaded from a file using `Load Prompts From File (Inspire)`, the name corresponds to the file name.
+  * `Zip Prompt (Inspire)`: Create ZIPPED_PROMPT from positive, negative, and name_opt.
+    * If name_opt is omitted, it will be considered as an empty name.
+
 
 ## Credits
 

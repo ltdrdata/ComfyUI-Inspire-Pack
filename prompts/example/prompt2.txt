@@ -1,0 +1,4 @@
+positive:1girl is walking through street,
+raincoat, yellow umbrella
+
+negative:text, watermark
