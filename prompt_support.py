@@ -96,6 +96,10 @@ class ZipPrompt:
         return ((positive, negative, name_opt), )
 
 
+prompt_blacklist = set([
+    'filename_prefix'
+])
+
 class PromptExtractor:
     @classmethod
     def INPUT_TYPES(s):
@@ -151,14 +155,15 @@ class PromptExtractor:
                     if 'optional' in input_types:
                         inputs.update(input_types['optional'])
 
-                    i = 0
                     for name, value in inputs.items():
+                        if name in prompt_blacklist:
+                            continue
+
                         if value[0] == 'STRING' and name in v['inputs']:
-                            prompt_dicts[f"{k}.{name.strip()}"] = v['inputs'][name]
-                        i += 1
+                            prompt_dicts[f"{k}.{name.strip()}"] = (v['class_type'], v['inputs'][name])
 
             for k, v in prompt_dicts.items():
-                text += f"{k} ==> {v}\n"
+                text += f"{k} [{v[0]}] ==> {v[1]}\n"
 
             positive = prompt_dicts.get(positive_id.strip(), "")
             negative = prompt_dicts.get(negative_id.strip(), "")
