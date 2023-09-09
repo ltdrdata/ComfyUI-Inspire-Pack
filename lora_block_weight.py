@@ -245,6 +245,7 @@ class XY_Capsule_LoraBlockWeight:
         self.another_capsule = capsule
 
     def set_result(self, image, latent):
+        print(f"XY_Capsule_LoraBlockWeight: ({self.x, self.y}) is processed.")
         if self.another_capsule is not None:
             self.storage[(self.another_capsule.x, self.y)] = image
 

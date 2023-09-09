@@ -34,7 +34,7 @@ class DWPreprocessor_wrapper:
         detect_face = 'enable' if self.detect_face else 'disable'
 
         obj = nodes.NODE_CLASS_MAPPINGS['DWPreprocessor']()
-        return obj.estimate_pose(image, detect_hand, detect_body, detect_face)[0]
+        return obj.estimate_pose(image, detect_hand, detect_body, detect_face)['result'][0]
 
 
 class LeReS_DepthMap_Preprocessor_wrapper:
