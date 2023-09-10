@@ -1,6 +1,38 @@
 import nodes
 import numpy as np
 
+
+class MediaPipeFaceMeshDetector:
+    def __init__(self, face, mouth, left_eyebrow, left_eye, left_pupil, right_eyebrow, right_eye, right_pupil, max_faces, is_segm):
+        self.face = face
+        self.mouth = mouth
+        self.left_eyebrow = left_eyebrow
+        self.left_eye = left_eye
+        self.left_pupil = left_pupil
+        self.right_eyebrow = right_eyebrow
+        self.right_eye = right_eye
+        self.right_pupil = right_pupil
+        self.is_segm = is_segm
+        self.max_faces = max_faces
+
+    def detect(self, image, threshold, dilation, crop_factor, drop_size=1, crop_min_size=None):
+        if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        if 'MediaPipeFaceMeshToSEGS' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI-Impact-Pack'")
+
+        pre_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']
+        seg_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipeFaceMeshToSEGS']
+
+        image = pre_obj().detect(image, self.max_faces, threshold)[0]
+        segs = seg_obj().doit(image, crop_factor, not self.is_segm, crop_min_size, drop_size, dilation,
+                              self.face, self.mouth, self.left_eyebrow, self.left_eye, self.left_pupil,
+                              self.right_eyebrow, self.right_eye, self.right_pupil)[0]
+
+        return segs
+
+
 class OpenPose_Preprocessor_wrapper:
     def __init__(self, detect_hand, detect_body, detect_face):
         self.detect_hand = detect_hand
@@ -199,13 +231,42 @@ class Canny_Preprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class MediaPipeFaceMeshDetectorProvider:
+    @classmethod
+    def INPUT_TYPES(s):
+        bool_widget = ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
+        return {"required": {
+                                "max_faces": ("INT", {"default": 10, "min": 1, "max": 50, "step": 1}),
+                                "face": bool_widget,
+                                "mouth": bool_widget,
+                                "left_eyebrow": bool_widget,
+                                "left_eye": bool_widget,
+                                "left_pupil": bool_widget,
+                                "right_eyebrow": bool_widget,
+                                "right_eye": bool_widget,
+                                "right_pupil": bool_widget,
+                            }}
+
+    RETURN_TYPES = ("BBOX_DETECTOR", "SEGM_DETECTOR")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Detector"
+
+    def doit(self, max_faces, face, mouth, left_eyebrow, left_eye, left_pupil, right_eyebrow, right_eye, right_pupil):
+        bbox_detector = MediaPipeFaceMeshDetector(face, mouth, left_eyebrow, left_eye, left_pupil, right_eyebrow, right_eye, right_pupil, max_faces, is_segm=False)
+        segm_detector = MediaPipeFaceMeshDetector(face, mouth, left_eyebrow, left_eye, left_pupil, right_eyebrow, right_eye, right_pupil, max_faces, is_segm=True)
+
+        return (bbox_detector, segm_detector)
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
     "MiDaS_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": MiDaS_DepthMap_Preprocessor_Provider_for_SEGS,
     "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": LeReS_DepthMap_Preprocessor_Provider_for_SEGS,
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": Zoe_DepthMap_Preprocessor_Provider_for_SEGS,
-    "Canny_Preprocessor_Provider_for_SEGS //Inspire": Canny_Preprocessor_Provider_for_SEGS
+    "Canny_Preprocessor_Provider_for_SEGS //Inspire": Canny_Preprocessor_Provider_for_SEGS,
+    "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -213,5 +274,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "MiDaS_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "MiDaS Depth Map Preprocessor Provider (SEGS)",
     "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "LeReS Depth Map Preprocessor Provider (SEGS)",
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "Zoe Depth Map Preprocessor Provider (SEGS)",
-    "Canny_Preprocessor_Provider_for_SEGS //Inspire": "Canny Preprocessor Provider (SEGS)"
+    "Canny_Preprocessor_Provider_for_SEGS //Inspire": "Canny Preprocessor Provider (SEGS)",
+    "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
