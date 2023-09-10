@@ -33,6 +33,19 @@ class MediaPipeFaceMeshDetector:
         return segs
 
 
+class MediaPipe_FaceMesh_Preprocessor_wrapper:
+    def __init__(self, max_faces, min_confidence):
+        self.max_faces = max_faces
+        self.min_confidence = min_confidence
+
+    def apply(self, image):
+        if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']()
+        return obj.detect(image, self.max_faces, self.min_confidence)[0]
+
+
 class OpenPose_Preprocessor_wrapper:
     def __init__(self, detect_hand, detect_body, detect_face):
         self.detect_hand = detect_hand
@@ -231,6 +244,25 @@ class Canny_Preprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "max_faces": ("INT", {"default": 10, "min": 1, "max": 50, "step": 1}),
+                "min_confidence": ("FLOAT", {"default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01})
+            }
+        }
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self, max_faces, min_confidence):
+        obj = MediaPipe_FaceMesh_Preprocessor_wrapper(max_faces, min_confidence)
+        return (obj, )
+
+
 class MediaPipeFaceMeshDetectorProvider:
     @classmethod
     def INPUT_TYPES(s):
@@ -266,6 +298,7 @@ NODE_CLASS_MAPPINGS = {
     "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": LeReS_DepthMap_Preprocessor_Provider_for_SEGS,
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": Zoe_DepthMap_Preprocessor_Provider_for_SEGS,
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": Canny_Preprocessor_Provider_for_SEGS,
+    "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS,
     "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -275,5 +308,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "LeReS Depth Map Preprocessor Provider (SEGS)",
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "Zoe Depth Map Preprocessor Provider (SEGS)",
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": "Canny Preprocessor Provider (SEGS)",
+    "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": "MediaPipe FaceMesh Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
