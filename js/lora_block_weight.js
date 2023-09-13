@@ -40,20 +40,66 @@ app.registerExtension({
                                 if(!value.startsWith('@') && node.widgets[vector_i].value != "")
                                     node.widgets[vector_i].value += "\n";
                                 if(value.startsWith('@')) {
-                                    let n = parseInt(value.split(':')[1]);
-                                    node.widgets[vector_i].value = "";
-                                    for(let i=1; i<=n; i++) {
-                                        var temp = "";
-                                        for(let j=1; j<=n; j++) {
-                                            if(temp!='')
-                                                temp += ',';
-                                            if(j==i)
-                                                temp += 'A';
-                                            else
-                                                temp += '0';
+                                    let spec = value.split(':')[1];
+                                    var n;
+                                    var sub_n = null;
+                                    var block = null;
+
+                                    if(isNaN(spec)) {
+                                        let sub_spec = spec.split(',');
+
+                                        if(sub_spec.length != 3) {
+	                                        node.widgets_values[vector_i] = '!! SPEC ERROR !!';
+	                                        node._value = '';
+	                                        return;
                                         }
 
-                                        node.widgets[vector_i].value += `B${i}:${temp}\n`;
+                                        n = parseInt(sub_spec[0].trim());
+                                        sub_n = parseInt(sub_spec[1].trim());
+                                        block = parseInt(sub_spec[2].trim());
+                                    }
+                                    else {
+                                        n = parseInt(spec.trim());
+                                    }
+
+                                    node.widgets[vector_i].value = "";
+                                    if(sub_n == null) {
+                                        for(let i=1; i<=n; i++) {
+                                            var temp = "";
+                                            for(let j=1; j<=n; j++) {
+                                                if(temp!='')
+                                                    temp += ',';
+                                                if(j==i)
+                                                    temp += 'A';
+                                                else
+                                                    temp += '0';
+                                            }
+
+                                            node.widgets[vector_i].value += `B${i}:${temp}\n`;
+                                        }
+                                    }
+                                    else {
+                                        for(let i=1; i<=sub_n; i++) {
+                                            var temp = "";
+                                            for(let j=1; j<=n; j++) {
+                                                if(temp!='')
+                                                    temp += ',';
+
+                                                if(block!=j)
+                                                    temp += '0';
+                                                else {
+                                                    temp += ' ';
+                                                    for(let k=1; k<=sub_n; k++) {
+                                                        if(k==i)
+                                                            temp += 'A ';
+                                                        else
+                                                            temp += '0 ';
+                                                    }
+                                                }
+                                            }
+
+                                            node.widgets[vector_i].value += `B${block}.SUB${i}:${temp}\n`;
+                                        }
                                     }
                                 }
                                 else {

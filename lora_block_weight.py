@@ -10,6 +10,7 @@ import re
 from server import PromptServer
 from .libs import utils
 
+
 def is_numeric_string(input_str):
     return re.match(r'^-?\d+(\.\d+)?$', input_str) is not None
 
@@ -67,31 +68,48 @@ class LoraLoaderBlockWeight:
             return False
 
         for x in vectors:
-            if x not in ['R', 'r', 'U', 'u', 'A', 'a', 'B', 'b'] and not is_numeric_string(x):
-                return False
+            if x in ['R', 'r', 'U', 'u', 'A', 'a', 'B', 'b'] or is_numeric_string(x):
+                continue
+            else:
+                subvectors = x.strip().split(' ')
+                for y in subvectors:
+                    y = y.strip()
+                    if y not in ['R', 'r', 'U', 'u', 'A', 'a', 'B', 'b'] and not is_numeric_string(y):
+                        return False
 
         return True
 
     @staticmethod
     def convert_vector_value(A, B, vector_value):
-        if vector_value in ['U', 'u']:
-            ratio = np.random.uniform(-1.5, 1.5)
-            ratio = round(ratio, 2)
-        elif vector_value in ['R', 'r']:
-            ratio = np.random.uniform(0, 3.0)
-            ratio = round(ratio, 2)
-        elif vector_value == 'A':
-            ratio = A
-        elif vector_value == 'a':
-            ratio = A/2
-        elif vector_value == 'B':
-            ratio = B
-        elif vector_value == 'b':
-            ratio = B/2
-        else:
-            ratio = float(vector_value)
+        def simple_vector(x):
+            if x in ['U', 'u']:
+                ratio = np.random.uniform(-1.5, 1.5)
+                ratio = round(ratio, 2)
+            elif x in ['R', 'r']:
+                ratio = np.random.uniform(0, 3.0)
+                ratio = round(ratio, 2)
+            elif x == 'A':
+                ratio = A
+            elif x == 'a':
+                ratio = A/2
+            elif x == 'B':
+                ratio = B
+            elif x == 'b':
+                ratio = B/2
+            elif is_numeric_string(x):
+                ratio = float(x)
+            else:
+                ratio = None
 
-        return ratio
+            return ratio
+
+        v = simple_vector(vector_value)
+        if v is not None:
+            ratios = [v]
+        else:
+            ratios = [simple_vector(x) for x in vector_value.split(" ")]
+
+        return ratios
 
     @staticmethod
     def norm_value(value):  # make to int if 1.0 or 0.0
@@ -126,7 +144,6 @@ class LoraLoaderBlockWeight:
 
         last_k_unet_num = None
         new_modelpatcher = model.clone()
-        ratio = strength_model
         populated_ratio = strength_model
 
         def parse_unet_num(s):
@@ -162,9 +179,11 @@ class LoraLoaderBlockWeight:
         # prepare patch
         np.random.seed(seed % (2**31))
         populated_vector_list = []
+        ratios = []
         for k, v, k_unet_num, k_unet in (input_blocks + middle_blocks + output_blocks):
             if last_k_unet_num != k_unet_num and len(vector) > vector_i:
-                ratio = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[vector_i].strip())
+                ratios = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[vector_i].strip())
+                ratio = ratios.pop(0)
 
                 if inverse:
                     populated_ratio = 1 - ratio
@@ -174,6 +193,14 @@ class LoraLoaderBlockWeight:
                 populated_vector_list.append(LoraLoaderBlockWeight.norm_value(populated_ratio))
 
                 vector_i += 1
+            else:
+                if len(ratios) > 0:
+                    ratio = ratios.pop(0)
+
+                if inverse:
+                    populated_ratio = 1 - ratio
+                else:
+                    populated_ratio = ratio
 
             last_k_unet_num = k_unet_num
 
@@ -184,12 +211,11 @@ class LoraLoaderBlockWeight:
             #     print(f"\t{k_unet} -> ({ratio}) ")
 
         # prepare base patch
-        ratio = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[0].strip())
+        ratios = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[0].strip())
+        ratio = ratios.pop(0)
 
         if inverse:
             populated_ratio = 1 - ratio
-        else:
-            populated_ratio = ratio
 
         populated_vector_list.insert(0, LoraLoaderBlockWeight.norm_value(populated_ratio))
 
