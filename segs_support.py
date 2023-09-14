@@ -25,12 +25,15 @@ class MediaPipeFaceMeshDetector:
         pre_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']
         seg_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipeFaceMeshToSEGS']
 
-        image = pre_obj().detect(image, self.max_faces, threshold)[0]
-        segs = seg_obj().doit(image, crop_factor, not self.is_segm, crop_min_size, drop_size, dilation,
+        facemesh_image = pre_obj().detect(image, self.max_faces, threshold)[0]
+        segs = seg_obj().doit(facemesh_image, crop_factor, not self.is_segm, crop_min_size, drop_size, dilation,
                               self.face, self.mouth, self.left_eyebrow, self.left_eye, self.left_pupil,
-                              self.right_eyebrow, self.right_eye, self.right_pupil)[0]
+                              self.right_eyebrow, self.right_eye, self.right_pupil, image)[0]
 
         return segs
+
+    def setAux(self, x):
+        pass
 
 
 class MediaPipe_FaceMesh_Preprocessor_wrapper:
