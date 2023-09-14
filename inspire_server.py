@@ -20,6 +20,7 @@ def control_seed(node_id, v):
 
 
 def prompt_seed_update(json_data):
+    seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
     value = None
     mode = None
     node = None
@@ -36,6 +37,9 @@ def prompt_seed_update(json_data):
 
     if value is not None:
         for k, v in json_data['prompt'].items():
+            if k not in seed_widget_map:
+                continue
+
             if 'seed' in v['inputs']:
                 if isinstance(v['inputs']['seed'], int):
                     v['inputs']['seed'] = value

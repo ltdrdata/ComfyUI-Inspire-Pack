@@ -34,7 +34,7 @@ async function queuePrompt_with_seed(number, { output, workflow }) {
 		let widgets = app.graph._nodes_by_id[node_id].widgets;
 		if(widgets) {
 		    for(let j in widgets) {
-		        if(widgets[j].name == 'seed')
+		        if(widgets[j].name == 'seed' && widgets[j].type != 'converted-widget')
 		            workflow.seed_widgets[node_id] = parseInt(j);
 		    }
         }
