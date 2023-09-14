@@ -7,13 +7,14 @@
 
 import importlib
 
-print(f"### Loading: ComfyUI-Inspire-Pack (V0.11.1)")
+print(f"### Loading: ComfyUI-Inspire-Pack (V0.12)")
 
 node_list = [
     "lora_block_weight",
     "segs_support",
     "a1111_compat",
     "prompt_support",
+    "inspire_server",
 ]
 
 NODE_CLASS_MAPPINGS = {}

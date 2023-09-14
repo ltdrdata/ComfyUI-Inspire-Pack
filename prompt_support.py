@@ -174,15 +174,39 @@ class PromptExtractor:
         return (positive, negative)
 
 
+class GlobalSeed:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "value": ("INT", {"default": 0, "min": 0, "max": 1125899906842624}),
+                "mode": ("BOOLEAN", {"default": True, "label_on": "control_before_generate", "label_off": "control_after_generate"}),
+                "action": (["fixed", "increment", "decrement", "randomize"], )
+            }
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack"
+
+    OUTPUT_NODE = True
+
+    def doit(self, **kwargs):
+        return {}
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "UnzipPrompt //Inspire": UnzipPrompt,
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
+    "GlobalSeed //Inspire": GlobalSeed,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
     "UnzipPrompt //Inspire": "Unzip Prompt (Inspire)",
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
-    "PromptExtractor //Inspire": "Prompt Extractor (Inspire)"
+    "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
+    "GlobalSeed //Inspire": "Global Seed (Inspire)"
 }
