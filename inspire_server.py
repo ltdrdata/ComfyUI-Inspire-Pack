@@ -104,15 +104,16 @@ def workflow_seed_update(json_data):
     updated_seed_map = {}
     value = None
     for node in nodes:
-        if node['type'] == 'GlobalSeed //Inspire':
-            value = prompt[str(node['id'])]['inputs']['value']
-            node['widgets_values'][0] = value
-        elif str(node['id']) in seed_widget_map:
-            node_id = str(node['id'])
-            widget_idx = seed_widget_map[node_id]
-            seed = prompt[str(node['id'])]['inputs']['seed']
-            node['widgets_values'][widget_idx] = seed
-            updated_seed_map[node_id] = seed
+        node_id = str(node['id'])
+        if node_id in prompt:
+            if node['type'] == 'GlobalSeed //Inspire':
+                value = prompt[node_id]['inputs']['value']
+                node['widgets_values'][0] = value
+            elif node_id in seed_widget_map:
+                widget_idx = seed_widget_map[node_id]
+                seed = prompt[node_id]['inputs']['seed']
+                node['widgets_values'][widget_idx] = seed
+                updated_seed_map[node_id] = seed
 
     server.PromptServer.instance.send_sync("inspire-global-seed", {"id": node_id, "value": value, "seed_map": updated_seed_map})
 

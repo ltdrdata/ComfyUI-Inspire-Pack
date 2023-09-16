@@ -15,7 +15,7 @@ function globalSeedHandler(event) {
         else
             if(node.widgets) {
                 const w = node.widgets.find((w) => w.name == 'seed' && w.type == 'number');
-                if(w) {
+                if(w && event.detail.seed_map[node.id] != undefined) {
                    w.value = event.detail.seed_map[node.id];
                 }
             }
