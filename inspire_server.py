@@ -13,7 +13,7 @@ class SeedGenerator:
     def __init__(self, base_value, action):
         self.base_value = base_value
 
-        if action == "increment" or action == "decrement" or action == "randomize":
+        if action == "fixed" or action == "increment" or action == "decrement" or action == "randomize":
             self.action = SGmode.FIX
         elif action == 'increment for each node':
             self.action = SGmode.INCR
