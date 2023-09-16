@@ -2,6 +2,12 @@ import nodes
 import numpy as np
 
 
+def normalize_size_base_64(w, h):
+    short_side = min(w, h)
+    remainder = short_side % 64
+    return short_side - remainder + (64 if remainder > 0 else 0)
+
+
 class MediaPipeFaceMeshDetector:
     def __init__(self, face, mouth, left_eyebrow, left_eye, left_pupil, right_eyebrow, right_eye, right_pupil, max_faces, is_segm):
         self.face = face
@@ -25,7 +31,8 @@ class MediaPipeFaceMeshDetector:
         pre_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']
         seg_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipeFaceMeshToSEGS']
 
-        facemesh_image = pre_obj().detect(image, self.max_faces, threshold)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        facemesh_image = pre_obj().detect(image, self.max_faces, threshold, resolution=resolution)[0]
         segs = seg_obj().doit(facemesh_image, crop_factor, not self.is_segm, crop_min_size, drop_size, dilation,
                               self.face, self.mouth, self.left_eyebrow, self.left_eye, self.left_pupil,
                               self.right_eyebrow, self.right_eye, self.right_pupil, image)[0]
@@ -46,7 +53,8 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']()
-        return obj.detect(image, self.max_faces, self.min_confidence)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.detect(image, self.max_faces, self.min_confidence, resolution=resolution)[0]
 
 
 class OpenPose_Preprocessor_wrapper:
@@ -64,7 +72,8 @@ class OpenPose_Preprocessor_wrapper:
         detect_face = 'enable' if self.detect_face else 'disable'
 
         obj = nodes.NODE_CLASS_MAPPINGS['OpenposePreprocessor']()
-        return obj.estimate_pose(image, detect_hand, detect_body, detect_face)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution)[0]
 
 
 class DWPreprocessor_wrapper:
@@ -82,7 +91,8 @@ class DWPreprocessor_wrapper:
         detect_face = 'enable' if self.detect_face else 'disable'
 
         obj = nodes.NODE_CLASS_MAPPINGS['DWPreprocessor']()
-        return obj.estimate_pose(image, detect_hand, detect_body, detect_face)['result'][0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution)['result'][0]
 
 
 class LeReS_DepthMap_Preprocessor_wrapper:
