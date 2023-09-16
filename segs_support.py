@@ -133,6 +133,19 @@ class Canny_Preprocessor_wrapper:
         return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
 
 
+class HED_Preprocessor_wrapper:
+    def __init__(self, safe, nodename):
+        self.safe = safe
+        self.nodename = nodename
+
+    def apply(self, image):
+        if self.nodename not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use {self.nodename}_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS[self.nodename]()
+        return obj.execute(image, safe="enable" if self.safe else "disable")[0]
+
+
 class OpenPose_Preprocessor_Provider_for_SEGS:
     @classmethod
     def INPUT_TYPES(s):
@@ -247,6 +260,30 @@ class Canny_Preprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class HEDPreprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "safe": ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
+            }
+        }
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self, safe):
+        obj = HED_Preprocessor_wrapper(safe, "HEDPreprocessor")
+        return (obj, )
+
+
+class FakeScribblePreprocessor_Provider_for_SEGS(HEDPreprocessor_Provider_for_SEGS):
+    def doit(self, safe):
+        obj = HED_Preprocessor_wrapper(safe, "FakeScribblePreprocessor")
+        return (obj, )
+
+
 class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
     @classmethod
     def INPUT_TYPES(s):
@@ -269,17 +306,18 @@ class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
 class MediaPipeFaceMeshDetectorProvider:
     @classmethod
     def INPUT_TYPES(s):
-        bool_widget = ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
+        bool_true_widget = ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
+        bool_false_widget = ("BOOLEAN", {"default": False, "label_on": "Enabled", "label_off": "Disabled"})
         return {"required": {
                                 "max_faces": ("INT", {"default": 10, "min": 1, "max": 50, "step": 1}),
-                                "face": bool_widget,
-                                "mouth": bool_widget,
-                                "left_eyebrow": bool_widget,
-                                "left_eye": bool_widget,
-                                "left_pupil": bool_widget,
-                                "right_eyebrow": bool_widget,
-                                "right_eye": bool_widget,
-                                "right_pupil": bool_widget,
+                                "face": bool_true_widget,
+                                "mouth": bool_false_widget,
+                                "left_eyebrow": bool_false_widget,
+                                "left_eye": bool_false_widget,
+                                "left_pupil": bool_false_widget,
+                                "right_eyebrow": bool_false_widget,
+                                "right_eye": bool_false_widget,
+                                "right_pupil": bool_false_widget,
                             }}
 
     RETURN_TYPES = ("BBOX_DETECTOR", "SEGM_DETECTOR")
@@ -303,6 +341,8 @@ NODE_CLASS_MAPPINGS = {
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": Canny_Preprocessor_Provider_for_SEGS,
     "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS,
     "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
+    "HEDPreprocessor_Provider_for_SEGS //Inspire": HEDPreprocessor_Provider_for_SEGS,
+    "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": FakeScribblePreprocessor_Provider_for_SEGS,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -312,5 +352,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": "Zoe Depth Map Preprocessor Provider (SEGS)",
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": "Canny Preprocessor Provider (SEGS)",
     "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": "MediaPipe FaceMesh Preprocessor Provider (SEGS)",
+    "HEDPreprocessor_Provider_for_SEGS //Inspire": "HED Preprocessor Provider (SEGS)",
+    "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": "Fake Scribble Preprocessor (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
