@@ -1,6 +1,9 @@
 # ComfyUI-Inspire-Pack
 This repository offers various extension nodes for ComfyUI. Nodes here have different characteristics compared to those in the ComfyUI Impact Pack. The Impact Pack has become too large now...
 
+## Notice:
+* WARN: If you use version **0.12 to 0.12.2** without a GlobalSeed node, your workflow's seed may have been erased. Please update immediately.
+
 ## Nodes
 * Lora Block Weight - This is a node that provides functionality related to Lora block weight.
     * This provides similar functionality to [sd-webui-lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight)

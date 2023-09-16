@@ -181,7 +181,8 @@ class GlobalSeed:
             "required": {
                 "value": ("INT", {"default": 0, "min": 0, "max": 1125899906842624}),
                 "mode": ("BOOLEAN", {"default": True, "label_on": "control_before_generate", "label_off": "control_after_generate"}),
-                "action": (["fixed", "increment", "decrement", "randomize"], )
+                "action": (["fixed", "increment", "decrement", "randomize",
+                            "increment for each node", "decrement for each node", "randomize for each node"], ),
             }
         }
 
