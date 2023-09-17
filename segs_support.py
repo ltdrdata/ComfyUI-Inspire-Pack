@@ -35,7 +35,7 @@ class MediaPipeFaceMeshDetector:
         facemesh_image = pre_obj().detect(image, self.max_faces, threshold, resolution=resolution)[0]
         segs = seg_obj().doit(facemesh_image, crop_factor, not self.is_segm, crop_min_size, drop_size, dilation,
                               self.face, self.mouth, self.left_eyebrow, self.left_eye, self.left_pupil,
-                              self.right_eyebrow, self.right_eye, self.right_pupil, image)[0]
+                              self.right_eyebrow, self.right_eye, self.right_pupil)[0]
 
         return segs
 
