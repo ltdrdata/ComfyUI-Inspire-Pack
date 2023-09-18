@@ -14,7 +14,7 @@ function globalSeedHandler(event) {
 	    }
         else
             if(node.widgets) {
-                const w = node.widgets.find((w) => w.name == 'seed' && w.type == 'number');
+                const w = node.widgets.find((w) => (w.name == 'seed' || w.name == 'noise_seed') && w.type == 'number');
                 if(w && event.detail.seed_map[node.id] != undefined) {
                    w.value = event.detail.seed_map[node.id];
                 }
@@ -34,7 +34,7 @@ async function queuePrompt_with_seed(number, { output, workflow }) {
 		let widgets = app.graph._nodes_by_id[node_id].widgets;
 		if(widgets) {
 		    for(let j in widgets) {
-		        if(widgets[j].name == 'seed' && widgets[j].type != 'converted-widget')
+		        if((widgets[j].name == 'seed' || widgets[j].name == 'noise_seed') && widgets[j].type != 'converted-widget')
 		            workflow.seed_widgets[node_id] = parseInt(j);
 		    }
         }

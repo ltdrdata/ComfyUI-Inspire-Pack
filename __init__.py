@@ -7,7 +7,7 @@
 
 import importlib
 
-print(f"### Loading: ComfyUI-Inspire-Pack (V0.13.3)")
+print(f"### Loading: ComfyUI-Inspire-Pack (V0.14)")
 
 node_list = [
     "lora_block_weight",
