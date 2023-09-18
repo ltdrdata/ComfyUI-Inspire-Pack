@@ -60,6 +60,9 @@ def control_seed(v):
 
 
 def prompt_seed_update(json_data):
+    if 'extra_data' not in json_data:
+        return None
+
     seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
     value = None
     mode = None
