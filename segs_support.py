@@ -108,7 +108,8 @@ class LeReS_DepthMap_Preprocessor_wrapper:
         boost = 'enable' if self.boost else 'disable'
 
         obj = nodes.NODE_CLASS_MAPPINGS['LeReS-DepthMapPreprocessor']()
-        return obj.execute(image, self.rm_nearest, self.rm_background, boost=boost)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, self.rm_nearest, self.rm_background, boost=boost, resolution=resolution)[0]
 
 
 class MiDaS_DepthMap_Preprocessor_wrapper:
@@ -121,7 +122,8 @@ class MiDaS_DepthMap_Preprocessor_wrapper:
             raise Exception(f"[ERROR] To use MiDaS_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['MiDaS-DepthMapPreprocessor']()
-        return obj.execute(image, self.a, self.bg_threshold)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, self.a, self.bg_threshold, resolution=resolution)[0]
 
 
 class Zoe_DepthMap_Preprocessor_wrapper:
@@ -130,17 +132,8 @@ class Zoe_DepthMap_Preprocessor_wrapper:
             raise Exception(f"[ERROR] To use Zoe_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['Zoe-DepthMapPreprocessor']()
-        return obj.execute(image)[0]
-
-
-class Canny_Preprocessor_wrapper:
-    def __init__(self, low_threshold, high_threshold):
-        self.low_threshold = low_threshold
-        self.high_threshold = high_threshold
-
-    def apply(self, image):
-        obj = nodes.NODE_CLASS_MAPPINGS['Canny']()
-        return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
 
 
 class HED_Preprocessor_wrapper:
@@ -153,7 +146,18 @@ class HED_Preprocessor_wrapper:
             raise Exception(f"[ERROR] To use {self.nodename}_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS[self.nodename]()
-        return obj.execute(image, safe="enable" if self.safe else "disable")[0]
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution, safe="enable" if self.safe else "disable")[0]
+
+
+class Canny_Preprocessor_wrapper:
+    def __init__(self, low_threshold, high_threshold):
+        self.low_threshold = low_threshold
+        self.high_threshold = high_threshold
+
+    def apply(self, image):
+        obj = nodes.NODE_CLASS_MAPPINGS['Canny']()
+        return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
 
 
 class OpenPose_Preprocessor_Provider_for_SEGS:
