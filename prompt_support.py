@@ -40,20 +40,75 @@ class LoadPromptsFromDir:
             print(f"file_name: {file_name}")
             try:
                 with open(os.path.join(prompt_dir, file_name), "r", encoding="utf-8") as file:
-                    prompt = file.read()
+                    prompt_data = file.read()
+                    prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
-                    pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+                    for prompt in prompt_list:
+                        pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+                        matches = re.search(pattern, prompt, re.DOTALL)
+
+                        if matches:
+                            positive_text = matches.group(1).strip()
+                            negative_text = matches.group(2).strip()
+                            result_tuple = (positive_text, negative_text, file_name)
+                            prompts.append(result_tuple)
+                        else:
+                            print(f"[WARN] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
+            except Exception as e:
+                print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}")
+
+        return (prompts, )
+
+
+class LoadPromptsFromFile:
+    @classmethod
+    def INPUT_TYPES(cls):
+        try:
+            current_directory = os.path.dirname(os.path.abspath(__file__))
+            prompt_dir = os.path.join(current_directory, "prompts")
+            prompt_files = []
+            for root, dirs, files in os.walk(prompt_dir):
+                for file in files:
+                    if file.endswith(".txt"):
+                        file_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(file_path, prompt_dir)
+                        prompt_files.append(rel_path)
+        except Exception:
+            prompt_files = []
+
+        return {"required": {"prompt_file": (prompt_files,)}}
+
+    RETURN_TYPES = ("ZIPPED_PROMPT",)
+    OUTPUT_IS_LIST = (True,)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/prompt"
+
+    def doit(self, prompt_file):
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        prompt_path = os.path.join(current_directory, "prompts", prompt_file)
+
+        prompts = []
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as file:
+                prompt_data = file.read()
+                prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
+
+                pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+
+                for prompt in prompt_list:
                     matches = re.search(pattern, prompt, re.DOTALL)
 
                     if matches:
                         positive_text = matches.group(1).strip()
                         negative_text = matches.group(2).strip()
-                        result_tuple = (positive_text, negative_text, file_name)
+                        result_tuple = (positive_text, negative_text, prompt_file)
                         prompts.append(result_tuple)
                     else:
-                        print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{file_name}'")
-            except Exception as e:
-                print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{file_name}': {str(e)}")
+                        print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+        except Exception as e:
+            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
 
         return (prompts, )
 
@@ -199,6 +254,7 @@ class GlobalSeed:
 
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
+    "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
     "UnzipPrompt //Inspire": UnzipPrompt,
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
@@ -206,6 +262,7 @@ NODE_CLASS_MAPPINGS = {
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
+    "LoadPromptsFromFile //Inspire": "Load Prompts From File (Inspire)",
     "UnzipPrompt //Inspire": "Unzip Prompt (Inspire)",
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
