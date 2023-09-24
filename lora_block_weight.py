@@ -42,10 +42,16 @@ class LoraLoaderBlockWeight:
         preset = ["Preset"]  # 20
         preset += load_lbw_preset("lbw-preset.txt")
         preset += load_lbw_preset("lbw-preset.custom.txt")
+        preset = [name for name in preset if not name.startswith('@')]
+
+        lora_names = folder_paths.get_filename_list("loras")
+        lora_dirs = [os.path.dirname(name) for name in lora_names]
+        lora_dirs = ["All"] + list(set(lora_dirs))
 
         return {"required": {"model": ("MODEL",),
                              "clip": ("CLIP", ),
-                             "lora_name": (folder_paths.get_filename_list("loras"), ),
+                             "category_filter": (lora_dirs,),
+                             "lora_name": (lora_names, ),
                              "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "inverse": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
@@ -54,6 +60,7 @@ class LoraLoaderBlockWeight:
                              "B": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "preset": (preset,),
                              "block_vector": ("STRING", {"multiline": True, "placeholder": "block weight vectors", "default": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1", "pysssss.autocomplete": False}),
+                             "bypass": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
                              }
                 }
 
@@ -232,9 +239,9 @@ class LoraLoaderBlockWeight:
         populated_vector = ','.join(map(str, populated_vector_list))
         return (new_modelpatcher, new_clip, populated_vector)
 
-    def doit(self, model, clip, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vector):
-        if strength_model == 0 and strength_clip == 0:
-            return (model, clip)
+    def doit(self, model, clip, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vector, bypass=False, category_filter=None):
+        if strength_model == 0 and strength_clip == 0 or bypass:
+            return (model, clip, "")
 
         lora_path = folder_paths.get_full_path("loras", lora_name)
         lora = None
@@ -272,9 +279,11 @@ class XY_Capsule_LoraBlockWeight:
         self.another_capsule = capsule
 
     def set_result(self, image, latent):
-        print(f"XY_Capsule_LoraBlockWeight: ({self.x, self.y}) is processed.")
         if self.another_capsule is not None:
+            print(f"XY_Capsule_LoraBlockWeight: ({self.another_capsule.x, self.y}) is processed.")
             self.storage[(self.another_capsule.x, self.y)] = image
+        else:
+            print(f"XY_Capsule_LoraBlockWeight: ({self.x, self.y}) is processed.")
 
     def patch_model(self, model, clip):
         lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode = self.params
@@ -402,7 +411,13 @@ class XYInput_LoraBlockWeight:
 
         default_vectors = "SD-NONE/SD-ALL\nSD-ALL/SD-ALL\nSD-INS/SD-ALL\nSD-IND/SD-ALL\nSD-INALL/SD-ALL\nSD-MIDD/SD-ALL\nSD-MIDD0.2/SD-ALL\nSD-MIDD0.8/SD-ALL\nSD-MOUT/SD-ALL\nSD-OUTD/SD-ALL\nSD-OUTS/SD-ALL\nSD-OUTALL/SD-ALL"
 
-        return {"required": {"lora_name": (folder_paths.get_filename_list("loras"), ),
+        lora_names = folder_paths.get_filename_list("loras")
+        lora_dirs = [os.path.dirname(name) for name in lora_names]
+        lora_dirs = ["All"] + list(set(lora_dirs))
+
+        return {"required": {
+                             "category_filter": (lora_dirs, ),
+                             "lora_name": (lora_names, ),
                              "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
                              "inverse": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
@@ -423,7 +438,7 @@ class XYInput_LoraBlockWeight:
     FUNCTION = "doit"
     CATEGORY = "InspirePack/LoraBlockWeight"
 
-    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode):
+    def doit(self, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vectors, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode, category_filter=None):
         xy_type = "XY_Capsule"
 
         preset_dict = load_preset_dict()

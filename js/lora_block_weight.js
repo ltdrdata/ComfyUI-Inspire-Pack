@@ -5,9 +5,29 @@ app.registerExtension({
 
 	nodeCreated(node, app) {
 		if(node.comfyClass == "LoraLoaderBlockWeight //Inspire") {
-		    let preset_i = 8;
-		    let vector_i = 9;
+		    // category filter
+			const lora_names_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'lora_name')];
+			var full_lora_list = lora_names_widget.options.values;
+			const category_filter_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'category_filter')];
+
+			Object.defineProperty(lora_names_widget.options, "values", {
+			    set: (x) => {
+			        full_lora_list = x;
+			    },
+			    get: () => {
+			        if(category_filter_widget.value == 'All')
+			            return full_lora_list;
+
+                    let l = full_lora_list.filter(x => x.startsWith(category_filter_widget.value));
+                    return l;
+			    }
+			});
+
+		    // vector selector
+		    let preset_i = 9;
+		    let vector_i = 10;
 			node._value = "Preset";
+
 			Object.defineProperty(node.widgets[preset_i], "value", {
 				set: (value) => {
 				        const stackTrace = new Error().stack;
@@ -29,8 +49,27 @@ app.registerExtension({
 		}
 
 		if(node.comfyClass == "XY Input: Lora Block Weight //Inspire") {
-		    let preset_i = 8;
-		    let vector_i = 9;
+		    // category filter
+            const lora_names_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'lora_name')];
+			var full_lora_list = lora_names_widget.options.values;
+			const category_filter_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'category_filter')];
+
+			Object.defineProperty(lora_names_widget.options, "values", {
+			    set: (x) => {
+			        full_lora_list = x;
+			    },
+			    get: () => {
+			        if(category_filter_widget.value == 'All')
+			            return full_lora_list;
+
+                    let l = full_lora_list.filter(x => x.startsWith(category_filter_widget.value));
+                    return l;
+			    }
+			});
+
+            // vector selector
+		    let preset_i = 9;
+		    let vector_i = 10;
 			node._value = "Preset";
 			Object.defineProperty(node.widgets[preset_i], "value", {
 				set: (value) => {
