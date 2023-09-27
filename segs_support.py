@@ -44,13 +44,17 @@ class MediaPipeFaceMeshDetector:
 
 
 class MediaPipe_FaceMesh_Preprocessor_wrapper:
-    def __init__(self, max_faces, min_confidence):
+    def __init__(self, max_faces, min_confidence, upscale_factor=1.0):
         self.max_faces = max_faces
         self.min_confidence = min_confidence
+        self.upscale_factor = upscale_factor
 
     def apply(self, image):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        if self.upscale_factor != 1.0:
+            image = nodes.ImageScaleBy().upscale(image, 'bilinear', self.upscale_factor)[0]
 
         obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']()
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
@@ -93,10 +97,11 @@ class LineArt_Preprocessor_wrapper:
 
 
 class OpenPose_Preprocessor_wrapper:
-    def __init__(self, detect_hand, detect_body, detect_face):
+    def __init__(self, detect_hand, detect_body, detect_face, upscale_factor=1.0):
         self.detect_hand = detect_hand
         self.detect_body = detect_body
         self.detect_face = detect_face
+        self.upscale_factor = upscale_factor
 
     def apply(self, image):
         if 'OpenposePreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
@@ -106,16 +111,20 @@ class OpenPose_Preprocessor_wrapper:
         detect_body = 'enable' if self.detect_body else 'disable'
         detect_face = 'enable' if self.detect_face else 'disable'
 
+        if self.upscale_factor != 1.0:
+            image = nodes.ImageScaleBy().upscale(image, 'bilinear', self.upscale_factor)[0]
+
         obj = nodes.NODE_CLASS_MAPPINGS['OpenposePreprocessor']()
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
-        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution)[0]
+        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution)['result'][0]
 
 
 class DWPreprocessor_wrapper:
-    def __init__(self, detect_hand, detect_body, detect_face):
+    def __init__(self, detect_hand, detect_body, detect_face, upscale_factor=1.0):
         self.detect_hand = detect_hand
         self.detect_body = detect_body
         self.detect_face = detect_face
+        self.upscale_factor = upscale_factor
 
     def apply(self, image):
         if 'DWPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
@@ -124,6 +133,9 @@ class DWPreprocessor_wrapper:
         detect_hand = 'enable' if self.detect_hand else 'disable'
         detect_body = 'enable' if self.detect_body else 'disable'
         detect_face = 'enable' if self.detect_face else 'disable'
+
+        if self.upscale_factor != 1.0:
+            image = nodes.ImageScaleBy().upscale(image, 'bilinear', self.upscale_factor)[0]
 
         obj = nodes.NODE_CLASS_MAPPINGS['DWPreprocessor']()
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
@@ -203,6 +215,7 @@ class OpenPose_Preprocessor_Provider_for_SEGS:
                 "detect_hand": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "detect_body": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "detect_face": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
+                "resolution_upscale_by": ("FLOAT", {"default": 1.0, "min": 0.5, "max": 100, "step": 0.1}),
             }
         }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
@@ -210,8 +223,8 @@ class OpenPose_Preprocessor_Provider_for_SEGS:
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self, detect_hand, detect_body, detect_face):
-        obj = OpenPose_Preprocessor_wrapper(detect_hand, detect_body, detect_face)
+    def doit(self, detect_hand, detect_body, detect_face, resolution_upscale_by):
+        obj = OpenPose_Preprocessor_wrapper(detect_hand, detect_body, detect_face, upscale_factor=resolution_upscale_by)
         return (obj, )
 
 
@@ -223,6 +236,7 @@ class DWPreprocessor_Provider_for_SEGS:
                 "detect_hand": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "detect_body": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "detect_face": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
+                "resolution_upscale_by": ("FLOAT", {"default": 1.0, "min": 0.5, "max": 100, "step": 0.1}),
             }
         }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
@@ -230,8 +244,8 @@ class DWPreprocessor_Provider_for_SEGS:
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self, detect_hand, detect_body, detect_face):
-        obj = DWPreprocessor_wrapper(detect_hand, detect_body, detect_face)
+    def doit(self, detect_hand, detect_body, detect_face, resolution_upscale_by):
+        obj = DWPreprocessor_wrapper(detect_hand, detect_body, detect_face, upscale_factor=resolution_upscale_by)
         return (obj, )
 
 
@@ -339,7 +353,8 @@ class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
         return {
             "required": {
                 "max_faces": ("INT", {"default": 10, "min": 1, "max": 50, "step": 1}),
-                "min_confidence": ("FLOAT", {"default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01})
+                "min_confidence": ("FLOAT", {"default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01}),
+                "resolution_upscale_by": ("FLOAT", {"default": 1.0, "min": 0.5, "max": 100, "step": 0.1}),
             }
         }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
@@ -347,8 +362,8 @@ class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self, max_faces, min_confidence):
-        obj = MediaPipe_FaceMesh_Preprocessor_wrapper(max_faces, min_confidence)
+    def doit(self, max_faces, min_confidence, resolution_upscale_by):
+        obj = MediaPipe_FaceMesh_Preprocessor_wrapper(max_faces, min_confidence, upscale_factor=resolution_upscale_by)
         return (obj, )
 
 
