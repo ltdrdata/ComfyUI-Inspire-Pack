@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import comfy
 
+
 class LoadImagesFromDir:
     @classmethod
     def INPUT_TYPES(s):
@@ -30,6 +31,10 @@ class LoadImagesFromDir:
         if len(dir_files) == 0:
             raise FileNotFoundError(f"No files in directory '{directory}'.")
 
+        # Filter files by extension
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+
         dir_files = sorted(dir_files)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
@@ -45,7 +50,7 @@ class LoadImagesFromDir:
         image_count = 0
 
         for image_path in dir_files:
-            if os.path.isdir(image_path):
+            if os.path.isdir(image_path) and os.path.ex:
                 continue
             if limit_images and image_count >= image_load_cap:
                 break
