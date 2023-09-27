@@ -57,6 +57,41 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
         return obj.detect(image, self.max_faces, self.min_confidence, resolution=resolution)[0]
 
 
+class AnimeLineArt_Preprocessor_wrapper:
+    def apply(self, image):
+        if 'AnimeLineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use AnimeLineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['AnimeLineArtPreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
+
+
+class Manga2Anime_LineArt_Preprocessor_wrapper:
+    def apply(self, image):
+        if 'Manga2Anime_LineArt_Preprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use Manga2Anime_LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['Manga2Anime_LineArt_Preprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
+
+
+class LineArt_Preprocessor_wrapper:
+    def __init__(self, coarse):
+        self.coarse = coarse
+
+    def apply(self, image):
+        if 'LineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        coarse = 'enable' if self.coarse else 'disable'
+
+        obj = nodes.NODE_CLASS_MAPPINGS['LineArtPreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution, coarse=coarse)[0]
+
+
 class OpenPose_Preprocessor_wrapper:
     def __init__(self, detect_hand, detect_body, detect_face):
         self.detect_hand = detect_hand
@@ -279,7 +314,7 @@ class HEDPreprocessor_Provider_for_SEGS:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "safe": ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
+                "safe": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"})
             }
         }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
@@ -320,8 +355,8 @@ class MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS:
 class MediaPipeFaceMeshDetectorProvider:
     @classmethod
     def INPUT_TYPES(s):
-        bool_true_widget = ("BOOLEAN", {"default": True, "label_on": "Enabled", "label_off": "Disabled"})
-        bool_false_widget = ("BOOLEAN", {"default": False, "label_on": "Enabled", "label_off": "Disabled"})
+        bool_true_widget = ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"})
+        bool_false_widget = ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"})
         return {"required": {
                                 "max_faces": ("INT", {"default": 10, "min": 1, "max": 50, "step": 1}),
                                 "face": bool_true_widget,
@@ -346,6 +381,50 @@ class MediaPipeFaceMeshDetectorProvider:
         return (bbox_detector, segm_detector)
 
 
+class AnimeLineArt_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = AnimeLineArt_Preprocessor_wrapper()
+        return (obj, )
+
+
+class Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = Manga2Anime_LineArt_Preprocessor_wrapper()
+        return (obj, )
+
+
+class LineArt_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+            "coarse": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
+        }}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self, coarse):
+        obj = LineArt_Preprocessor_wrapper(coarse)
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -357,6 +436,9 @@ NODE_CLASS_MAPPINGS = {
     "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
     "HEDPreprocessor_Provider_for_SEGS //Inspire": HEDPreprocessor_Provider_for_SEGS,
     "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": FakeScribblePreprocessor_Provider_for_SEGS,
+    "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire": AnimeLineArt_Preprocessor_Provider_for_SEGS,
+    "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS,
+    "LineArt_Preprocessor_Provider_for_SEGS //Inspire": LineArt_Preprocessor_Provider_for_SEGS,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -367,6 +449,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": "Canny Preprocessor Provider (SEGS)",
     "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": "MediaPipe FaceMesh Preprocessor Provider (SEGS)",
     "HEDPreprocessor_Provider_for_SEGS //Inspire": "HED Preprocessor Provider (SEGS)",
-    "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": "Fake Scribble Preprocessor (SEGS)",
+    "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": "Fake Scribble Preprocessor Provider (SEGS)",
+    "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire": "AnimeLineArt Preprocessor Provider (SEGS)",
+    "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": "Manga2Anime LineArt Preprocessor Provider (SEGS)",
+    "LineArt_Preprocessor_Provider_for_SEGS //Inspire": "LineArt Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
