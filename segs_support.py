@@ -81,6 +81,16 @@ class Manga2Anime_LineArt_Preprocessor_wrapper:
         return obj.execute(image, resolution=resolution)[0]
 
 
+class Color_Preprocessor_wrapper:
+    def apply(self, image):
+        if 'ColorPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use Color_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['ColorPreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
+
+
 class LineArt_Preprocessor_wrapper:
     def __init__(self, coarse):
         self.coarse = coarse
@@ -440,6 +450,20 @@ class LineArt_Preprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class Color_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = Color_Preprocessor_wrapper()
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -454,6 +478,7 @@ NODE_CLASS_MAPPINGS = {
     "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire": AnimeLineArt_Preprocessor_Provider_for_SEGS,
     "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS,
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": LineArt_Preprocessor_Provider_for_SEGS,
+    "Color_Preprocessor_Provider_for_SEGS //Inspire": Color_Preprocessor_Provider_for_SEGS,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -468,5 +493,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire": "AnimeLineArt Preprocessor Provider (SEGS)",
     "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": "Manga2Anime LineArt Preprocessor Provider (SEGS)",
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": "LineArt Preprocessor Provider (SEGS)",
+    "Color_Preprocessor_Provider_for_SEGS //Inspire": "Color Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
