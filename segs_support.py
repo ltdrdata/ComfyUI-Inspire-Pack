@@ -20,6 +20,7 @@ class MediaPipeFaceMeshDetector:
         self.right_pupil = right_pupil
         self.is_segm = is_segm
         self.max_faces = max_faces
+        self.override_bbox_by_segm = True
 
     def detect(self, image, threshold, dilation, crop_factor, drop_size=1, crop_min_size=None):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
