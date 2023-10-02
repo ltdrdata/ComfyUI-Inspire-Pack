@@ -238,6 +238,7 @@ class GlobalSeed:
                 "mode": ("BOOLEAN", {"default": True, "label_on": "control_before_generate", "label_off": "control_after_generate"}),
                 "action": (["fixed", "increment", "decrement", "randomize",
                             "increment for each node", "decrement for each node", "randomize for each node"], ),
+                "last_seed": ("STRING", {"default": ""}),
             }
         }
 

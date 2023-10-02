@@ -9,6 +9,8 @@ function globalSeedHandler(event) {
 	    if(node.type == 'GlobalSeed //Inspire') {
 	        if(node.widgets) {
 			    const w = node.widgets.find((w) => w.name == 'value');
+			    const last_w = node.widgets.find((w) => w.name == 'last_seed');
+			    last_w.value = w.value;
 			    w.value = event.detail.value;
 	        }
 	    }
