@@ -70,6 +70,9 @@ def prompt_seed_update(json_data):
     action = None
 
     for k, v in json_data['prompt'].items():
+        if 'class_type' not in v:
+            continue
+
         cls = v['class_type']
         if cls == 'GlobalSeed //Inspire':
             mode = v['inputs']['mode']
