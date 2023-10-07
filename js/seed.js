@@ -31,13 +31,12 @@ const original_queuePrompt = api.queuePrompt;
 async function queuePrompt_with_seed(number, { output, workflow }) {
 	workflow.seed_widgets = {};
 
-	for(let i in workflow.nodes) {
-	    let node_id = workflow.nodes[i].id;
-		let widgets = app.graph._nodes_by_id[node_id].widgets;
+	for(let i in app.graph._nodes_by_id) {
+		let widgets = app.graph._nodes_by_id[i].widgets;
 		if(widgets) {
 		    for(let j in widgets) {
 		        if((widgets[j].name == 'seed' || widgets[j].name == 'noise_seed') && widgets[j].type != 'converted-widget')
-		            workflow.seed_widgets[node_id] = parseInt(j);
+		            workflow.seed_widgets[i] = parseInt(j);
 		    }
         }
 	}
