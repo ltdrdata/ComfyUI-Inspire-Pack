@@ -88,6 +88,10 @@ def prompt_seed_update(json_data):
         seed_generator = SeedGenerator(value, action)
 
         for k, v in json_data['prompt'].items():
+            for k2, v2 in v['inputs'].items():
+                if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
+                    v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
+
             if k not in seed_widget_map:
                 continue
 
@@ -98,6 +102,10 @@ def prompt_seed_update(json_data):
             if 'noise_seed' in v['inputs']:
                 if isinstance(v['inputs']['noise_seed'], int):
                     v['inputs']['noise_seed'] = seed_generator.next()
+
+            for k2, v2 in v['inputs'].items():
+                if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
+                    v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
 
     # control after generated
     if mode is not None and not mode:
