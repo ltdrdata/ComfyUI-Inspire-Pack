@@ -260,8 +260,8 @@ class BindImageListPromptList:
             "required": {
                 "images": ("IMAGE",),
                 "zipped_prompts": ("ZIPPED_PROMPT",),
-                "default_positive": ("STRING", {"multiline": True, "placeholder": "positive"}),
-                "default_negative": ("STRING", {"multiline": True, "placeholder": "negative"}),
+                "default_positive": ("STRING", {"multiline": True, "placeholder": "default positive"}),
+                "default_negative": ("STRING", {"multiline": True, "placeholder": "default negative"}),
             }
         }
 
