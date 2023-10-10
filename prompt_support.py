@@ -253,6 +253,53 @@ class GlobalSeed:
         return {}
 
 
+class BindImageListPromptList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "zipped_prompts": ("ZIPPED_PROMPT",),
+                "default_positive": ("STRING", {"multiline": True, "placeholder": "positive"}),
+                "default_negative": ("STRING", {"multiline": True, "placeholder": "negative"}),
+            }
+        }
+
+    INPUT_IS_LIST = True
+
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("image", "positive", "negative", "prompt_label")
+
+    OUTPUT_IS_LIST = (True, True, True,)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack"
+
+    def doit(self, images, zipped_prompts, default_positive, default_negative):
+        positives = []
+        negatives = []
+        prompt_labels = []
+
+        if len(images) < len(zipped_prompts):
+            zipped_prompts = zipped_prompts[:len(images)]
+
+        elif len(images) > len(zipped_prompts):
+            lack = len(images) - len(zipped_prompts)
+            default_prompt = (default_positive[0], default_negative[0], "default")
+            zipped_prompts = zipped_prompts[:]
+            for i in range(lack):
+                zipped_prompts.append(default_prompt)
+
+        for prompt in zipped_prompts:
+            a, b, c = prompt
+            positives.append(a)
+            negatives.append(b)
+            prompt_labels.append(c)
+
+        return (images, positives, negatives, prompt_labels)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -260,6 +307,7 @@ NODE_CLASS_MAPPINGS = {
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
     "GlobalSeed //Inspire": GlobalSeed,
+    "BindImageListPromptList //Inspire": BindImageListPromptList,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -267,5 +315,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "UnzipPrompt //Inspire": "Unzip Prompt (Inspire)",
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
-    "GlobalSeed //Inspire": "Global Seed (Inspire)"
+    "GlobalSeed //Inspire": "Global Seed (Inspire)",
+    "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
 }
