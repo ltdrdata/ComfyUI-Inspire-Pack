@@ -55,7 +55,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 
 * Image Util
   * `Load Images From Dir (Inspire)`: This is almost same as `LoadImagesFromDirectory` of [ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet). This is just a modified version. Just note that this node forcibly normalizes the size of the loaded image to match the size of the first image, even if they are not the same size, to create a batch image.  
-
+  * `Load Image (Inspire)`: This node is similar to LoadImage, but the loaded image information is stored in the workflow. The image itself is stored in the workflow, making it easier to reproduce image generation on other computers. 
+    * NOTE: If the image is too large, attempting to store the workflow in the browser cache can fail, resulting in a failure to recover the workflow upon refresh.
+  
 * KSampler Progress - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
 
 ## Credits

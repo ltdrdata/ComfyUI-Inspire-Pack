@@ -1,7 +1,7 @@
 import { ComfyApp, app } from "../../scripts/app.js";
 
 app.registerExtension({
-	name: "Comfy.Impact.Exp",
+	name: "Comfy.Inspire.LBW",
 
 	nodeCreated(node, app) {
 		if(node.comfyClass == "LoraLoaderBlockWeight //Inspire") {

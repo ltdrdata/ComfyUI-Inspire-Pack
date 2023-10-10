@@ -141,10 +141,20 @@ def workflow_seed_update(json_data):
     server.PromptServer.instance.send_sync("inspire-global-seed", {"id": node_id, "value": value, "seed_map": updated_seed_map})
 
 
+def workflow_loadimage_update(json_data):
+    prompt = json_data['prompt']
+
+    for v in prompt.values():
+        if 'class_type' in v and v['class_type'] == 'LoadImage //Inspire':
+            v['inputs']['image'] = "#DATA"
+
+
 def onprompt(json_data):
     is_changed = prompt_seed_update(json_data)
     if is_changed:
         workflow_seed_update(json_data)
+
+    workflow_loadimage_update(json_data)
 
     return json_data
 
