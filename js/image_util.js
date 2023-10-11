@@ -14,6 +14,22 @@ app.registerExtension({
 			console.log(node);
 			let w = node.widgets.find(obj => obj.name === 'image_data');
 
+			Object.defineProperty(w, 'value', {
+				set(v) {
+					if(v != '[IMAGE DATA]')
+						w._value = v;
+				},
+				get() {
+					const stackTrace = new Error().stack;
+					if(!stackTrace.includes('draw') && !stackTrace.includes('graphToPrompt') && stackTrace.includes('app.js')) {
+						return "[IMAGE DATA]";
+					}
+					else {
+						return w._value;
+					}
+				}
+			});
+
 			Object.defineProperty(node, 'imgs', {
 				set(v) {
 					this._img = v;
@@ -31,7 +47,8 @@ app.registerExtension({
 				get() {
 					if(this._img == undefined && w.value != '') {
 						this._img = [new Image()];
-						this._img[0].src = w.value;
+						if(w.value != '[IMAGE DATA]')
+							this._img[0].src = w.value;
 					}
 
 					return this._img;
