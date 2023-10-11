@@ -300,6 +300,57 @@ class BindImageListPromptList:
         return (images, positives, negatives, prompt_labels)
 
 
+class BNK_EncoderWrapper:
+    def __init__(self, token_normalization, weight_interpretation):
+        self.token_normalization = token_normalization
+        self.weight_interpretation = weight_interpretation
+
+    def encode(self, clip, text):
+        if 'BNK_CLIPTextEncodeAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'Advanced CLIP Text Encode'")
+        return nodes.NODE_CLASS_MAPPINGS['BNK_CLIPTextEncodeAdvanced']().encode(clip, text, self.token_normalization, self.weight_interpretation)
+
+
+class WildcardEncodeInspire:
+    @classmethod
+    def INPUT_TYPES(s):
+        if 'ImpactWildcardEncode' in nodes.NODE_CLASS_MAPPINGS:
+            wildcards = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].get_wildcard_list()
+        else:
+            wildcards = ["Impact Pack isn't installed"]
+
+        return {"required": {
+                        "model": ("MODEL",),
+                        "clip": ("CLIP",),
+                        "token_normalization": (["none", "mean", "length", "length+mean"], ),
+                        "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
+                        "wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Wildcard Prmopt (User Input)'}),
+                        "populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Prmopt (Will be generated automatically)'}),
+                        "mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
+                        "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"), ),
+                        "Select to add Wildcard": (["Select the Wildcard to add to the text"] + wildcards, ),
+                        "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    },
+                }
+
+    CATEGORY = "ImpactPack/Prompt"
+
+    RETURN_TYPES = ("MODEL", "CLIP", "CONDITIONING", "STRING")
+    RETURN_NAMES = ("model", "clip", "conditioning", "populated_text")
+    FUNCTION = "doit"
+
+    def doit(self, *args, **kwargs):
+        populated = kwargs['populated_text']
+
+        clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
+
+        if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Impact Pack'")
+
+        model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], clip_encoder=clip_encoder)
+        return (model, clip, conditioning, populated)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -308,6 +359,7 @@ NODE_CLASS_MAPPINGS = {
     "PromptExtractor //Inspire": PromptExtractor,
     "GlobalSeed //Inspire": GlobalSeed,
     "BindImageListPromptList //Inspire": BindImageListPromptList,
+    "WildcardEncode //Inspire": WildcardEncodeInspire,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -317,4 +369,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
     "GlobalSeed //Inspire": "Global Seed (Inspire)",
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
+    "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
 }

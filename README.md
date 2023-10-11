@@ -47,6 +47,10 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Global Seed (Inspire)`: This is a node that controls the global seed without a separate connection line. It only controls when the widget's name is 'seed' or 'noise_seed'. Additionally, if 'control_before_generate' is checked, it controls the seed before executing the prompt.
     * Seeds that have been converted into inputs are excluded from the target. If you want to control the seed separately, convert it into an input and control it separately.
   * `Bind [ImageList, PromptList] (Inspire)`: Bind Image list and zipped prompt list to export `image`, `positive`, `negative`, and `prompt_label` in a list format. If there are more prompts than images, the excess prompts are ignored, and if there are not enough, the remainder is filled with default input based on the images.
+  * `Wildcard Encode (Inspire)`: The combination node of [ImpactWildcardEncode](https://github.com/ltdrdata/ComfyUI-extension-tutorials/blob/Main/ComfyUI-Impact-Pack/tutorial/ImpactWildcard.md) and BlenderNeko's [CLIP Text Encode (Advanced)](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb).
+    * To use this node, you need both the [Impact Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack) and the [Advanced CLIP Text Encode]((https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb)) extensions.
+    * This node is identical to `ImpactWildcardEncode`, but it encodes using `CLIP Text Encode (Advanced)` instead of the default CLIP Text Encode from ComfyUI for CLIP Text Encode.
+    * Requirement: Impact Pack V4.18.6 or above
 
 * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
   * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
