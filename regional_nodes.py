@@ -32,7 +32,9 @@ class RegionalPromptSimple:
         kap = nodes.NODE_CLASS_MAPPINGS['KSamplerAdvancedProvider']()
         rp = nodes.NODE_CLASS_MAPPINGS['RegionalPrompt']()
 
-        model, clip, positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt)
+        if wildcard_prompt != "":
+            model, clip, positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt)
+
         basic_pipe = model, clip, vae, positive, negative
 
         sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe)[0]
