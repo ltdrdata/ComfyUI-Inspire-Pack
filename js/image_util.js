@@ -11,7 +11,6 @@ app.registerExtension({
 
 	nodeCreated(node, app) {
 		if(node.comfyClass == "LoadImage //Inspire") {
-			console.log(node);
 			let w = node.widgets.find(obj => obj.name === 'image_data');
 
 			Object.defineProperty(w, 'value', {
