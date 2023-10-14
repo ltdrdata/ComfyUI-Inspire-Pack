@@ -46,7 +46,7 @@ app.registerExtension({
 				get() {
 					if(this._img == undefined && w.value != '') {
 						this._img = [new Image()];
-						if(w.value != '[IMAGE DATA]')
+						if(w.value && w.value != '[IMAGE DATA]')
 							this._img[0].src = w.value;
 					}
 
