@@ -66,7 +66,7 @@ def color_to_mask(color_mask, mask_color):
     mask = [
         [1.0 if np.array_equal(pixel, mask_color) else 0.0 for pixel in row] for row in image
     ]
-    return torch.tensor(mask)
+    return torch.tensor(mask).unsqueeze(0)
 
 
 class RegionalPromptColorMask:
@@ -95,7 +95,31 @@ class RegionalPromptColorMask:
         return (rp, mask)
 
 
-class RegionalConditioning:
+class RegionalConditioningSimple:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "clip": ("CLIP", ),
+                "mask": ("MASK",),
+                "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "set_cond_area": (["default", "mask bounds"],),
+                "prompt": ("STRING", {"multiline": True, "placeholder": "prompt"}),
+            },
+        }
+
+    RETURN_TYPES = ("CONDITIONING", )
+    FUNCTION = "doit"
+
+    CATEGORY = "Inspire/Regional"
+
+    def doit(self, clip, mask, strength, set_cond_area, prompt):
+        conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
+        conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]
+        return (conditioning, )
+
+
+class RegionalConditioningColorMask:
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -112,7 +136,7 @@ class RegionalConditioning:
     RETURN_TYPES = ("CONDITIONING", "MASK")
     FUNCTION = "doit"
 
-    CATEGORY = "Inspire/RegionalSampler"
+    CATEGORY = "Inspire/Regional"
 
     def doit(self, clip, color_mask, mask_color, strength, set_cond_area, prompt):
         mask = color_to_mask(color_mask, mask_color)
@@ -125,10 +149,12 @@ class RegionalConditioning:
 NODE_CLASS_MAPPINGS = {
     "RegionalPromptSimple //Inspire": RegionalPromptSimple,
     "RegionalPromptColorMask //Inspire": RegionalPromptColorMask,
-    "RegionalConditioning //Inspire": RegionalConditioning,
+    "RegionalConditioningSimple //Inspire": RegionalConditioningSimple,
+    "RegionalConditioningColorMask //Inspire": RegionalConditioningColorMask,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "RegionalPromptSimple //Inspire": "Regional Prompt Simple (Inspire)",
     "RegionalPromptColorMask //Inspire": "Regional Prompt By Color Mask (Inspire)",
-    "RegionalConditioning //Inspire": "Regional Conditioning By Color Mask (Inspire)",
+    "RegionalConditioningSimple //Inspire": "Regional Conditioning Simple (Inspire)",
+    "RegionalConditioningColorMask //Inspire": "Regional Conditioning By Color Mask (Inspire)",
 }
