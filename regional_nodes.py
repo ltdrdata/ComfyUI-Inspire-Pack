@@ -43,6 +43,32 @@ class RegionalPromptSimple:
         return (regional_prompts, )
 
 
+def color_to_mask(color_mask, mask_color):
+    try:
+        if mask_color.startswith("#"):
+            selected = int(mask_color[1:], 16)
+        else:
+            selected = int(mask_color, 10)
+    except Exception:
+        raise Exception(f"[ERROR] Invalid mask_color value. mask_color should be color value for RGB")
+
+    red = (selected >> 16) & 0xFF
+    green = (selected >> 8) & 0xFF
+    blue = selected & 0xFF
+
+    mask_color = np.array([red, green, blue])
+    image = 255. * color_mask.cpu().numpy()
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    image = np.array(image).squeeze(0)
+
+    h, w, _ = image.shape
+
+    mask = [
+        [1.0 if np.array_equal(pixel, mask_color) else 0.0 for pixel in row] for row in image
+    ]
+    return torch.tensor(mask)
+
+
 class RegionalPromptColorMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -64,39 +90,45 @@ class RegionalPromptColorMask:
     CATEGORY = "Inspire/RegionalSampler"
 
     def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt):
-        try:
-            if mask_color.startswith("#"):
-                selected = int(mask_color[1:], 16)
-            else:
-                selected = int(mask_color, 10)
-        except Exception:
-            raise Exception(f"[ERROR] Invalid mask_color value. mask_color should be color value for RGB")
-
-        red = (selected >> 16) & 0xFF
-        green = (selected >> 8) & 0xFF
-        blue = selected & 0xFF
-
-        mask_color = np.array([red, green, blue])
-        image = 255. * color_mask.cpu().numpy()
-        image = np.clip(image, 0, 255).astype(np.uint8)
-        image = np.array(image).squeeze(0)
-
-        h, w, _ = image.shape
-
-        mask = [
-                    [1.0 if np.array_equal(pixel, mask_color) else 0.0 for pixel in row] for row in image
-               ]
-        mask = torch.tensor(mask)
-
+        mask = color_to_mask(color_mask, mask_color)
         rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt)[0]
         return (rp, mask)
+
+
+class RegionalConditioning:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "clip": ("CLIP", ),
+                "color_mask": ("IMAGE",),
+                "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
+                "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "set_cond_area": (["default", "mask bounds"],),
+                "prompt": ("STRING", {"multiline": True, "placeholder": "prompt"}),
+            },
+        }
+
+    RETURN_TYPES = ("CONDITIONING", "MASK")
+    FUNCTION = "doit"
+
+    CATEGORY = "Inspire/RegionalSampler"
+
+    def doit(self, clip, color_mask, mask_color, strength, set_cond_area, prompt):
+        mask = color_to_mask(color_mask, mask_color)
+
+        conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
+        conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]
+        return (conditioning, mask)
 
 
 NODE_CLASS_MAPPINGS = {
     "RegionalPromptSimple //Inspire": RegionalPromptSimple,
     "RegionalPromptColorMask //Inspire": RegionalPromptColorMask,
+    "RegionalConditioning //Inspire": RegionalConditioning,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "RegionalPromptSimple //Inspire": "Regional Prompt Simple (Inspire)",
     "RegionalPromptColorMask //Inspire": "Regional Prompt By Color Mask (Inspire)",
+    "RegionalConditioning //Inspire": "Regional Conditioning By Color Mask (Inspire)",
 }
