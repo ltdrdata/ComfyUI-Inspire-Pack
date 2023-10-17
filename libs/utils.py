@@ -16,3 +16,10 @@ def empty_pil_tensor(w=64, h=64):
 
 def empty_latent():
     return torch.zeros([1, 4, 8, 8])
+
+# wildcard trick is taken from pythongossss's
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+any_typ = AnyType("*")

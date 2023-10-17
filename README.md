@@ -63,6 +63,16 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   
 * KSampler Progress - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
 
+* Backend Cache - Nodes for storing arbitrary data from the backend in a cache and sharing it across multiple workflows.
+  * `Cache Backend Data (Inspire)`: Stores any backend data in the cache using a string key. Tags are for quick reference.
+  * `Retrieve Backend Data (Inspire)`: Retrieves cached backend data using a string key.
+  * `Remove Backend Data (Inspire)`: Removes cached backend data. 
+    * Deletion in this node only removes it from the cache managed by Inspire, and if it's still in use elsewhere, it won't be completely removed from memory.
+    * `signal_opt` is used to control the order of execution for this node; it will still run without a `signal_opt` input.
+    * When using '*' as the key, it clears all data.
+  * `Show Cached Info (Inspire)`: Displays information about cached data.
+  * `Cache Backend Data [NumberKey] (Inspire)`, `Retrieve Backend Data [NumberKey] (Inspire)`, `Remove Backend Data [NumberKey] (Inspire)`: These nodes are provided for convenience in the automation process, allowing the use of numbers as keys.
+   
 ## Credits
 
 ComfyUI/[ComfyUI](https://github.com/comfyanonymous/ComfyUI) - A powerful and modular stable diffusion GUI.
