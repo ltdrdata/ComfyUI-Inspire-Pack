@@ -1,6 +1,6 @@
 import nodes
 import numpy as np
-
+import torch
 
 def normalize_size_base_64(w, h):
     short_side = min(w, h)
@@ -50,7 +50,7 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
         self.min_confidence = min_confidence
         self.upscale_factor = upscale_factor
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -63,7 +63,7 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
 
 
 class AnimeLineArt_Preprocessor_wrapper:
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'AnimeLineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use AnimeLineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -73,7 +73,7 @@ class AnimeLineArt_Preprocessor_wrapper:
 
 
 class Manga2Anime_LineArt_Preprocessor_wrapper:
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'Manga2Anime_LineArt_Preprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use Manga2Anime_LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -83,7 +83,7 @@ class Manga2Anime_LineArt_Preprocessor_wrapper:
 
 
 class Color_Preprocessor_wrapper:
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'ColorPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use Color_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -92,11 +92,23 @@ class Color_Preprocessor_wrapper:
         return obj.execute(image, resolution=resolution)[0]
 
 
+class InpaintPreprocessor_wrapper:
+    def apply(self, image, mask=None):
+        if 'InpaintPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use InpaintPreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['InpaintPreprocessor']()
+        if mask is None:
+            mask = torch.ones((image.shape[1], image.shape[2]), dtype=torch.float32, device="cpu").unsqueeze(0)
+
+        return obj.preprocess(image, mask)[0]
+
+
 class LineArt_Preprocessor_wrapper:
     def __init__(self, coarse):
         self.coarse = coarse
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'LineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -114,7 +126,7 @@ class OpenPose_Preprocessor_wrapper:
         self.detect_face = detect_face
         self.upscale_factor = upscale_factor
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'OpenposePreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use OpenPose_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -137,7 +149,7 @@ class DWPreprocessor_wrapper:
         self.detect_face = detect_face
         self.upscale_factor = upscale_factor
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'DWPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use DWPreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -159,7 +171,7 @@ class LeReS_DepthMap_Preprocessor_wrapper:
         self.rm_background = rm_background
         self.boost = boost
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'LeReS-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use LeReS_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -175,7 +187,7 @@ class MiDaS_DepthMap_Preprocessor_wrapper:
         self.a = a
         self.bg_threshold = bg_threshold
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'MiDaS-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use MiDaS_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -185,7 +197,7 @@ class MiDaS_DepthMap_Preprocessor_wrapper:
 
 
 class Zoe_DepthMap_Preprocessor_wrapper:
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if 'Zoe-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use Zoe_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -199,7 +211,7 @@ class HED_Preprocessor_wrapper:
         self.safe = safe
         self.nodename = nodename
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         if self.nodename not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use {self.nodename}_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
@@ -213,7 +225,7 @@ class Canny_Preprocessor_wrapper:
         self.low_threshold = low_threshold
         self.high_threshold = high_threshold
 
-    def apply(self, image):
+    def apply(self, image, mask=None):
         obj = nodes.NODE_CLASS_MAPPINGS['Canny']()
         return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
 
@@ -465,6 +477,20 @@ class Color_Preprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class InpaintPreprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = InpaintPreprocessor_wrapper()
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -480,6 +506,7 @@ NODE_CLASS_MAPPINGS = {
     "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS,
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": LineArt_Preprocessor_Provider_for_SEGS,
     "Color_Preprocessor_Provider_for_SEGS //Inspire": Color_Preprocessor_Provider_for_SEGS,
+    "InpaintPreprocessor_Provider_for_SEGS //Inspire": InpaintPreprocessor_Provider_for_SEGS,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -495,5 +522,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire": "Manga2Anime LineArt Preprocessor Provider (SEGS)",
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": "LineArt Preprocessor Provider (SEGS)",
     "Color_Preprocessor_Provider_for_SEGS //Inspire": "Color Preprocessor Provider (SEGS)",
+    "InpaintPreprocessor_Provider_for_SEGS //Inspire": "Inpaint Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
