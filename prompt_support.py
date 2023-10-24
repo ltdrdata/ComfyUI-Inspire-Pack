@@ -315,7 +315,10 @@ class WildcardEncodeInspire:
     @classmethod
     def INPUT_TYPES(s):
         if 'ImpactWildcardEncode' in nodes.NODE_CLASS_MAPPINGS:
-            wildcards = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].get_wildcard_list()
+            try:
+                wildcards = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].get_wildcard_list()
+            except:
+                wildcards = ["Impact Pack is outdated"]
         else:
             wildcards = ["Impact Pack isn't installed"]
 
