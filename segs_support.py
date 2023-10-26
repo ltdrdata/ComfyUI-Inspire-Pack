@@ -22,7 +22,7 @@ class MediaPipeFaceMeshDetector:
         self.max_faces = max_faces
         self.override_bbox_by_segm = True
 
-    def detect(self, image, threshold, dilation, crop_factor, drop_size=1, crop_min_size=None):
+    def detect(self, image, threshold, dilation, crop_factor, drop_size=1, crop_min_size=None, detailer_hook=None):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
