@@ -29,19 +29,32 @@ app.registerExtension({
 				}
 			});
 
+			let set_img_act = (v) => {
+				node._img = v;
+				var canvas = document.createElement('canvas');
+				canvas.width = v[0].width;
+				canvas.height = v[0].height;
+
+				var context = canvas.getContext('2d');
+				context.drawImage(v[0], 0, 0, v[0].width, v[0].height);
+
+				var base64Image = canvas.toDataURL('image/png');
+				w.value = base64Image;
+			};
+
 			Object.defineProperty(node, 'imgs', {
 				set(v) {
-					this._img = v;
-
-					var canvas = document.createElement('canvas');
-					canvas.width = v[0].width;
-					canvas.height = v[0].height;
-
-					var context = canvas.getContext('2d');
-					context.drawImage(v[0], 0, 0, v[0].width, v[0].height);
-
-					var base64Image = canvas.toDataURL('image/png');
-					w.value = base64Image;
+					if (!v[0].complete) {
+						let orig_onload = v[0].onload;
+						v[0].onload = function(v2) {
+							if(orig_onload)
+								orig_onload();
+							set_img_act(v);
+						};
+					}
+					else {
+						set_img_act(v);
+					}
 				},
 				get() {
 					if(this._img == undefined && w.value != '') {

@@ -20,7 +20,7 @@ class RegionalPromptSimple:
     RETURN_TYPES = ("REGIONAL_PROMPTS", )
     FUNCTION = "doit"
 
-    CATEGORY = "Inspire/RegionalSampler"
+    CATEGORY = "InspirePack/Regional"
 
     def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
@@ -87,7 +87,7 @@ class RegionalPromptColorMask:
     RETURN_TYPES = ("REGIONAL_PROMPTS", "MASK")
     FUNCTION = "doit"
 
-    CATEGORY = "Inspire/RegionalSampler"
+    CATEGORY = "InspirePack/Regional"
 
     def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt):
         mask = color_to_mask(color_mask, mask_color)
@@ -111,7 +111,7 @@ class RegionalConditioningSimple:
     RETURN_TYPES = ("CONDITIONING", )
     FUNCTION = "doit"
 
-    CATEGORY = "Inspire/Regional"
+    CATEGORY = "InspirePack/Regional"
 
     def doit(self, clip, mask, strength, set_cond_area, prompt):
         conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
@@ -136,7 +136,7 @@ class RegionalConditioningColorMask:
     RETURN_TYPES = ("CONDITIONING", "MASK")
     FUNCTION = "doit"
 
-    CATEGORY = "Inspire/Regional"
+    CATEGORY = "InspirePack/Regional"
 
     def doit(self, clip, color_mask, mask_color, strength, set_cond_area, prompt):
         mask = color_to_mask(color_mask, mask_color)

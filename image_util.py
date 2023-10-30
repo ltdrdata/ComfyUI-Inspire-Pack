@@ -24,7 +24,7 @@ class LoadImagesFromDir:
     RETURN_TYPES = ("IMAGE", "MASK", "INT")
     FUNCTION = "load_images"
 
-    CATEGORY = "Inspire/image"
+    CATEGORY = "image"
 
     def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0):
         if not os.path.isdir(directory):
@@ -92,7 +92,7 @@ class LoadImageInspire:
                             }
                 }
 
-    CATEGORY = "Inspire/image"
+    CATEGORY = "InspirePack/image"
 
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
