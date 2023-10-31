@@ -104,6 +104,19 @@ class InpaintPreprocessor_wrapper:
         return obj.preprocess(image, mask)[0]
 
 
+class TilePreprocessor_wrapper:
+    def __init__(self, pyrUp_iters):
+        self.pyrUp_iters = pyrUp_iters
+
+    def apply(self, image, mask=None):
+        if 'TilePreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use TilePreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['TilePreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, self.pyrUp_iters, resolution=resolution)[0]
+
+
 class LineArt_Preprocessor_wrapper:
     def __init__(self, coarse):
         self.coarse = coarse
@@ -491,6 +504,20 @@ class InpaintPreprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class TilePreprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {'pyrUp_iters': ("INT", {"default": 3, "min": 1, "max": 10, "step": 1})}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self, pyrUp_iters):
+        obj = TilePreprocessor_wrapper(pyrUp_iters)
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -499,7 +526,6 @@ NODE_CLASS_MAPPINGS = {
     # "Zoe_DepthMap_Preprocessor_Provider_for_SEGS //Inspire": Zoe_DepthMap_Preprocessor_Provider_for_SEGS,
     "Canny_Preprocessor_Provider_for_SEGS //Inspire": Canny_Preprocessor_Provider_for_SEGS,
     "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire": MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS,
-    "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
     "HEDPreprocessor_Provider_for_SEGS //Inspire": HEDPreprocessor_Provider_for_SEGS,
     "FakeScribblePreprocessor_Provider_for_SEGS //Inspire": FakeScribblePreprocessor_Provider_for_SEGS,
     "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire": AnimeLineArt_Preprocessor_Provider_for_SEGS,
@@ -507,6 +533,8 @@ NODE_CLASS_MAPPINGS = {
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": LineArt_Preprocessor_Provider_for_SEGS,
     "Color_Preprocessor_Provider_for_SEGS //Inspire": Color_Preprocessor_Provider_for_SEGS,
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": InpaintPreprocessor_Provider_for_SEGS,
+    "TilePreprocessor_Provider_for_SEGS //Inspire": TilePreprocessor_Provider_for_SEGS,
+    "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": "OpenPose Preprocessor Provider (SEGS)",
@@ -523,5 +551,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LineArt_Preprocessor_Provider_for_SEGS //Inspire": "LineArt Preprocessor Provider (SEGS)",
     "Color_Preprocessor_Provider_for_SEGS //Inspire": "Color Preprocessor Provider (SEGS)",
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": "Inpaint Preprocessor Provider (SEGS)",
+    "TilePreprocessor_Provider_for_SEGS //Inspire": "Tile Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
