@@ -3,12 +3,38 @@ import torch
 import numpy as np
 import latent_preview
 
-def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu"):
+def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incremental_seed_mode=False):
     """
     creates random noise given a latent image and a seed.
     optional arg skip can be used to skip and discard x number of noise generations for a given seed
     """
 
+    # method: incremental seed batch noise
+    if noise_inds is None and incremental_seed_mode:
+        latent_size = latent_image.size()
+
+        batch_cnt = latent_size[0]
+        latent_size = [1, latent_size[1], latent_size[2], latent_size[3]]
+
+        latents = None
+        for i in range(batch_cnt):
+            if noise_device == "cpu":
+                generator = torch.manual_seed(seed+i)
+            else:
+                torch.cuda.manual_seed(seed+i)
+                generator = None
+
+            latent = torch.randn(latent_size, dtype=latent_image.dtype, layout=latent_image.layout,
+                                 generator=generator, device=noise_device)
+
+            if latents is None:
+                latents = latent
+            else:
+                latents = torch.cat((latents, latent), dim=0)
+
+        return latents
+
+    # method: comfy batch noise
     if noise_device == "cpu":
         generator = torch.manual_seed(seed)
     else:
@@ -30,7 +56,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu"):
     noises = torch.cat(noises, axis=0)
     return noises
 
-def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False):
+def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False, incremental_seed_mode=False):
     device = comfy.model_management.get_torch_device()
     noise_device = "cpu" if noise_mode == "CPU" else device
     latent_image = latent["samples"]
@@ -39,7 +65,7 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device=noise_device)
     else:
         batch_inds = latent["batch_index"] if "batch_index" in latent else None
-        noise = prepare_noise(latent_image, seed, batch_inds, noise_device)
+        noise = prepare_noise(latent_image, seed, batch_inds, noise_device, incremental_seed_mode)
 
     noise_mask = None
     if "noise_mask" in latent:
@@ -80,7 +106,8 @@ class KSampler_inspire:
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],)
+                     "noise_mode": (["GPU(=A1111)", "CPU"],),
+                     "batch_seed_mode": ("BOOLEAN", {"default": False, "label_on": "incremental", "label_off": "comfy"}),
                      }
                 }
 
@@ -89,8 +116,8 @@ class KSampler_inspire:
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode):
-        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode)
+    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, batch_seed_mode=False):
+        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode)
 
 
 class KSamplerAdvanced_inspire:
@@ -111,6 +138,7 @@ class KSamplerAdvanced_inspire:
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
                      "noise_mode": (["GPU(=A1111)", "CPU"],),
                      "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
+                     "batch_seed_mode": ("BOOLEAN", {"default": False, "label_on": "incremental", "label_off": "comfy"}),
                      }
                 }
 
@@ -119,7 +147,7 @@ class KSamplerAdvanced_inspire:
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0):
+    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0, batch_seed_mode=False):
         force_full_denoise = True
 
         if return_with_leftover_noise:
@@ -130,7 +158,7 @@ class KSamplerAdvanced_inspire:
         if not add_noise:
             disable_noise = True
 
-        return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step, force_full_denoise=force_full_denoise, noise_mode=noise_mode)
+        return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step, force_full_denoise=force_full_denoise, noise_mode=noise_mode, incremental_seed_mode=batch_seed_mode)
 
 
 NODE_CLASS_MAPPINGS = {
