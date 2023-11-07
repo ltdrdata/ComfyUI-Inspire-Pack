@@ -2,12 +2,29 @@ import os
 import re
 import json
 import sys
+import shutil
+import yaml
 
 from PIL import Image
 import nodes
 
 import folder_paths
 from server import PromptServer
+
+
+prompt_builder_preset = {}
+
+try:
+    pb_yaml_path = os.path.join(os.path.dirname(__file__), 'resources', 'prompt-builder.yaml')
+    pb_yaml_path_example = os.path.join(os.path.dirname(__file__), 'resources', 'prompt-builder.yaml.example')
+
+    if not os.path.exists(pb_yaml_path):
+        shutil.copy(pb_yaml_path_example, pb_yaml_path)
+
+    with open(pb_yaml_path, 'r') as f:
+        prompt_builder_preset = yaml.load(f, Loader=yaml.FullLoader)
+except Exception as e:
+    print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'")
 
 
 class LoadPromptsFromDir:
@@ -245,7 +262,7 @@ class GlobalSeed:
     RETURN_TYPES = ()
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack"
+    CATEGORY = "InspirePack/Prompt"
 
     OUTPUT_NODE = True
 
@@ -274,7 +291,7 @@ class BindImageListPromptList:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, images, zipped_prompts, default_positive, default_negative):
         positives = []
@@ -336,7 +353,7 @@ class WildcardEncodeInspire:
                     },
                 }
 
-    CATEGORY = "ImpactPack/Prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     RETURN_TYPES = ("MODEL", "CLIP", "CONDITIONING", "STRING")
     RETURN_NAMES = ("model", "clip", "conditioning", "populated_text")
@@ -354,6 +371,28 @@ class WildcardEncodeInspire:
         return (model, clip, conditioning, populated)
 
 
+class PromptBuilder:
+    @classmethod
+    def INPUT_TYPES(s):
+        global prompt_builder_preset
+
+        presets = ["#PRESET"]
+        return {"required": {
+                        "category": (list(prompt_builder_preset.keys()), ),
+                        "preset": (presets, ),
+                        "text": ("STRING", {"multiline": True}),
+                     },
+                }
+
+    RETURN_TYPES = ("STRING", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    def doit(self, category, preset, text):
+        return (text,)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -363,6 +402,7 @@ NODE_CLASS_MAPPINGS = {
     "GlobalSeed //Inspire": GlobalSeed,
     "BindImageListPromptList //Inspire": BindImageListPromptList,
     "WildcardEncode //Inspire": WildcardEncodeInspire,
+    "PromptBuilder //Inspire": PromptBuilder,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -373,4 +413,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "GlobalSeed //Inspire": "Global Seed (Inspire)",
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
+    "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
 }

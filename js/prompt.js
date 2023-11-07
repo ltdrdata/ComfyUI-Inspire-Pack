@@ -1,6 +1,20 @@
 import { ComfyApp, app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
+let pb_cache = {};
+
+async function get_prompt_builder_items(category) {
+	if(pb_cache[category])
+		return pb_cache[category];
+	else {
+		let res = await api.fetchApi(`/inspire/prompt_builder?category=${category}`);
+		let data = await res.json();
+		pb_cache[category] = data.presets;
+		return data.presets;
+	}
+}
+
+
 app.registerExtension({
 	name: "Comfy.Inspire.Prompts",
 
@@ -141,6 +155,40 @@ app.registerExtension({
             };
 
             populated_text_widget.serializeValue = force_serializeValue;
+		}
+		else if(node.comfyClass == "PromptBuilder //Inspire") {
+			const preset_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'preset')];
+			var full_preset_widget = preset_widget.options.values;
+			const category_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'category')];
+
+			Object.defineProperty(preset_widget.options, "values", {
+			    set: (x) => {},
+			    get: () => {
+			    	get_prompt_builder_items(category_widget.value);
+			    	if(pb_cache[category_widget.value] == undefined) {
+			    		return ["#PRESET"];
+			    	}
+					return pb_cache[category_widget.value];
+			    }
+			});
+
+			Object.defineProperty(preset_widget, "value", {
+			    set: (x) => {
+					const stackTrace = new Error().stack;
+					if(stackTrace.includes('inner_value_change')) {
+						if(node.widgets[2].value) {
+							node.widgets[2].value += ', ';
+						}
+						node.widgets[2].value += x;
+						if(node.widgets_values) {
+			    			node.widgets_values[2] = node.widgets[2].values;
+						}
+					};
+			    },
+			    get: () => { return '#PRESET'; }
+			});
+
+			preset_widget.serializeValue = (workflowNode, widgetIndex) => { return "#PRESET"; };
 		}
 	}
 });

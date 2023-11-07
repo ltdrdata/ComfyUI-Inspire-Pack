@@ -1,6 +1,21 @@
 import random
 import server
 from enum import Enum
+from . import prompt_support
+from aiohttp import web
+
+
+@server.PromptServer.instance.routes.get("/inspire/prompt_builder")
+def prompt_builder(request):
+    result = {"presets": []}
+
+    if "category" in request.rel_url.query:
+        category = request.rel_url.query["category"]
+        if category in prompt_support.prompt_builder_preset:
+            result['presets'] = prompt_support.prompt_builder_preset[category]
+
+    return web.json_response(result)
+
 
 class SGmode(Enum):
     FIX = 1
