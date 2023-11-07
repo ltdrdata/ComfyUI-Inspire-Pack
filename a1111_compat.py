@@ -4,7 +4,7 @@ import numpy as np
 import latent_preview
 
 
-def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incremental_seed_mode="comfy", variant_seed=None, variant_strength=None):
+def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incremental_seed_mode="comfy", variation_seed=None, variation_strength=None):
     """
     creates random noise given a latent image and a seed.
     optional arg skip can be used to skip and discard x number of noise generations for a given seed
@@ -13,29 +13,29 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
     latent_size = latent_image.size()
     latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
 
-    if variant_strength > 0 or incremental_seed_mode.startswith("variant str inc"):
+    if variation_strength > 0 or incremental_seed_mode.startswith("variation str inc"):
         if noise_device == "cpu":
-            variant_generator = torch.manual_seed(variant_seed)
+            variation_generator = torch.manual_seed(variation_seed)
         else:
-            torch.cuda.manual_seed(variant_seed)
-            variant_generator = None
+            torch.cuda.manual_seed(variation_seed)
+            variation_generator = None
 
-        variant_latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
-                                     generator=variant_generator, device=noise_device)
+        variation_latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
+                                     generator=variation_generator, device=noise_device)
     else:
-        variant_latent = None
+        variation_latent = None
 
-    def apply_variant(input_latent, strength_up=None):
-        if variant_latent is None:
+    def apply_variation(input_latent, strength_up=None):
+        if variation_latent is None:
             return input_latent
         else:
-            strength = variant_strength
+            strength = variation_strength
 
             if strength_up is not None:
                 strength += strength_up
 
-            variant_noise = variant_latent.expand(input_latent.size()[0], -1, -1, -1)
-            result = (1 - strength) * input_latent + strength * variant_noise
+            variation_noise = variation_latent.expand(input_latent.size()[0], -1, -1, -1)
+            result = (1 - strength) * input_latent + strength * variation_noise
             return result
 
     # method: incremental seed batch noise
@@ -53,7 +53,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
             latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
                                  generator=generator, device=noise_device)
 
-            latent = apply_variant(latent)
+            latent = apply_variation(latent)
 
             if latents is None:
                 latents = latent
@@ -62,8 +62,8 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
 
         return latents
 
-    # method: incremental variant batch noise
-    elif noise_inds is None and incremental_seed_mode.startswith("variant str inc"):
+    # method: incremental variation batch noise
+    elif noise_inds is None and incremental_seed_mode.startswith("variation str inc"):
         batch_cnt = latent_size[0]
 
         latents = None
@@ -78,7 +78,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
                                  generator=generator, device=noise_device)
 
             step = float(incremental_seed_mode[16:])
-            latent = apply_variant(latent, step*i)
+            latent = apply_variation(latent, step*i)
 
             if latents is None:
                 latents = latent
@@ -97,7 +97,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
     if noise_inds is None:
         latents = torch.randn(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout,
                               generator=generator, device=noise_device)
-        latents = apply_variant(latents)
+        latents = apply_variation(latents)
         return latents
 
     unique_inds, inverse = np.unique(noise_inds, return_inverse=True)
@@ -114,7 +114,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
 
 def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
                     noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False,
-                    incremental_seed_mode="comfy", variant_seed=None, variant_strength=None):
+                    incremental_seed_mode="comfy", variation_seed=None, variation_strength=None):
     device = comfy.model_management.get_torch_device()
     noise_device = "cpu" if noise_mode == "CPU" else device
     latent_image = latent["samples"]
@@ -123,7 +123,7 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device=noise_device)
     else:
         batch_inds = latent["batch_index"] if "batch_index" in latent else None
-        noise = prepare_noise(latent_image, seed, batch_inds, noise_device, incremental_seed_mode, variant_seed=variant_seed, variant_strength=variant_strength)
+        noise = prepare_noise(latent_image, seed, batch_inds, noise_device, incremental_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)
 
     noise_mask = None
     if "noise_mask" in latent:
@@ -165,9 +165,9 @@ class KSampler_inspire:
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                      "noise_mode": (["GPU(=A1111)", "CPU"],),
-                     "batch_seed_mode": (["incremental", "comfy", "variant str inc:0.01", "variant str inc:0.05"],),
-                     "variant_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                     "variant_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                     "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
+                     "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                     "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                      }
                 }
 
@@ -176,8 +176,8 @@ class KSampler_inspire:
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, batch_seed_mode="comfy", variant_seed=None, variant_strength=None):
-        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variant_seed=variant_seed, variant_strength=variant_strength)
+    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, batch_seed_mode="comfy", variation_seed=None, variation_strength=None):
+        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)
 
 
 class KSamplerAdvanced_inspire:
@@ -198,9 +198,9 @@ class KSamplerAdvanced_inspire:
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
                      "noise_mode": (["GPU(=A1111)", "CPU"],),
                      "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
-                     "batch_seed_mode": (["incremental", "comfy", "variant str inc:0.01", "variant str inc:0.05"],),
-                     "variant_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                     "variant_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                     "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
+                     "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                     "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                      }
                 }
 
@@ -209,7 +209,7 @@ class KSamplerAdvanced_inspire:
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0, batch_seed_mode="comfy", variant_seed=None, variant_strength=None):
+    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0, batch_seed_mode="comfy", variation_seed=None, variation_strength=None):
         force_full_denoise = True
 
         if return_with_leftover_noise:
@@ -223,7 +223,7 @@ class KSamplerAdvanced_inspire:
         return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
                                denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
                                force_full_denoise=force_full_denoise, noise_mode=noise_mode, incremental_seed_mode=batch_seed_mode,
-                               variant_seed=variant_seed, variant_strength=variant_strength)
+                               variation_seed=variation_seed, variation_strength=variation_strength)
 
 
 NODE_CLASS_MAPPINGS = {
