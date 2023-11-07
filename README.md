@@ -58,6 +58,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * To use this node, you need both the [Impact Pack](https://github.com/ltdrdata/ComfyUI-Impact-Pack) and the [Advanced CLIP Text Encode]((https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb)) extensions.
     * This node is identical to `ImpactWildcardEncode`, but it encodes using `CLIP Text Encode (Advanced)` instead of the default CLIP Text Encode from ComfyUI for CLIP Text Encode.
     * Requirement: Impact Pack V4.18.6 or above
+  * `Prompt Builder (Inspire)`: This node is a convenience node that allows you to easily assemble prompts by selecting categories and presets. To modify the presets, edit the `ComfyUI-InspirePack/resources/prompt-builder.yaml` file.
 
 * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
   * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
