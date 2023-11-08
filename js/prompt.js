@@ -179,7 +179,13 @@ app.registerExtension({
 						if(node.widgets[2].value) {
 							node.widgets[2].value += ', ';
 						}
-						node.widgets[2].value += x;
+
+						const y = x.split(':');
+						if(y.length == 2)
+							node.widgets[2].value += y[1].trim();
+						else
+							node.widgets[2].value += x.trim();
+
 						if(node.widgets_values) {
 			    			node.widgets_values[2] = node.widgets[2].values;
 						}
