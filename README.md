@@ -81,6 +81,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * When using '*' as the key, it clears all data.
   * `Show Cached Info (Inspire)`: Displays information about cached data.
   * `Cache Backend Data [NumberKey] (Inspire)`, `Retrieve Backend Data [NumberKey] (Inspire)`, `Remove Backend Data [NumberKey] (Inspire)`: These nodes are provided for convenience in the automation process, allowing the use of numbers as keys.
+    
+* Util - Utilities
+  * `Float Range (Inspire)` - Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value. 
    
 ## Credits
 
