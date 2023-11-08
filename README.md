@@ -88,7 +88,7 @@ ComfyUI/[ComfyUI](https://github.com/comfyanonymous/ComfyUI) - A powerful and mo
 
 ComfyUI/[sd-webui-lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight) - The original idea for LoraBlockWeight came from here, and it is based on the syntax of this extension.
 
-LucianoCirino[efficiency-nodes-comfyui](https://github.com/LucianoCirino/efficiency-nodes-comfyui) - The `XY Input` provided by the Inspire Pack supports the `XY Plot` of this node.
+jags111/[efficiency-nodes-comfyui](https://github.com/jags111/ComfyUI-Jags-workflows) - The `XY Input` provided by the Inspire Pack supports the `XY Plot` of this node.
 
 Fannovel16/[comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) - The wrapper for the controlnet preprocessor in the Inspire Pack depends on these nodes.
 
