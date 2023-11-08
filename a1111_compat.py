@@ -77,7 +77,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
             latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
                                  generator=generator, device=noise_device)
 
-            step = float(incremental_seed_mode[16:])
+            step = float(incremental_seed_mode[18:])
             latent = apply_variation(latent, step*i)
 
             if latents is None:
