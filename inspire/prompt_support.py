@@ -7,16 +7,27 @@ import yaml
 
 from PIL import Image
 import nodes
+import torch
 
 import folder_paths
-from server import PromptServer
+import comfy
+import traceback
 
+from server import PromptServer
+from .libs import utils
 
 prompt_builder_preset = {}
 
+
+resource_path = os.path.join(os.path.dirname(__file__), "..", "resources")
+resource_path = os.path.abspath(resource_path)
+
+prompts_path = os.path.join(os.path.dirname(__file__), "..", "prompts")
+prompts_path = os.path.abspath(prompts_path)
+
 try:
-    pb_yaml_path = os.path.join(os.path.dirname(__file__), 'resources', 'prompt-builder.yaml')
-    pb_yaml_path_example = os.path.join(os.path.dirname(__file__), 'resources', 'prompt-builder.yaml.example')
+    pb_yaml_path = os.path.join(resource_path, 'prompt-builder.yaml')
+    pb_yaml_path_example = os.path.join(resource_path, 'prompt-builder.yaml.example')
 
     if not os.path.exists(pb_yaml_path):
         shutil.copy(pb_yaml_path_example, pb_yaml_path)
@@ -30,10 +41,9 @@ except Exception as e:
 class LoadPromptsFromDir:
     @classmethod
     def INPUT_TYPES(cls):
+        global prompts_path
         try:
-            current_directory = os.path.dirname(os.path.abspath(__file__))
-            prompt_dir = os.path.join(current_directory, "prompts")
-            prompt_dirs = [d for d in os.listdir(prompt_dir) if os.path.isdir(os.path.join(prompt_dir, d))]
+            prompt_dirs = [d for d in os.listdir(prompts_path) if os.path.isdir(os.path.join(prompts_path, d))]
         except Exception:
             prompt_dirs = []
 
@@ -47,8 +57,8 @@ class LoadPromptsFromDir:
     CATEGORY = "InspirePack/prompt"
 
     def doit(self, prompt_dir):
-        current_directory = os.path.dirname(os.path.abspath(__file__))
-        prompt_dir = os.path.join(current_directory, "prompts", prompt_dir)
+        global prompts_path
+        prompt_dir = os.path.join(prompts_path, prompt_dir)
         files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
         files.sort()
 
@@ -80,15 +90,14 @@ class LoadPromptsFromDir:
 class LoadPromptsFromFile:
     @classmethod
     def INPUT_TYPES(cls):
+        global prompts_path
         try:
-            current_directory = os.path.dirname(os.path.abspath(__file__))
-            prompt_dir = os.path.join(current_directory, "prompts")
             prompt_files = []
-            for root, dirs, files in os.walk(prompt_dir):
+            for root, dirs, files in os.walk(prompts_path):
                 for file in files:
                     if file.endswith(".txt"):
                         file_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(file_path, prompt_dir)
+                        rel_path = os.path.relpath(file_path, prompts_path)
                         prompt_files.append(rel_path)
         except Exception:
             prompt_files = []
@@ -103,8 +112,7 @@ class LoadPromptsFromFile:
     CATEGORY = "InspirePack/prompt"
 
     def doit(self, prompt_file):
-        current_directory = os.path.dirname(os.path.abspath(__file__))
-        prompt_path = os.path.join(current_directory, "prompts", prompt_file)
+        prompt_path = os.path.join(prompts_path, prompt_file)
 
         prompts = []
         try:
@@ -393,6 +401,76 @@ class PromptBuilder:
         return (text,)
 
 
+class SeedExplorer:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": { 
+                "latent": ("LATENT",),
+                "seed_prompt": ("STRING", {"multiline": True}),
+                "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
+                "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "noise_mode": (["GPU(=A1111)", "CPU"],),
+                "initial_batch_seed_mode": (["incremental", "comfy"],),
+                }
+        }
+        
+    RETURN_TYPES = ("NOISE", )
+    RETURN_TYPES = ("noise",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    def doit(self, latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, initial_batch_seed_mode):
+        latent_image = latent["samples"]
+        device = comfy.model_management.get_torch_device()
+        noise_device = "cpu" if noise_mode == "CPU" else device
+
+        seed_prompt = seed_prompt.replace("\n", "")
+        items = seed_prompt.strip().split(",")
+
+        if items == ['']:
+            items = []
+
+        if enable_additional:
+            items.append((additional_seed, additional_strength))
+
+        try:
+            hd = items[0]
+            tl = items[1:]
+
+            if isinstance(hd, tuple):
+                hd_seed = int(hd[0])
+            else:
+                hd_seed = int(hd)
+
+            noise = utils.prepare_noise(latent_image, hd_seed, None, noise_device, initial_batch_seed_mode)
+
+            for x in tl:
+                if isinstance(x, str):
+                    item = x.split(':')
+                else:
+                    item = x
+
+                if len(item) == 2:
+                    try:
+                        variation_seed = int(item[0])
+                        variation_strength = float(item[1])
+                        noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength)
+                    except Exception:
+                        print(f"[ERROR] SeedExplorer failed to processing '{x}'")
+
+            return (noise,)
+
+        except Exception:
+            print(f"[ERROR] SeedExplorer failed")
+            traceback.print_exc()
+
+        noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device=noise_device)
+        return (noise,)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -403,6 +481,7 @@ NODE_CLASS_MAPPINGS = {
     "BindImageListPromptList //Inspire": BindImageListPromptList,
     "WildcardEncode //Inspire": WildcardEncodeInspire,
     "PromptBuilder //Inspire": PromptBuilder,
+    "SeedExplorer //Inspire": SeedExplorer,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -414,4 +493,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
     "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
+    "SeedExplorer //Inspire": "SeedExplorer (Inspire)",
 }

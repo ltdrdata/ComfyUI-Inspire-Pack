@@ -7,7 +7,7 @@
 
 import importlib
 
-print(f"### Loading: ComfyUI-Inspire-Pack (V0.38.2)")
+print(f"### Loading: ComfyUI-Inspire-Pack (V0.39)")
 
 node_list = [
     "lora_block_weight",
@@ -26,7 +26,7 @@ NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
 for module_name in node_list:
-    imported_module = importlib.import_module(".{}".format(module_name), __name__)
+    imported_module = importlib.import_module(".inspire.{}".format(module_name), __name__)
 
     NODE_CLASS_MAPPINGS = {**NODE_CLASS_MAPPINGS, **imported_module.NODE_CLASS_MAPPINGS}
     NODE_DISPLAY_NAME_MAPPINGS = {**NODE_DISPLAY_NAME_MAPPINGS, **imported_module.NODE_DISPLAY_NAME_MAPPINGS}

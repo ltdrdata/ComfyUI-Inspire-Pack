@@ -20,7 +20,8 @@ def pil2tensor(image):
 
 
 def load_lbw_preset(filename):
-    path = os.path.join(os.path.dirname(__file__), "resources", filename)
+    path = os.path.join(os.path.dirname(__file__), "..", "resources", filename)
+    path = os.path.abspath(path)
     preset_list = []
 
     if os.path.exists(path):
