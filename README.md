@@ -59,6 +59,11 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * This node is identical to `ImpactWildcardEncode`, but it encodes using `CLIP Text Encode (Advanced)` instead of the default CLIP Text Encode from ComfyUI for CLIP Text Encode.
     * Requirement: Impact Pack V4.18.6 or above
   * `Prompt Builder (Inspire)`: This node is a convenience node that allows you to easily assemble prompts by selecting categories and presets. To modify the presets, edit the `ComfyUI-InspirePack/resources/prompt-builder.yaml` file.
+  * `Seed Explorer (Inspire)`: This node helps explore seeds by allowing you to adjust the variation seed gradually in a prompt-like form.
+    * This feature is designed for utilizing a seed that you like, adding slight variations, and then further modifying from there when exploring.
+    * In the `seed_prompt`, the first seed is considered the initial seed, and the reflection rate is omitted, always defaulting to 1.0.
+    * Each prompt is separated by a comma, and from the second seed onwards, it should follow the format `seed:strength`.
+    * Pressing the "Add to prompt" button will append `additional_seed:additional_strength` to the prompt.
 
 * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
   * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
