@@ -21,7 +21,7 @@ try:
     if not os.path.exists(pb_yaml_path):
         shutil.copy(pb_yaml_path_example, pb_yaml_path)
 
-    with open(pb_yaml_path, 'r') as f:
+    with open(pb_yaml_path, 'r', encoding="utf-8") as f:
         prompt_builder_preset = yaml.load(f, Loader=yaml.FullLoader)
 except Exception as e:
     print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'")
