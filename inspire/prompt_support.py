@@ -503,5 +503,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
     "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
-    "SeedExplorer //Inspire": "SeedExplorer (Inspire)",
+    "SeedExplorer //Inspire": "Seed Explorer (Inspire)",
 }
