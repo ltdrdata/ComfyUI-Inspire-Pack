@@ -4,7 +4,7 @@ import numpy as np
 from . import utils
 
 
-def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength):
+def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None):
     latent_size = latent_image.size()
     latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
 
@@ -18,7 +18,12 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
                                    generator=variation_generator, device=noise_device)
 
     variation_noise = variation_latent.expand(latent_image.size()[0], -1, -1, -1)
-    result = (1 - variation_strength) * latent_image + variation_strength * variation_noise
+
+    if mask is None:
+        result = (1 - variation_strength) * latent_image + variation_strength * variation_noise
+    else:
+        result = (mask == 1).float() * ((1 - variation_strength) * latent_image + variation_strength * variation_noise * mask) + (mask == 0).float() * latent_image
+
     return result
 
 

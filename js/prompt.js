@@ -195,17 +195,24 @@ app.registerExtension({
 
 			preset_widget.serializeValue = (workflowNode, widgetIndex) => { return "#PRESET"; };
 		}
-		else if(node.comfyClass == "SeedExplorer //Inspire") {
+		else if(node.comfyClass == "SeedExplorer //Inspire"
+				|| node.comfyClass == "RegionalSeedExplorerMask //Inspire"
+				|| node.comfyClass == "RegionalSeedExplorerColorMask //Inspire") {
 			const prompt_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'seed_prompt')];
 			const seed_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'additional_seed')];
 			const strength_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'additional_strength')];
 
+			let allow_init_seed = node.comfyClass == "SeedExplorer //Inspire";
+
 			node.addWidget("button", "Add to prompt", null, () => {
-				if(!prompt_widget.value?.trim()) {
+				if(!prompt_widget.value?.trim() && allow_init_seed) {
 					prompt_widget.value = ''+seed_widget.value;
 				}
 				else {
-					prompt_widget.value += `, ${seed_widget.value}:${strength_widget.value.toFixed(2)}`;
+					if(prompt_widget.value?.trim())
+						prompt_widget.value += ', ';
+
+					prompt_widget.value += `${seed_widget.value}:${strength_widget.value.toFixed(2)}`;
 					seed_widget.value += 1;
 				}
 			});

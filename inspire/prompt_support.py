@@ -405,24 +405,44 @@ class SeedExplorer:
     @classmethod
     def INPUT_TYPES(s):
         return {
-            "required": { 
+            "required": {
                 "latent": ("LATENT",),
-                "seed_prompt": ("STRING", {"multiline": True}),
+                "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "noise_mode": (["GPU(=A1111)", "CPU"],),
                 "initial_batch_seed_mode": (["incremental", "comfy"],),
-                }
+            }
         }
-        
-    RETURN_TYPES = ("NOISE", )
-    RETURN_TYPES = ("noise",)
+
+    RETURN_TYPES = ("NOISE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, initial_batch_seed_mode):
+    @staticmethod
+    def apply_variation(start_noise, seed_items, noise_device, mask=None):
+        noise = start_noise
+        for x in seed_items:
+            if isinstance(x, str):
+                item = x.split(':')
+            else:
+                item = x
+
+            if len(item) == 2:
+                try:
+                    variation_seed = int(item[0])
+                    variation_strength = float(item[1])
+
+                    noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength, mask=mask)
+                except Exception:
+                    print(f"[ERROR] IGNORED: SeedExplorer failed to processing '{x}'")
+                    traceback.print_exc()
+        return noise
+
+    def doit(self, latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode,
+             initial_batch_seed_mode):
         latent_image = latent["samples"]
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
@@ -446,28 +466,18 @@ class SeedExplorer:
                 hd_seed = int(hd)
 
             noise = utils.prepare_noise(latent_image, hd_seed, None, noise_device, initial_batch_seed_mode)
-
-            for x in tl:
-                if isinstance(x, str):
-                    item = x.split(':')
-                else:
-                    item = x
-
-                if len(item) == 2:
-                    try:
-                        variation_seed = int(item[0])
-                        variation_strength = float(item[1])
-                        noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength)
-                    except Exception:
-                        print(f"[ERROR] SeedExplorer failed to processing '{x}'")
+            noise = noise.to(device)
+            noise = SeedExplorer.apply_variation(noise, tl, noise_device)
+            noise = noise.cpu()
 
             return (noise,)
 
         except Exception:
-            print(f"[ERROR] SeedExplorer failed")
+            print(f"[ERROR] IGNORED: SeedExplorer failed")
             traceback.print_exc()
 
-        noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device=noise_device)
+        noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout,
+                            device=noise_device)
         return (noise,)
 
 
