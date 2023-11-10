@@ -65,10 +65,18 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * Each prompt is separated by a comma, and from the second seed onwards, it should follow the format `seed:strength`.
     * Pressing the "Add to prompt" button will append `additional_seed:additional_strength` to the prompt.
 
-* Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
-  * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
-  * `Regional Prompt By Color Mask (Inspire)`: Similar to `Regional Prompt Simple (Inspire)`, this function accepts a color mask image as input and defines the region using the color value that will be used as the mask, instead of directly receiving the mask.
-    * The color value can only be in the form of a hex code like #FFFF00 or a decimal number. 
+* Regional Nodes - These node simplifies the application of prompts by region.
+  * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
+    * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
+    * `Regional Prompt By Color Mask (Inspire)`: Similar to `Regional Prompt Simple (Inspire)`, this function accepts a color mask image as input and defines the region using the color value that will be used as the mask, instead of directly receiving the mask.
+      * The color value can only be in the form of a hex code like #FFFF00 or a decimal number.
+  * Regional Conditioning - These nodes provides assistance for simplifying the use of `Conditioning (Set Mask)`.
+    * `Regional Conditioning Simple (Inspire)`
+    * `Regional Conditioning By Color Mask (Inspire)`
+  * Regional IPAdapter - These nodes facilitates the convenient use of the attn_mask feature in `ComfyUI IPAdapter Plus` custom nodes.
+    * To use this node, you need to install the [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension.
+    * `Regional IPAdapter Mask (Inspire)`
+    * `Regional IPAdapter By Color Mask (Inspire)`
 
 * Image Util
   * `Load Image Batch From Dir (Inspire)`: This is almost same as `LoadImagesFromDirectory` of [ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet). This is just a modified version. Just note that this node forcibly normalizes the size of the loaded image to match the size of the first image, even if they are not the same size, to create a batch image.  
@@ -88,7 +96,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Cache Backend Data [NumberKey] (Inspire)`, `Retrieve Backend Data [NumberKey] (Inspire)`, `Remove Backend Data [NumberKey] (Inspire)`: These nodes are provided for convenience in the automation process, allowing the use of numbers as keys.
     
 * Util - Utilities
-  * `Float Range (Inspire)` - Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value. 
+  * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
+  * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.
+  
    
 ## Credits
 

@@ -146,15 +146,132 @@ class RegionalConditioningColorMask:
         return (conditioning, mask)
 
 
+class ToIPAdapterPipe:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "ipadapter": ("IPADAPTER", ),
+                "clip_vision": ("CLIP_VISION",),
+                "model": ("MODEL", ),
+            }
+        }
+
+    RETURN_TYPES = ("IPADAPTER_PIPE",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, ipadapter, clip_vision, model):
+        pipe = ipadapter, clip_vision, model
+
+        return (pipe,)
+
+
+class FromIPAdapterPipe:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "ipadapter_pipe": ("IPADAPTER_PIPE", ),
+            }
+        }
+
+    RETURN_TYPES = ("IPADAPTER", "CLIP_VISION", "MODEL")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, ipadapter_pipe):
+        return ipadapter_pipe
+
+
+class RegionalIPAdapterMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "ipadapter_pipe": ("IPADAPTER_PIPE",),
+                "mask": ("MASK",),
+                "image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
+                "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "weight_type": (["original", "linear", "channel penalty"],),
+            },
+        }
+
+    RETURN_TYPES = ("IPADAPTER_PIPE", "MODEL")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    def doit(self, ipadapter_pipe, mask, image, weight, noise, weight_type):
+        if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use RegionalIPAdapterMask, you need to install 'ComfyUI_IPAdapter_plus'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterApply']
+
+        ipadapter, clip_vision, model = ipadapter_pipe
+        model = obj().apply_ipadapter(ipadapter, model, weight, clip_vision=clip_vision, image=image, weight_type=weight_type, noise=noise, attn_mask=mask)[0]
+
+        new_ipadapter_pipe = ipadapter, clip_vision, model
+        return new_ipadapter_pipe, model
+
+
+class RegionalIPAdapterColorMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "ipadapter_pipe": ("IPADAPTER_PIPE", ),
+
+                "color_mask": ("IMAGE",),
+                "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
+                
+                "image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
+                "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "weight_type": (["original", "linear", "channel penalty"], ),
+            },
+        }
+
+    RETURN_TYPES = ("IPADAPTER_PIPE", "MODEL", "MASK")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    def doit(self, ipadapter_pipe, color_mask, mask_color, image, weight, noise, weight_type):
+        mask = color_to_mask(color_mask, mask_color)
+
+        if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
+            raise Exception(f"[ERROR] To use RegionalIPAdapterColorMask, you need to install 'ComfyUI_IPAdapter_plus'")
+        
+        obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterApply']
+
+        ipadapter, clip_vision, model = ipadapter_pipe
+        model = obj().apply_ipadapter(ipadapter, model, weight, clip_vision=clip_vision, image=image, weight_type=weight_type, noise=noise, attn_mask=mask)[0]
+
+        new_ipadapter_pipe = ipadapter, clip_vision, model
+        return new_ipadapter_pipe, model, mask
+        
+
 NODE_CLASS_MAPPINGS = {
     "RegionalPromptSimple //Inspire": RegionalPromptSimple,
     "RegionalPromptColorMask //Inspire": RegionalPromptColorMask,
     "RegionalConditioningSimple //Inspire": RegionalConditioningSimple,
     "RegionalConditioningColorMask //Inspire": RegionalConditioningColorMask,
+    "RegionalIPAdapterMask //Inspire": RegionalIPAdapterMask,
+    "RegionalIPAdapterColorMask //Inspire": RegionalIPAdapterColorMask,
+    "ToIPAdapterPipe //Inspire": ToIPAdapterPipe,
+    "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "RegionalPromptSimple //Inspire": "Regional Prompt Simple (Inspire)",
     "RegionalPromptColorMask //Inspire": "Regional Prompt By Color Mask (Inspire)",
     "RegionalConditioningSimple //Inspire": "Regional Conditioning Simple (Inspire)",
     "RegionalConditioningColorMask //Inspire": "Regional Conditioning By Color Mask (Inspire)",
+    "RegionalIPAdapterMask //Inspire": "Regional IPAdapter Mask (Inspire)",
+    "RegionalIPAdapterColorMask //Inspire": "Regional IPAdapter By Color Mask (Inspire)",
+    "ToIPAdapterPipe //Inspire": "ToIPAdapterPipe (Inspire)",
+    "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
 }
