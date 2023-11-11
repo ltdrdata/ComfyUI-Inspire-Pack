@@ -19,9 +19,12 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
 
     variation_noise = variation_latent.expand(latent_image.size()[0], -1, -1, -1)
 
-    if mask is None:
+    if variation_strength == 0:
+        return latent_image
+    elif mask is None:
         result = (1 - variation_strength) * latent_image + variation_strength * variation_noise
     else:
+        # this seems precision is not enough when variation_strength is 0.0
         result = (mask == 1).float() * ((1 - variation_strength) * latent_image + variation_strength * variation_noise * mask) + (mask == 0).float() * latent_image
 
     return result
