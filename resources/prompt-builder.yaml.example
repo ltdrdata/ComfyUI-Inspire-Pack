@@ -1,209 +1,1048 @@
-picture quality:
-    - UHD
-    - retina
-    - masterpiece
-    - ccurate
-    - anatomically correct
-    - textured skin
-    - super detail
-    - high details
-    - high quality
-    - award winning
-    - best quality
-    - highres
+#Category:
+    #Input
+
+Angle of View:
+    - Atmospheric Perspective
+    - Blurry Foreground
+    - Close-Up
+    - Cowboy Shot
+    - Cut-In
+    - Dutch Angle
+    - First-Person View
+    - Fisheye
+    - From Above
+    - From Behind
+    - From Below
+    - From Outside
+    - From Side
+    - Hatching (Texture)
+    - Multiple Views
+    - Panorama
+    - Perspective
+    - Pov
+    - Rotated
+    - Sideways
+    - Three Sided View
+    - Upside-Down
+    - Vanishing Point
+    - Wide Shot
+
+Artists:
+    - Abanindranath Tagore
+    - Abdur Rahman Chughtai
+    - Abu'L Hasan
+    - Adolf Wölfli
+    - Agnes Denes
+    - Agnes Martin
+    - Agnolo Di Cosimo (Bronzino)
+    - Ai Weiwei
+    - Albert Bierstadt
+    - Albert Gleizes
+    - Albert Pinkham Ryder
+    - Alberto Burri
+    - Alberto Giacometti
+    - Albrecht Dürer
+    - Alexander Calder
+    - Alexander Gerasimov
+    - Alexander Kanoldt
+    - Alexander Rodchenko
+    - Alfred Wallis
+    - Alice Neel
+    - Aloïse Corbaz
+    - Alphonse Mucha
+    - Ambrogio Lorenzetti
+    - Amedeo Modigliani
+    - Amrita Sher-Gil
+    - André Derain
+    - Andrei Rublev
+    - Andy Goldsworthy
+    - Andy Warhol
+    - Angelica Kauffman
+    - Anna Banana
+    - Ansel Adams
+    - Anselm Kiefer
+    - Anthony Van Dyck
+    - Antoni Gaudi
+    - Antonio Canova
+    - Apelles
+    - Arkady Plastov
+    - Artemisia Gentileschi
+    - Artists Of Hagia Sophia
+    - Asger Jorn
+    - Asher B. Durand
+    - Asit Kumar Haldar
+    - Aubrey Beardsley
+    - Audrey Flack
+    - Auguste Rodin
+    - Augustus Pugin
+    - Banksy
+    - Barbara Kruger
+    - Barberini Faun
+    - Bart Van Der Leck
+    - Baseera Khan
+    - Becky Lloyd
+    - Ben Shahn
+    - Benedetto Antelami
+    - Bichitr
+    - Bill Traylor
+    - Bridget Riley
+    - Bruce Nauman
+    - Camille Claudel
+    - Camille Pissarro
+    - Caravaggio
+    - Carel Willink
+    - Carl Andre
+    - Carlo Carrà
+    - Caspar David Friedrich
+    - Charles Demuth
+    - Charles Sheeler
+    - Chiho Aoshima
+    - Childe Hassam
+    - Chuck Close
+    - Cimabue
+    - Cindy Sherman
+    - Claude Monet
+    - Clementine Hunter
+    - Clyfford Still
+    - Constant Nieuwenhuys
+    - Cornelis Norbertus Gysbrechts
+    - Cory Arcangel
+    - Dante Gabriel Rossetti
+    - David Hockney
+    - Diego Rivera
+    - Diego Velázquez
+    - Donald Judd
+    - Doris Salcedo
+    - Duccio Di Buoninsegna
+    - Dying Gaul
+    - Edgar Degas
+    - Edouard Manet
+    - Édouard Vuillard
+    - Edvard Munch
+    - Edward Burne-Jones
+    - Edward Hopper
+    - Edward Ruscha
+    - Egon Schiele
+    - El Greco
+    - El Lissitzky
+    - Ellsworth Kelly
+    - Émile-Jacques Ruhlmann
+    - Ernst Ludwig Kirchner
+    - Erté (Romain De Tirtoff)
+    - Eugene Delacroix
+    - Eva Hesse
+    - Evert Collier
+    - Fernand Léger
+    - Filippo Tommaso Marinetti
+    - Francesco Mazzola Parmigianino
+    - Francis Bacon
+    - Francisco De Zurbaran
+    - Francisco Goya
+    - Francois Boucher
+    - Frank Stella
+    - Frans Hals
+    - Frantisek Kupka
+    - Frederic Edwin Church
+    - Frida Kahlo
+    - Genesis P-Orridge
+    - George Ault
+    - George Bellows
+    - George Grosz
+    - George Inness
+    - George Luks
+    - George Tooker
+    - Georges Braque
+    - Georges Seurat
+    - Georgia O'Keeffe
+    - Gerrit Rietveld
+    - Giacomo Balla
+    - Gian Lorenzo Bernini
+    - Giorgio De Chirico
+    - Giorgio Morandi
+    - Giotto Di Bondone
+    - Giovanni Battista Tiepolo
+    - Govardhan
+    - Grandma Moses (Anna Mary Robertson Moses)
+    - Grant Wood
+    - Gustav Klimt
+    - Gustave Courbet
+    - Gustave Moreau
+    - Hannah Höch
+    - Hans Holbein The Younger
+    - Helen Frankenthaler
+    - Henri Cartier-Bresson
+    - Henri Matisse
+    - Henri Rousseau
+    - Henri-Edmond Cross
+    - Henry Darger
+    - Hieronymus Bosch
+    - Hishikawa Moronobu
+    - Howard Finster
+    - Invader (Space Invader)
+    - Ismail Gulgee
+    - Ivan Generalić
+    - J.M.W. Turner
+    - Jackson Pollock
+    - Jacob Jordaens
+    - Jacopo Comin (Tintoretto)
+    - Jacques-Louis David
+    - James Abbott Mcneill Whistler
+    - James Wyatt
+    - Jamini Roy
+    - Jan Brueghel The Elder
+    - Jan Vermeer
+    - Jean Arp
+    - Jean Auguste Dominique Ingres
+    - Jean Boulogne (Giambologna)
+    - Jean Dubuffet
+    - Jean Metzinger
+    - Jean Tinguely
+    - Jean-Antoine Watteau
+    - Jean-François Millet
+    - Jean-Honoré Fragonard
+    - Jean-Michel Basquiat
+    - Jeff Koons
+    - Jenny Saville
+    - Jesús Rafael Soto
+    - Joan Miró
+    - Johann Sebastian Bach
+    - Johannes Vermeer
+    - John Baldessari
+    - John Everett Millais
+    - John F. Peto
+    - John Mclaughlin
+    - John Singer Sargent
+    - John Sloan
+    - John William Waterhouse
+    - Josef Albers
+    - Joseph Kosuth
+    - Joseph Mallord William Turner
+    - Juan Gris
+    - Judy Chicago
+    - Kara Walker
+    - Karel Appel
+    - Karl Benjamin
+    - Katsushika Hokusai
+    - Kazimir Malevich
+    - Keith Haring
+    - Kitagawa Utamaro
+    - Lady Pink (Sandra Fabara)
+    - Laurence Gartel
+    - Lee Krasner
+    - Leonardo Da Vinci
+    - Lex Horn
+    - Louis Comfort Tiffany
+    - Louise Bourgeois
+    - Louise Nevelson
+    - Lucian Freud
+    - Maestro Esiguo
+    - Man Ray
+    - Marc Chagall
+    - Marcel Duchamp
+    - Mark Rothko
+    - Mary Cassatt
+    - Master Of The Franciscan Crucifixes
+    - Mastro Guglielmo
+    - Maurice De Vlaminck
+    - Maurice Denis
+    - Max Beckmann
+    - Max Ernst
+    - Michael Janis
+    - Michelangelo
+    - Morris Louis
+    - Mr. (Masaru Shichinohe)
+    - Nandalal Bose
+    - Naum Gabo
+    - Nicholas Of Verdun
+    - Nicola Pisano
+    - Odilon Redon
+    - Olafur Eliasson
+    - Olga Rozanova
+    - Oskar Schlemmer
+    - Otto Dix
+    - Pablo Picasso
+    - Paul Cezanne
+    - Paul Gauguin
+    - Paul Klee
+    - Paul Sérusier
+    - Paul Signac
+    - Peter Paul Rubens
+    - Pierre Alechinsky
+    - Pierre Bonnard
+    - Pierre-Auguste Renoir
+    - Piet Mondrian
+    - Pieter Bruegel The Elder
+    - Pietro Lorenzetti
+    - Raffaello Sanzio (Raphael)
+    - Raja Ravi Varma
+    - Ralph Albert Blakelock
+    - Ralph Goings
+    - Raphael (Raffaello Sanzio)
+    - Ray Johnson
+    - Refik Anadol
+    - Rembrandt Harmenszoon Van Rijn
+    - René Lalique
+    - Rene Magritte
+    - Richard Anuszkiewicz
+    - Richard Estes
+    - Richard Hamilton
+    - Richard Serra
+    - Robert Delaunay
+    - Robert Henri
+    - Robert Smithson
+    - Robert Watts
+    - Roy Lichtenstein
+    - Ryoji Ikeda
+    - Sadequain
+    - Saint Luke
+    - Salvador Dali
+    - Sandro Botticelli
+    - Sergei Gerasimov
+    - Shepard Fairey
+    - Simone Martini
+    - Sir Charles Barry
+    - Sir Lawrence Alma-Tadema
+    - Sol Lewitt
+    - Sonia Delaunay
+    - Takashi Murakami
+    - Tamara De Lempicka
+    - Theo Van Doesburg
+    - Théodore Géricault
+    - Theodore The Studite
+    - Thomas Cole
+    - Thomas Eakins
+    - Thomas Gainsborough
+    - Thomas Hart Benton
+    - Tintoretto (Jacopo Comin)
+    - Titian (Tiziano Vecellio)
+    - Tony Da
+    - Umberto Boccioni
+    - Ustad Mansur
+    - Utagawa Hiroshige
+    - Vasily Kandinsky
+    - Vera Mukhina
+    - Victor Vasarely
+    - Vincent Van Gogh
+    - Vladimir Tatlin
+    - Wassily Kandinsky
+    - White On White
+    - Willem De Kooning
+    - William Blake
+    - William Holman Hunt
+    - William Merritt Chase
+    - William Michael Harnett
+    - Winged Victory Of Samothrace
+    - Yayoi Kusama
+    - Yoshitomo Nara
+    - Yves Klein
+    - Zaha Hadid
+
+Character Types:
+    - Acolyte
+    - Acrobat
+    - Apothecary
+    - Artificer
+    - Artisan
+    - Barbarian
+    - Bard
+    - Bardic Sage
+    - Blood Hunter
+    - Bounty Hunter
+    - Cavalier
+    - Champion
+    - Charlatan
+    - City Watch
+    - Cleric
+    - Clown
+    - Druid
+    - Duelist
+    - Elemental Shaman
+    - Executioner
+    - Exorcist
+    - Explorer
+    - Fey-Touched
+    - Fighter
+    - Geomancer
+    - Gladiator
+    - Guild Artisan
+    - Hermit
+    - Knight
+    - Monk
+    - Mystic
+    - Noble
+    - Outlander
+    - Paladin
+    - Pirate
+    - Ranger
+    - Rogue
+    - Runescribe
+    - Sage
+    - Sailor
+    - Shaman
+    - Soldier
+    - Sorcerer
+    - Urchin
+    - Warden
+    - Warlock
+    - Warlord
+    - Wizard
+
+Colors:
+    - Almond Color
+    - Amber
+    - Apricot Orange
+    - Ash Gray
+    - Beige
+    - Black
+    - Blue
+    - Brick Red
+    - Bronze
+    - Brown
+    - Caramel Color
+    - Carnation Pink
+    - Cerulean
+    - Charcoal Grey
+    - Chocolate Color
+    - Cinnamon Brown
+    - Coral Orange
+    - Cream Color
+    - Creamy White
+    - Cyan
+    - Denim Blue
+    - Emerald Green
+    - Forest Green
+    - Fuchsia
+    - Gold
+    - Goldfish Orange
+    - Grass Green
+    - Green
+    - Honey Color
+    - Indigo
+    - Ivory Color
+    - Jade Green
+    - Lavender
+    - Lemon Yellow
+    - Lilac Purple
+    - Lime Green
+    - Magenta
+    - Mahogany
+    - Marigold
+    - Maroon
+    - Mauve
+    - Midnight Blue
+    - Mint Green
+    - Mocha Brown
+    - Navy Blue
+    - Olive Green
+    - Orange
+    - Orchid Pink
+    - Pansy Color
+    - Paprika Red
+    - Peach Color
+    - Peachy Pink
+    - Pearl Color
+    - Periwinkle
+    - Pine Color
+    - Pink
+    - Plum Purple
+    - Pomegranate Color
+    - Purple
+    - Raspberry Color
+    - Red
+    - Rose
+    - Ruby Red
+    - Rust Brown
+    - Salmon Pink
+    - Sand Color
+    - Sapphire Blue
+    - Seafoam Green
+    - Sienna
+    - Silver
+    - Sky Blue
+    - Slate Gray
+    - Steel Blue
+    - Steel Gray
+    - Tan Brown
+    - Tangerine Orange
+    - Teak
+    - Teal
+    - Teal Green
+    - Terracotta Orange
+    - Topaz Yellow
+    - Turquoise
+    - Vanilla Color
+    - Violet
+    - White
+    - Wine Red
+    - Yellow
+
+Composition:
+    - Beauty Shot
+    - Bird'S Eye View
+    - Black And White Portrait
+    - Candid Shot
+    - Double Exposure Portrait
+    - Environmental Portrait
+    - Extreme Close-Up
+    - Framed Portrait
+    - Frontal
+    - Full Shot
+    - Group Shot
+    - Headshot
+    - High Angle
+    - High-Key Portrait
+    - Infrared Portrait
+    - Low Angle
+    - Macro
+    - Medium Close-Up
+    - Medium Shot
+    - Micro
+    - Motion Blur Portrait
+    - Multiple Exposure Portrait
+    - Narrative Portrait
+    - Outdoor Portrait
+    - Over-The-Shoulder
+    - Profile
+    - Reflection Portrait
+    - Selective Color Portrait
+    - Sepia Tone Portrait
+    - Shadow Portrait
+    - Silhouette
+    - Split Tone Portrait
+    - Studio Portrait
+    - Surreal Portrait
+    - Three-Quarter View
+    - Two-Shot
+    - Worm'S Eye View
+
+Composition Form:
+    - Afterimage
+    - Border
+    - Bust Chart
+    - Character Chart
+    - Chart
+    - Collage
+    - Column Lineup
+    - Cropped
+    - Diagram
+    - Fading Border
+    - Fake Scrollbar
+    - Feet Out Of Frame
+    - Framed
+    - Head Out Of Frame
+    - Isometric
+    - Letterboxed
+    - Lineup
+    - Mosaic Art
+    - Move Chart
+    - Negative Space
+    - Omake
+    - Out Of Frame
+    - Outside Border
+    - Partially Underwater Shot
+    - Photomosaic
+    - Pillarboxed
+    - Polar Opposites
+    - Projected Inset
+    - Reference Sheet
+    - Relationship Graph
+    - Rotational Symmetry
+    - Rounded Corners
+    - Seating Chart
+    - Social Media Composition
+    - Stats
+    - Symmetry
+    - Tachi-E
+    - Trim Marks
+    - Viewfinder
+    - Zoom Layer
+
+Lighting:
+    - Artificial Indoor Lighting
+    - Back Lighting
+    - Bright And Sunny Lighting
+    - Bright Festive Holiday Lights Lighting
+    - Bright Stadium Lights Lighting
+    - Broad Lighting
+    - Butterfly Lighting
+    - Candlelit Dinner Lighting
+    - Candlelit Scene Lighting
+    - Celestial Sky Illumination Lighting
+    - City Lights Lighting
+    - Clamshell Lighting
+    - Classic Chandelier Lighting
+    - Classic Gas Lamp Lighting
+    - Classic Oil Lamp Lighting
+    - Cool And Blue Lighting
+    - Cozy Book Reading Nook Lighting
+    - Creepy Haunted House Lighting
+    - Dappled Sunlight Through Leaves Lighting
+    - Dazzling Disco Lights Lighting
+    - Dim And Cozy Lighting
+    - Dramatic High Contrast Lighting
+    - Dramatic Opera House Lighting
+    - Dramatic Spotlight Lighting
+    - Dreamlike Fairy Circle Lights Lighting
+    - Dreamy Moonlit Ocean Lighting
+    - Eerie Moonlit Graveyard Lighting
+    - Eerie Torchlight Lighting
+    - Electric Disco Dance Floor Lighting
+    - Elegant Crystal Lighting
+    - Enchanted Garden Lanterns Lighting
+    - Enchanting Bioluminescence Lighting
+    - Enveloping Fog Lights Lighting
+    - Ethereal Moonlight Lighting
+    - Ethereal Starlit Sky Lighting
+    - Exotic Tiki Torches Lighting
+    - Firelight Flicker Lighting
+    - Floating Chinese Lanterns Lighting
+    - Fluorescent Office Lighting
+    - Futuristic Laser Lights Lighting
+    - Futuristic Neon Glow Lighting
+    - Futuristic Spacecraft Lighting
+    - Glimmering Disco Ball Lighting
+    - Glimmering Water Reflections Lighting
+    - Glistening Icicle Lights Lighting
+    - Glistening Winter Frost Lighting
+    - Glittering Cityscape Lighting
+    - Glowing Carnival Rides Lighting
+    - Glowing Fireflies Lighting
+    - Glowing Jack-O'-Lanterns Lighting
+    - Glowing Lighthouse Beacon Lighting
+    - Glowing Neon Lighting
+    - Golden Hour Lighting
+    - Golden Hour Light Lighting
+    - Hard Shadows Lighting
+    - Harsh Overhead Lighting
+    - Haunting Moonlight Lighting
+    - High Key Lighting
+    - Industrial Warehouse Lighting
+    - Intense Firelight Lighting
+    - Intense Lightning Storm Lighting
+    - Intense Police Searchlight Lighting
+    - Intimate Candlelit Bath Lighting
+    - Light Painting Lighting
+    - Loop Lighting
+    - Low Key Lighting
+    - Luminous Jellyfish Aquarium Lighting
+    - Magical Enchanted Forest Lighting
+    - Majestic Lighting
+    - Modern Led Strips Lighting
+    - Moody And Mysterious Lighting
+    - Moonlit Forest Lighting
+    - Natural Sunlight Lighting
+    - Neon Glow Lighting
+    - Night Photography Lighting
+    - Nostalgic Retro Diner Glow Lighting
+    - Peaceful Starry Campfire Lighting
+    - Product Lighting
+    - Radiant Angelic Lighting
+    - Radiant Stadium Floodlights Lighting
+    - Radiant Streetlamps Lighting
+    - Rembrandt Lighting
+    - Reminiscent Film Lighting
+    - Retro Diner Neon Signs Lighting
+    - Retro Neon Diner Lights Lighting
+    - Rim Lighting
+    - Romantic Candlelight Lighting
+    - Rustic Barn Lighting
+    - Rustic Campfire Lighting
+    - Rustic Fireplace Lighting
+    - Rustic Lanterns Lighting
+    - Sci-Fi Futuristic Lighting
+    - Sci-Fi Holographic Projections Lighting
+    - Serene Zen Garden Illumination Lighting
+    - Shadow Play Lighting
+    - Shimmering Lake Reflections Lighting
+    - Short Lighting
+    - Side Lighting
+    - Silhouette Lighting
+    - Silky Water Effect (Long Exposure) Lighting
+    - Sinister Back Alley Lighting
+    - Soft And Diffused Lighting
+    - Soft And Warm Lighting
+    - Soft Candlelit Meditation Lighting
+    - Soft Illumination Lighting
+    - Soft Pastel Glow Lighting
+    - Soft Shadows Lighting
+    - Split Lighting
+    - Spooky Halloween Lights Lighting
+    - Starry Night Lighting
+    - Still Life Lighting
+    - Street Lamp Lighting
+    - Studio Portrait Lighting
+    - Subdued Desk Lamp Lighting
+    - Subdued Nightlight Lighting
+    - Subtle Ambient Glow Lighting
+    - Sunrise At The Mountains Lighting
+    - Sunrise Over The Ocean Lighting
+    - Sunset Silhouette Lighting
+    - Twinkling Christmas Stars Lighting
+    - Twinkling Fairy Lights Lighting
+    - Under The Christmas Tree Lights Lighting
+    - Under The Streetlights Lighting
+    - Underwater Illumination Lighting
+    - Vibrant Stage Lighting
+    - Vintage Film Noir Lighting
+    - Vivid Art Gallery Spotlights Lighting
+    - Warm Fireplace Embers Lighting
+    - Warm Sunset Glow Lighting
+    - Whimsical Fairy Tale Lighting
+
+Negative:
+    - Blurry, Text, Watermark, Signature, Frame
+    - Disfigure Body, Disfigured Torso, Disfigured Face, Disfigured Eyes, Disfigured Pupils, Disfigured Arms, Disfigured Hands, Disfigured Fingers, Disfigured Legs, Disfigured Toes
+
+Picture Effect:
+    - Anaglyph
+    - Blending
+    - Bloom
+    - Blurry
+    - Chromatic Aberration
+    - Chromatic Aberration Abuse
+    - Cinematic Lighting
+    - Depth Of Field
+    - Dithering
+    - Drop Shadow
+    - Film Grain
+    - Fujicolor
+    - Glowing Light
+    - God Rays
+    - Halftone
+    - Image Fill
+    - Jpeg Artifacts
+    - Motion Blur
+    - Motion Lines
+    - Multiple Monochrome
+    - Optical Illusion
+    - Ray Tracing
+    - Reflection Light
+    - Scanlines
+    - Sparkle
+    - Speed Lines
+    - Stereogram
+    - Vignetting
+
+Picture Quality:
     - 1080P
-    - HD
+    - 16K
     - 4K
-    - 8k
-    - 16k
-    
-Composition form:
-    - afterimage
-    - border
-    - framed
-    - outside border
-    - fading border
-    - rounded corners
-    - viewfinder
-    - chart
-    - character chart
-    - reference sheet
-    - diagram
-    - move chart
-    - relationship graph
-    - seating chart
-    - stats
-    - collage
-    - column lineup
-    - bust chart
-    - cropped
-    - fake scrollbar
-    - head out of frame
-    - out of frame
-    - feet out of frame
-    - isometric
-    - letterboxed
-    - pillarboxed
-    - lineup
-    - mosaic art
-    - photomosaic
-    - negative space
-    - omake
-    - partially underwater shot
-    - social media composition
-    - symmetry
-    - polar opposites
-    - rotational symmetry
-    - tachi-e
-    - trim marks
-    - zoom layer
-    - projected inset
+    - 8K
+    - Accurate
+    - Anatomically Correct
+    - Award Winning
+    - Best Quality
+    - HD
+    - High Quality
+    - Highres
+    - Masterpiece
+    - Retina
+    - Super Detail
+    - Textured Skin
+    - UHD
 
-angle of view:
-    - first-person view
-    - pov
-    - three sided view
-    - multiple views
-    - cut-in
-    - blurry foreground
-    - close-up
-    - cowboy shot
-    - dutch angle
-    - fisheye
-    - hatching (texture)
-    - vanishing point
-    - wide shot
-    - from above
-    - from behind
-    - from below
-    - from outside
-    - from side
-    - atmospheric perspective
-    - panorama
-    - perspective
-    - rotated
-    - sideways
-    - upside-down
+Setting:
+    - Advanced Alien Civilization Setting
+    - Age Of Exploration Setting
+    - Ai Uprising Setting
+    - Ai-Powered Society Setting
+    - Alien Invasion Setting
+    - Alternate Dimensions Setting
+    - Alternate History Setting
+    - Alternate Identity Setting
+    - Alternate Realities Collide Setting
+    - Ancient Civilization Setting
+    - Ancient Curse Setting
+    - Ancient Gods Setting
+    - Ancient Prophecy Setting
+    - Apocalyptic Earth Setting
+    - Arctic Setting
+    - Artificial Intelligence Setting
+    - Astral Plane Setting
+    - Biopunk Setting
+    - City Of Tomorrow Setting
+    - City Under Siege Setting
+    - Cosmic Horror Setting
+    - Cyber Warfare Setting
+    - Cybernetic Augmentation Setting
+    - Cyberpunk Setting
+    - Desert Setting
+    - Detective Noir Setting
+    - Dinosaur Era Setting
+    - Dream Within A Dream Setting
+    - Dream World Setting
+    - Dystopian Setting
+    - Espionage Setting
+    - Fairytale Setting
+    - Fantasy Setting
+    - Forgotten Technology Setting
+    - Future Dystopia Setting
+    - Future War Setting
+    - Futuristic Setting
+    - Futuristic Sports Setting
+    - Galactic Conflict Setting
+    - Galactic Empire Setting
+    - Genetic Engineering Setting
+    - Genetic Mutation Setting
+    - Haunted Mansion Setting
+    - Hidden Alien Species Setting
+    - Hidden Sanctuary Setting
+    - Historical Setting
+    - Holographic Reality Setting
+    - Interdimensional Travel Setting
+    - Jungle Setting
+    - Lost Civilization Setting
+    - Lost In Space Setting
+    - Lost In Time Setting
+    - Lunar Colony Setting
+    - Magical School Setting
+    - Mechanical World Setting
+    - Medieval Setting
+    - Mind Upload Setting
+    - Mythical Artifacts Setting
+    - Mythical Beasts Setting
+    - Mythological Setting
+    - Nature Reclaiming Civilization Setting
+    - Navigating The Multiverse Setting
+    - Ocean Exploration Setting
+    - Parallel Histories Setting
+    - Parallel Universe Setting
+    - Pirate Adventure Setting
+    - Planetary Exploration Setting
+    - Post-Apocalyptic Setting
+    - Robot Uprising Setting
+    - Robotic Society Setting
+    - Robotic Utopia Setting
+    - Sci-Fi Setting
+    - Space Setting
+    - Space Anomaly Setting
+    - Space Colonization Setting
+    - Space Opera Setting
+    - Space Rebellion Setting
+    - Space Travelers Setting
+    - Space Western Setting
+    - Steampunk Setting
+    - Superhero Setting
+    - Supernatural Mystery Setting
+    - Surreal Setting
+    - Time Crime Setting
+    - Time Loop Setting
+    - Time Paradox Setting
+    - Time Travel Setting
+    - Transhumanism Setting
+    - Underwater Setting
+    - Urban Setting
+    - Utopian Society Setting
+    - Victorian Setting
+    - Virtual Conspiracy Setting
+    - Virtual Paradise Setting
+    - Virtual Reality Setting
+    - Wild Animal Kingdom Setting
+    - Wild West Setting
 
-shot:
-    - lens flare
-    - overexposure
-    - bokeh
-    - caustics
-    - diffraction spikes
-    - foreshortening
-    - emphasis lines
-    - satellite image
-    - macro photo
-    - 360 view
-    - Wide-Angle
-    - Ultra-Wide Angle
-    - Eye-Level Shot
-    - f/1.2
-    - f/1.8
-    - f/2.8
-    - f/4.0
-    - f/16
-    - 35mm
-    - 85mm
-    - 135mm
-    - Nikon
+Shot:
+    - 135Mm
+    - 35Mm
+    - 360 View
+    - 85Mm
+    - Bokeh
     - Canon
+    - Caustics
+    - Diffraction Spikes
+    - Emphasis Lines
+    - Eye-Level Shot
+    - F/1.2
+    - F/1.8
+    - F/16
+    - F/2.8
+    - F/4.0
+    - Foreshortening
     - Fujifilm
     - Hasselblad
-    - Sony FE
-    - Sony FE GM
+    - Lens Flare
+    - Macro Photo
+    - Nikon
+    - Overexposure
+    - Satellite Image
+    - Sony Fe
+    - Sony Fe Gm
+    - Ultra-Wide Angle
+    - Wide-Angle
 
-style:
-    - Surrealism
-    - Color Field painting
-    - Art Deco
-    - rococo style
-    - high detail
-    - blind box toy style
-    - Cubist Futurism
-    - Conceptual art
-    - Futurism
-    - Social realism
-    - interior architecture
-    - Renaissance
-    - Neoclassicism
-    - modern
-    - anime
-    - Minimalism
-    - Romanticism
-    - Gothic art
-    - American propaganda poster
-    - Tonalism
-    - Baroque
-    - Fauvism
-    - Expressionism
-    - Carl Larsson
-    - Op art
-    - Realism
-    - Contemporary art
-    - Genre painting
-    - Constructivism
-    - Mannerism
-    - Bauhaus
-    - Action painting
-    - by Alfons Mucha
-    - Dutch Golden Age painting
-    - Pop art
-    - Monet
-    - Northern Renaissance
-    - Dadaism
-    - Ukiyo-e
-    - Luminism
-    - Abstract expressionism
-    - Impressionism
-    - Pre-Raphaelite Brotherhood
-    - Classicism
-    - Ghibli-like colours
-    - Hyperrealism
-    - Art Nouveau
-    - Suprematism
-    - Abstractionism
-    - pre-rephaëlite painting
-    - anime style
-    - Post-Impressionism
-    - En plein air
-    - Pointillism
-    - Verism
-    - raised fist
-    - Ashcan School
-    - Pixar
-    - Cubism
-
-picture effect: 
-    - chiaroscuro
-    - depth of field
-    - cinematic lighting
-    - motion blur
-    - chromatic aberration
-    - sparkle
-    - jpeg artifacts
-    - blurry
-    - glowing light
-    - god rays
-    - ray tracing
-    - reflection light
-    - backlighting
-    - blending
-    - bloom
-    - chromatic aberration abuse
-    - dithering
-    - drop shadow
-    - film grain
-    - Fujicolor
-    - halftone
-    - image fill
-    - motion lines
-    - multiple monochrome
-    - optical illusion
-    - anaglyph
-    - stereogram
-    - scanlines
-    - silhouette
-    - speed lines
-    - vignetting
+Style:
+    - Abstract Art Style
+    - Abstract Expressionism Style
+    - Abstract Figurative Style
+    - Abstract Landscapes Style
+    - Abstract Portraiture Style
+    - Abstract Still Life Style
+    - Abstractionism Style
+    - Acrylic Painting Style
+    - Action Painting Style
+    - American Impressionism Style
+    - American Propaganda Poster Style
+    - American Scene Painting Style
+    - Analytical Cubism Style
+    - Anime Style
+    - Architectural Design Style
+    - Art Brut Style
+    - Art Deco Style
+    - Art Nouveau Style
+    - Ashcan School Style
+    - Assemblage Art Style
+    - Augmented Reality Art Style
+    - Baroque Style
+    - Batik Style
+    - Bauhaus Style
+    - Bengal School Of Art Style
+    - Blind Box Toy Style
+    - Body Painting Style
+    - Botanical Art Style
+    - Bronze Casting Style
+    - By Alfons Mucha Style
+    - Byzantine Art Style
+    - Carl Larsson Style
+    - Ceramic Pottery Style
+    - Charcoal Drawing Style
+    - Chiaroscuro Style
+    - Classicism Style
+    - Cobra Style
+    - Color Field Painting Style
+    - Colored Pencil Drawing Style
+    - Conceptual Art Style
+    - Constructivism Style
+    - Contemporary Style
+    - Contemporary Art Style
+    - Cubism Style
+    - Cubist Futurism Style
+    - Dada Style
+    - Dadaism Style
+    - De Stijl Style
+    - Digital Art Style
+    - Digital Sculpture Style
+    - Dutch Golden Age Style
+    - Embroidery Style
+    - En Plein Air Style
+    - Environmental Art Style
+    - Environmental Sculpture Style
+    - Etching Style
+    - Expressionism Style
+    - Fashion Design Style
+    - Fauvism Style
+    - Fiber Art Style
+    - Figurative Art Style
+    - Film And Video Art Style
+    - Flemish Baroque Style
+    - Folk Art Style
+    - Found Object Art Style
+    - Futurism Style
+    - Genre Painting Style
+    - Ghibli-Like Colors Style
+    - Glassblowing Style
+    - Gothic Style
+    - Gothic Art Style
+    - Gothic Revival Style
+    - Gouache Painting Style
+    - Graffiti Art Style
+    - Graphite Drawing Style
+    - Hard-Edge Painting Style
+    - Hellenistic Art Style
+    - High Detail Style
+    - Hindu Art Style
+    - Hudson River School Style
+    - Hyperrealism Style
+    - Impressionism Style
+    - Industrial Design Style
+    - Installation Art Style
+    - Interactive Art Style
+    - Interior Architecture Style
+    - Interior Design Style
+    - Islamic Art Style
+    - Jewelry Design Style
+    - Kinetic Art Style
+    - Land Art Style
+    - Landscapes Style
+    - Les Nabis Style
+    - Light Art Style
+    - Linocut Style
+    - Lithography Style
+    - Luminism Style
+    - Magic Realism Style
+    - Mail Art Style
+    - Mannerism Style
+    - Medieval Art Style
+    - Metalworking Style
+    - Metaphysical Art Style
+    - Minimalism Style
+    - Mixed Media Style
+    - Modern Style
+    - Monet Style
+    - Monotype Style
+    - Mosaic Style
+    - Mughal Art Style
+    - Naive Art Style
+    - Neoclassicism Style
+    - Neo-Expressionism Style
+    - Neo-Impressionism Style
+    - New Objectivity Style
+    - Northern Renaissance Style
+    - Oil Painting Style
+    - Op Art Style
+    - Orphism Style
+    - Pastel Painting Style
+    - Pen And Ink Drawing Style
+    - Performance Art Style
+    - Performance Painting Style
+    - Photography Style
+    - Photorealism Style
+    - Pixar Style
+    - Pointillism Style
+    - Pop Art Style
+    - Portraiture Style
+    - Post-Impressionism Style
+    - Post-Minimalism Style
+    - Postmodernism Style
+    - Precisionism Style
+    - Pre-Raphaelite Brotherhood Style
+    - Pre-Rephaëlite Painting Style
+    - Primitivism Style
+    - Printmaking Style
+    - Proto-Renaissance Style
+    - Raised Fist Style
+    - Realism Style
+    - Renaissance Style
+    - Renaissance Art Style
+    - Rococo Style
+    - Romanticism Style
+    - Screen Printing Style
+    - Sculpture Style
+    - Seascape Style
+    - Sgraffito Style
+    - Sienese School Style
+    - Social Realism Style
+    - Socialist Realism Style
+    - Southern Renaissance Style
+    - Stained Glass Style
+    - Still Life Style
+    - Stone Carving Style
+    - Street Art Style
+    - Superflat Style
+    - Suprematism Style
+    - Surrealism Style
+    - Symbolism Style
+    - Synthetic Cubism Style
+    - Tapestry Style
+    - Textile Design Style
+    - Textile Sculpture Style
+    - Tonalism Style
+    - Trompe-L'Oeil Style
+    - Ukiyo-E Style
+    - Verism Style
+    - Victorian Art Style
+    - Video Art Style
+    - Virtual Reality Art Style
+    - Watercolor Style
+    - Weaving Style
+    - Wildlife Art Style
+    - Wood Carving Style
+    - Woodcut Style

@@ -30,7 +30,7 @@ class CacheBackendData:
         if key == '*':
             print(f"[Inspire Pack] CacheBackendData: '*' is reserved key. Cannot use that key")
 
-        cache[key] = (tag, data)
+        cache[key] = (tag, (False, data))
         return (data,)
 
 
@@ -56,9 +56,70 @@ class CacheBackendDataNumberKey:
 
     def doit(self, key, tag, data):
         global cache
-        cache[key] = (tag, data)
+        cache[key] = (tag, (False, data))
         return (data,)
 
+
+class CacheBackendDataList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "key": ("STRING", {"multiline": False, "placeholder": "Input data key (e.g. 'model a', 'chunli lora', 'girl latent 3', ...)"}),
+                "tag": ("STRING", {"multiline": False, "placeholder": "Tag: short description"}),
+                "data": (any_typ,),
+            }
+        }
+
+    INPUT_IS_LIST = True
+
+    RETURN_TYPES = (any_typ,)
+    RETURN_NAMES = ("data opt",)
+    OUTPUT_IS_LIST = (True,)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    OUTPUT_NODE = True
+
+    def doit(self, key, tag, data):
+        global cache
+
+        if key == '*':
+            print(f"[Inspire Pack] CacheBackendDataList: '*' is reserved key. Cannot use that key")
+
+        cache[key[0]] = (tag[0], (True, data))
+        return (data,)
+
+
+class CacheBackendDataNumberKeyList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "key": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "tag": ("STRING", {"multiline": False, "placeholder": "Tag: short description"}),
+                "data": (any_typ,),
+            }
+        }
+
+    INPUT_IS_LIST = True
+
+    RETURN_TYPES = (any_typ,)
+    RETURN_NAMES = ("data opt",)
+    OUTPUT_IS_LIST = (True,)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    OUTPUT_NODE = True
+
+    def doit(self, key, tag, data):
+        global cache
+        cache[key[0]] = (tag[0], (True, data))
+        return (data,)
 
 
 class RetrieveBackendData:
@@ -72,6 +133,7 @@ class RetrieveBackendData:
 
     RETURN_TYPES = (any_typ,)
     RETURN_NAMES = ("data",)
+    OUTPUT_IS_LIST = (True,)
 
     FUNCTION = "doit"
 
@@ -80,7 +142,12 @@ class RetrieveBackendData:
     def doit(self, key):
         global cache
 
-        return (cache[key][1],)
+        is_list, data = cache[key][1]
+
+        if is_list:
+            return (data,)
+        else:
+            return ([data],)
 
 
 class RetrieveBackendDataNumberKey(RetrieveBackendData):
@@ -197,6 +264,8 @@ class ShowCachedInfo:
 NODE_CLASS_MAPPINGS = {
     "CacheBackendData //Inspire": CacheBackendData,
     "CacheBackendDataNumberKey //Inspire": CacheBackendDataNumberKey,
+    "CacheBackendDataList //Inspire": CacheBackendDataList,
+    "CacheBackendDataNumberKeyList //Inspire": CacheBackendDataNumberKeyList,
     "RetrieveBackendData //Inspire": RetrieveBackendData,
     "RetrieveBackendDataNumberKey //Inspire": RetrieveBackendDataNumberKey,
     "RemoveBackendData //Inspire": RemoveBackendData,
@@ -207,6 +276,8 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "CacheBackendData //Inspire": "Cache Backend Data (Inspire)",
     "CacheBackendDataNumberKey //Inspire": "Cache Backend Data [NumberKey] (Inspire)",
+    "CacheBackendDataList //Inspire": "Cache Backend Data List (Inspire)",
+    "CacheBackendDataNumberKeyList //Inspire": "Cache Backend Data List [NumberKey] (Inspire)",
     "RetrieveBackendData //Inspire": "Retrieve Backend Data (Inspire)",
     "RetrieveBackendDataNumberKey //Inspire": "Retrieve Backend Data [NumberKey] (Inspire)",
     "RemoveBackendData //Inspire": "Remove Backend Data (Inspire)",
