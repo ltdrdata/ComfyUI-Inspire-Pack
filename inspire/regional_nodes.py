@@ -256,7 +256,7 @@ class RegionalSeedExplorerMask:
                 "mask": ("MASK",),
 
                 "noise": ("NOISE",),
-                "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False}),
+                "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -310,7 +310,7 @@ class RegionalSeedExplorerColorMask:
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
 
                 "noise": ("NOISE",),
-                "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False}),
+                "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
