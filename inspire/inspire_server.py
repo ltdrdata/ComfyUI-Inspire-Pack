@@ -167,6 +167,8 @@ def workflow_loadimage_update(json_data):
 
 
 def onprompt(json_data):
+    prompt_support.list_counter_map = {}
+
     is_changed = prompt_seed_update(json_data)
     if is_changed:
         workflow_seed_update(json_data)

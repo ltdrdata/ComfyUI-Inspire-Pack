@@ -102,6 +102,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 * Util - Utilities
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
   * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.
+  * `List Counter (Inspire)`: When each item in the list traverses through this node, it increments a counter by one, generating an integer value.
   
    
 ## Credits
