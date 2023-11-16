@@ -75,10 +75,10 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `Regional Conditioning By Color Mask (Inspire)`
   * Regional IPAdapter - These nodes facilitates the convenient use of the attn_mask feature in `ComfyUI IPAdapter Plus` custom nodes.
     * To use this node, you need to install the [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension.
-    * `Regional IPAdapter Mask (Inspire)`
-    * `Regional IPAdapter By Color Mask (Inspire)`
+    * `Regional IPAdapter Mask (Inspire)`, `Regional IPAdapter By Color Mask (Inspire)`
+    * `Regional IPAdapter Encoded Mask (Inspire)`, `Regional IPAdapter Encoded By Color Mask (Inspire)`: accept `embeds` instead of `image`
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
-    * `Regional IPAdapter By Mask (Inspire)` 
+    * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
 
 * Image Util
