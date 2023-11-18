@@ -181,13 +181,44 @@ class LoadImageInspire:
         return (image, mask.unsqueeze(0))
 
 
+class ChangeImageBatchSize:
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {"required": {
+                                "image": ("IMAGE",),
+                                "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096, "step": 1}),
+                                "mode": (["simple"],)
+                            }
+                }
+
+    CATEGORY = "InspirePack/image"
+
+    RETURN_TYPES = ("IMAGE", )
+    FUNCTION = "load_image"
+
+    def load_image(self, image, batch_size, mode):
+        if mode == "simple":
+            if len(image) < batch_size:
+                last_frame = image[-1].unsqueeze(0).expand(batch_size - len(image), -1, -1, -1)
+                image = torch.concat((image, last_frame), dim=0)
+            else:
+                image = image[:batch_size, :, :, :]
+            return (image,)
+        else:
+            print(f"[WARN] ChangeImageBatchSize: Unknown mode `{mode}` - ignored")
+            return (image, )
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadImagesFromDir //Inspire": LoadImagesFromDirBatch,
     "LoadImageListFromDir //Inspire": LoadImagesFromDirList,
     "LoadImage //Inspire": LoadImageInspire,
+    "ChangeImageBatchSize //Inspire": ChangeImageBatchSize,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagesFromDir //Inspire": "Load Image Batch From Dir (Inspire)",
     "LoadImageListFromDir //Inspire": "Load Image List From Dir (Inspire)",
-    "LoadImage //Inspire": "LoadImage (Inspire)",
+    "ChangeImageBatchSize //Inspire": "Change Image Batch Size (Inspire)"
 }
