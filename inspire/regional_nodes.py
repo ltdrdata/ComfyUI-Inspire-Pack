@@ -18,6 +18,7 @@ class RegionalPromptSimple:
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
                 "scheduler": (comfy.samplers.KSampler.SCHEDULERS,),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
+                "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
             },
         }
 
@@ -26,7 +27,7 @@ class RegionalPromptSimple:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt):
+    def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe=False):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception(f"[ERROR] To use RegionalPromptSimple, you need to install 'ComfyUI-Impact-Pack'")
 
@@ -37,9 +38,24 @@ class RegionalPromptSimple:
         rp = nodes.NODE_CLASS_MAPPINGS['RegionalPrompt']()
 
         if wildcard_prompt != "":
-            model, clip, positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt)
+            model, clip, new_positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt)
 
-        basic_pipe = model, clip, vae, positive, negative
+            if controlnet_in_pipe:
+                prev_cnet = None
+                for t in positive:
+                    if 'control' in t[1] and 'control_apply_to_uncond' in t[1]:
+                        prev_cnet = t[1]['control'], t[1]['control_apply_to_uncond']
+                        break
+
+                if prev_cnet is not None:
+                    for t in new_positive:
+                        t[1]['control'] = prev_cnet[0]
+                        t[1]['control_apply_to_uncond'] = prev_cnet[1]
+
+        else:
+            new_positive = positive
+
+        basic_pipe = model, clip, vae, new_positive, negative
 
         sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe)[0]
         regional_prompts = rp.doit(mask, sampler)[0]
@@ -74,6 +90,7 @@ class RegionalPromptColorMask:
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
                 "scheduler": (comfy.samplers.KSampler.SCHEDULERS,),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
+                "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
             },
         }
 
@@ -82,9 +99,9 @@ class RegionalPromptColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt):
+    def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe=False):
         mask = color_to_mask(color_mask, mask_color)
-        rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt)[0]
+        rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe)[0]
         return (rp, mask)
 
 
