@@ -35,10 +35,6 @@ app.registerExtension({
 						if(input_i.name != 'select' && input_i.name != 'sel_mode')
 							input_i.type = origin_type;
 					}
-
-					this.outputs[0].type = origin_type;
-					this.outputs[0].label = origin_type;
-					this.outputs[0].name = origin_type;
 				}
 
 				if (!connected && (this.inputs.length > base_slot+1)) {
