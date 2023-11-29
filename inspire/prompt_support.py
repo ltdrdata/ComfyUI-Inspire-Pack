@@ -250,7 +250,7 @@ class PromptExtractor:
         else:
             text = "There is no prompt information within the image."
 
-        PromptServer.instance.send_sync("inspire-node-feedback", {"id": unique_id, "widget_name": "info", "type": "text", "data": text})
+        PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "info", "type": "text", "data": text})
         return (positive, negative)
 
 

@@ -252,7 +252,7 @@ class ShowCachedInfo:
                 text2 += f'{k}: {tag}\n'
 
         text = text1 + "\n" + text2
-        PromptServer.instance.send_sync("inspire-node-feedback", {"id": unique_id, "widget_name": "cache_info", "type": "text", "data": text})
+        PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "cache_info", "type": "text", "data": text})
 
         return ()
 

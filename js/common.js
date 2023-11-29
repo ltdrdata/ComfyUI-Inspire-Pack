@@ -2,7 +2,7 @@ import { api } from "../../scripts/api.js";
 
 function nodeFeedbackHandler(event) {
 	let nodes = app.graph._nodes_by_id;
-	let node = nodes[event.detail.id];
+	let node = nodes[event.detail.node_id];
 	if(node) {
 		if(event.detail.type == "text") {
 			const w = node.widgets.find((w) => event.detail.widget_name === w.name);

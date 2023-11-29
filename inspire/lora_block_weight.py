@@ -623,7 +623,7 @@ class LoraBlockInfo:
         lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
         text = LoraBlockInfo.extract_info(model, clip, lora)
 
-        PromptServer.instance.send_sync("inspire-node-feedback", {"id": unique_id, "widget_name": "block_info", "type": "text", "data": text})
+        PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "block_info", "type": "text", "data": text})
         return {}
 
 
