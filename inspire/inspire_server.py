@@ -1,4 +1,6 @@
 import random
+
+import nodes
 import server
 from enum import Enum
 from . import prompt_support
@@ -166,6 +168,30 @@ def workflow_loadimage_update(json_data):
             v['inputs']['image'] = "#DATA"
 
 
+def populate_wildcards(json_data):
+    prompt = json_data['prompt']
+
+    if 'ImpactWildcardProcessor' in nodes.NODE_CLASS_MAPPINGS:
+        wildcard_process = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process
+        updated_widget_values = {}
+        for k, v in prompt.items():
+            if 'class_type' in v and v['class_type'] == 'WildcardEncode //Inspire':
+                inputs = v['inputs']
+                if inputs['mode'] and isinstance(inputs['populated_text'], str):
+                    inputs['populated_text'] = wildcard_process(text=inputs['wildcard_text'], seed=int(inputs['seed']))
+                    inputs['mode'] = False
+
+                    server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "populated_text", "type": "text", "data": inputs['populated_text']})
+                    updated_widget_values[k] = inputs['populated_text']
+
+        if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
+            for node in json_data['extra_data']['extra_pnginfo']['workflow']['nodes']:
+                key = str(node['id'])
+                if key in updated_widget_values:
+                    node['widgets_values'][3] = updated_widget_values[key]
+                    node['widgets_values'][4] = False
+
+
 def onprompt(json_data):
     prompt_support.list_counter_map = {}
 
@@ -174,6 +200,7 @@ def onprompt(json_data):
         workflow_seed_update(json_data)
 
     workflow_loadimage_update(json_data)
+    populate_wildcards(json_data)
 
     return json_data
 

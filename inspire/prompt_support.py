@@ -339,14 +339,6 @@ class BNK_EncoderWrapper:
 class WildcardEncodeInspire:
     @classmethod
     def INPUT_TYPES(s):
-        if 'ImpactWildcardEncode' in nodes.NODE_CLASS_MAPPINGS:
-            try:
-                wildcards = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].get_wildcard_list()
-            except:
-                wildcards = ["Impact Pack is outdated"]
-        else:
-            wildcards = ["Impact Pack isn't installed"]
-
         return {"required": {
                         "model": ("MODEL",),
                         "clip": ("CLIP",),
@@ -356,7 +348,7 @@ class WildcardEncodeInspire:
                         "populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Prmopt (Will be generated automatically)'}),
                         "mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
                         "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"), ),
-                        "Select to add Wildcard": (["Select the Wildcard to add to the text"] + wildcards, ),
+                        "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
                 }
