@@ -178,7 +178,23 @@ def populate_wildcards(json_data):
             if 'class_type' in v and v['class_type'] == 'WildcardEncode //Inspire':
                 inputs = v['inputs']
                 if inputs['mode'] and isinstance(inputs['populated_text'], str):
-                    inputs['populated_text'] = wildcard_process(text=inputs['wildcard_text'], seed=int(inputs['seed']))
+                    if isinstance(inputs['seed'], list):
+                        try:
+                            input_node = prompt[inputs['seed'][0]]
+                            if input_node['class_type'] == 'ImpactInt':
+                                input_seed = int(input_node['inputs']['value'])
+                                if not isinstance(input_seed, int):
+                                    continue
+                            else:
+                                print(
+                                    f"[Impact Pack] Only ImpactInt and Primitive Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
+                                continue
+                        except:
+                            continue
+                    else:
+                        input_seed = int(inputs['seed'])
+
+                    inputs['populated_text'] = wildcard_process(text=inputs['wildcard_text'], seed=input_seed)
                     inputs['mode'] = False
 
                     server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "populated_text", "type": "text", "data": inputs['populated_text']})
