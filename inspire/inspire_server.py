@@ -172,6 +172,10 @@ def populate_wildcards(json_data):
     prompt = json_data['prompt']
 
     if 'ImpactWildcardProcessor' in nodes.NODE_CLASS_MAPPINGS:
+        if not hasattr(nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'], 'process'):
+            print(f"[Inspire Pack] Your Impact Pack is outdated. Please update to the latest version.")
+            return
+        
         wildcard_process = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process
         updated_widget_values = {}
         for k, v in prompt.items():

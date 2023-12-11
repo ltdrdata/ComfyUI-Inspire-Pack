@@ -8,6 +8,11 @@ try {
 } catch (error) {
 }
 
+// fallback
+if(!get_wildcards_list) {
+	get_wildcards_list = () => { return ["Impact Pack isn't installed or is outdated."]; }
+}
+
 let pb_cache = {};
 
 async function get_prompt_builder_items(category) {
