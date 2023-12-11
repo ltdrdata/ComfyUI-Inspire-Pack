@@ -101,7 +101,10 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Show Cached Info (Inspire)`: Displays information about cached data.
   * `Cache Backend Data [NumberKey] (Inspire)`, `Retrieve Backend Data [NumberKey] (Inspire)`, `Remove Backend Data [NumberKey] (Inspire)`: These nodes are provided for convenience in the automation process, allowing the use of numbers as keys.
   * `Cache Backend Data List (Inspire)`, `Cache Backend Data List [NumberKey] (Inspire)`: This node allows list input for backend cache. Conversely, nodes like `Cache Backend Data [NumberKey] (Inspire)` that do not accept list input will attempt to cache redundantly and overwrite existing data if provided with a list input. Therefore, it is necessary to use a unique key for each element to prevent this. This node caches the combined list. When retrieving cached backend data through this node, the output is in the form of a list.
-    
+
+* Conditioning - Nodes for conditionings
+  * `Concat Conditionings with Multiplier (Inspire)`: Concatenating an arbitrary number of Conditionings while applying a multiplier for each Conditioning. The multiplier depends on `comfy_PoP`, so [comfy_PoP](https://github.com/picturesonpictures/comfy_PoP) must be installed.
+
 * Util - Utilities
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
   * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.

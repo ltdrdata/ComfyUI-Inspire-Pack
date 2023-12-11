@@ -7,7 +7,7 @@
 
 import importlib
 
-print(f"### Loading: ComfyUI-Inspire-Pack (V0.48.2)")
+print(f"### Loading: ComfyUI-Inspire-Pack (V0.49)")
 
 node_list = [
     "lora_block_weight",
@@ -20,6 +20,7 @@ node_list = [
     "sampler_nodes",
     "backend_support",
     "list_nodes",
+    "conditioning_nodes"
 ]
 
 NODE_CLASS_MAPPINGS = {}
