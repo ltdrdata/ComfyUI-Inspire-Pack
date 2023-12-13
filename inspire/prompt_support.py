@@ -502,6 +502,34 @@ class ListCounter:
         return (count + base_value, )
 
 
+class CLIPTextEncodeWithWeight:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "text": ("STRING", {"multiline": True}), "clip": ("CLIP", ),
+                "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "add_weight": ("FLOAT", {"default": 0.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                }
+            }
+    RETURN_TYPES = ("CONDITIONING",)
+    FUNCTION = "encode"
+
+    CATEGORY = "InspirePack/Util"
+
+    def encode(self, clip, text, strength, add_weight):
+        tokens = clip.tokenize(text)
+
+        if add_weight != 0 or strength != 1:
+            for v in tokens.values():
+                for vv in v:
+                    for i in range(0, len(vv)):
+                        vv[i] = (vv[i][0], vv[i][1] * strength + add_weight)
+
+        cond, pooled = clip.encode_from_tokens(tokens, return_pooled=True)
+        return ([[cond, {"pooled_output": pooled}]], )
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -514,6 +542,7 @@ NODE_CLASS_MAPPINGS = {
     "PromptBuilder //Inspire": PromptBuilder,
     "SeedExplorer //Inspire": SeedExplorer,
     "ListCounter //Inspire": ListCounter,
+    "CLIPTextEncodeWithWeight //Inspire": CLIPTextEncodeWithWeight,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -526,5 +555,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
     "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
     "SeedExplorer //Inspire": "Seed Explorer (Inspire)",
-    "ListCounter //Inspire": "List Counter (Inspire)"
+    "ListCounter //Inspire": "List Counter (Inspire)",
+    "CLIPTextEncodeWithWeight //Inspire": "CLIPTextEncodeWithWeight (Inspire)"
 }

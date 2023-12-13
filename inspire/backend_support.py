@@ -286,10 +286,13 @@ class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
         if key not in cache:
             res = self.load_checkpoint(ckpt_name)
             cache[key] = ("ckpt", (False, res))
+            print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{ckpt_name}' is cached to '{key}'.")
         else:
-            res = cache[key]
+            _, (_, res) = cache[key]
+            print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key}' is loaded. (Loading skip)")
 
-        return res + [key]
+        model, clip, vae = res
+        return model, clip, vae, key
 
 
 NODE_CLASS_MAPPINGS = {
