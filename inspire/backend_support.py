@@ -224,7 +224,8 @@ class ShowCachedInfo:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "cache_info": ("STRING", {"multiline": True}),
+                "cache_info": ("STRING", {"multiline": True, "default": ""}),
+                "key": ("STRING", {"multiline": False, "default": ""}),
             },
             "hidden": {"unique_id": "UNIQUE_ID"},
         }
@@ -237,7 +238,8 @@ class ShowCachedInfo:
 
     OUTPUT_NODE = True
 
-    def doit(self, cache_info, unique_id):
+    @staticmethod
+    def get_data():
         global cache
 
         text1 = "---- [String Key Caches] ----\n"
@@ -253,10 +255,13 @@ class ShowCachedInfo:
             else:
                 text2 += f'{k}: {tag}\n'
 
-        text = text1 + "\n" + text2
+        return text1 + "\n" + text2
+
+    def doit(self, cache_info, key, unique_id):
+        text = ShowCachedInfo.get_data()
         PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "cache_info", "type": "text", "data": text})
 
-        return ()
+        return {}
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):

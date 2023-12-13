@@ -5,6 +5,7 @@ import server
 from enum import Enum
 from . import prompt_support
 from aiohttp import web
+from . import backend_support
 
 
 @server.PromptServer.instance.routes.get("/inspire/prompt_builder")
@@ -17,6 +18,26 @@ def prompt_builder(request):
             result['presets'] = prompt_support.prompt_builder_preset[category]
 
     return web.json_response(result)
+
+
+@server.PromptServer.instance.routes.get("/inspire/cache/remove")
+def cache_clear(request):
+    if "key" in request.rel_url.query:
+        key = request.rel_url.query["key"]
+        del backend_support.cache[key]
+
+    return web.Response(status=200)
+
+
+@server.PromptServer.instance.routes.get("/inspire/cache/clear")
+def cache_clear(request):
+    backend_support.cache = {}
+    return web.Response(status=200)
+
+
+@server.PromptServer.instance.routes.get("/inspire/cache/list")
+def cache_refresh(request):
+    return web.Response(text=backend_support.ShowCachedInfo.get_data(), status=200)
 
 
 class SGmode(Enum):
