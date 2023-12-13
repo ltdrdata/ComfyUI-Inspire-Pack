@@ -1,5 +1,7 @@
 from .libs.utils import any_typ
 from server import PromptServer
+import folder_paths
+import nodes
 
 cache = {}
 
@@ -261,6 +263,35 @@ class ShowCachedInfo:
         return float("NaN")
 
 
+class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
+                    "key_opt": ("STRING", {"multiline": False, "placeholder": "If empty, use 'ckpt_name' as the key." })
+                }}
+
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE", "STRING")
+    RETURN_NAMES = ("model", "clip", "vae", "cache key")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    def doit(self, ckpt_name, key_opt):
+        if key_opt.strip() == '':
+            key = ckpt_name
+        else:
+            key = key_opt.strip()
+
+        if key not in cache:
+            res = self.load_checkpoint(ckpt_name)
+            cache[key] = ("ckpt", (False, res))
+        else:
+            res = cache[key]
+
+        return res + [key]
+
+
 NODE_CLASS_MAPPINGS = {
     "CacheBackendData //Inspire": CacheBackendData,
     "CacheBackendDataNumberKey //Inspire": CacheBackendDataNumberKey,
@@ -271,6 +302,7 @@ NODE_CLASS_MAPPINGS = {
     "RemoveBackendData //Inspire": RemoveBackendData,
     "RemoveBackendDataNumberKey //Inspire": RemoveBackendDataNumberKey,
     "ShowCachedInfo //Inspire": ShowCachedInfo,
+    "CheckpointLoaderSimpleShared //Inspire": CheckpointLoaderSimpleShared
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -283,4 +315,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RemoveBackendData //Inspire": "Remove Backend Data (Inspire)",
     "RemoveBackendDataNumberKey //Inspire": "Remove Backend Data [NumberKey] (Inspire)",
     "ShowCachedInfo //Inspire": "Show Cached Info (Inspire)",
+    "CheckpointLoaderSimpleShared //Inspire": "Shared Checkpoint Loader (Inspire)"
 }
