@@ -197,13 +197,16 @@ class FromIPAdapterPipe:
 
 
 class IPAdapterConditioning:
-    def __init__(self, mask, weight, weight_type, noise=None, image=None, embeds=None):
+    def __init__(self, mask, weight, weight_type, noise=None, image=None, embeds=None, start_at=0.0, end_at=1.0, unfold_batch=False):
         self.mask = mask
         self.image = image
         self.embeds = embeds
         self.weight = weight
         self.noise = noise
         self.weight_type = weight_type
+        self.start_at = start_at
+        self.end_at = end_at
+        self.unfold_batch = unfold_batch
 
     def doit(self, ipadapter, clip_vision, model):
         if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
@@ -216,7 +219,8 @@ class IPAdapterConditioning:
 
         model = obj().apply_ipadapter(ipadapter, model, self.weight, clip_vision=clip_vision, image=self.image,
                                       embeds=self.embeds, weight_type=self.weight_type, noise=self.noise,
-                                      attn_mask=self.mask)[0]
+                                      attn_mask=self.mask, start_at=self.start_at, end_at=self.end_at,
+                                      unfold_batch=self.unfold_batch)[0]
 
         return model
 
@@ -232,6 +236,9 @@ class RegionalIPAdapterMask:
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "weight_type": (["original", "linear", "channel penalty"],),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "unfold_batch": ("BOOLEAN", {"default": False}),
             },
         }
 
@@ -240,8 +247,8 @@ class RegionalIPAdapterMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, image, weight, noise, weight_type):
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image)
+    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
         return (cond, )
 
 
@@ -257,6 +264,9 @@ class RegionalIPAdapterColorMask:
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "weight_type": (["original", "linear", "channel penalty"], ),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "unfold_batch": ("BOOLEAN", {"default": False}),
             },
         }
 
@@ -265,9 +275,9 @@ class RegionalIPAdapterColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, image, weight, noise, weight_type):
+    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
         mask = color_to_mask(color_mask, mask_color)
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image)
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
         return (cond, mask)
 
 
@@ -281,6 +291,9 @@ class RegionalIPAdapterEncodedMask:
                 "embeds": ("embeds",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "weight_type": (["original", "linear", "channel penalty"],),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "unfold_batch": ("BOOLEAN", {"default": False}),
             },
         }
 
@@ -289,8 +302,8 @@ class RegionalIPAdapterEncodedMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, embeds, weight, weight_type):
-        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds)
+    def doit(self, mask, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
+        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
         return (cond, )
 
 
@@ -305,6 +318,9 @@ class RegionalIPAdapterEncodedColorMask:
                 "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "weight_type": (["original", "linear", "channel penalty"],),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "unfold_batch": ("BOOLEAN", {"default": False}),
             },
         }
 
@@ -313,9 +329,9 @@ class RegionalIPAdapterEncodedColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, embeds, weight, weight_type):
+    def doit(self, color_mask, mask_color, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
         mask = color_to_mask(color_mask, mask_color)
-        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds)
+        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
         return (cond, mask)
 
 
