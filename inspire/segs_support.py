@@ -24,9 +24,13 @@ class MediaPipeFaceMeshDetector:
 
     def detect(self, image, threshold, dilation, crop_factor, drop_size=1, crop_min_size=None, detailer_hook=None):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'MediaPipeFaceMeshDetector' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         if 'MediaPipeFaceMeshToSEGS' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+                                          "To use 'MediaPipeFaceMeshDetector' node, 'Impact Pack' extension is required.")
             raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI-Impact-Pack'")
 
         pre_obj = nodes.NODE_CLASS_MAPPINGS['MediaPipe-FaceMeshPreprocessor']
@@ -52,7 +56,9 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'MediaPipe-FaceMeshPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
-            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+            raise Exception(f"[ERROR] To use MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         if self.upscale_factor != 1.0:
             image = nodes.ImageScaleBy().upscale(image, 'bilinear', self.upscale_factor)[0]
@@ -65,6 +71,8 @@ class MediaPipe_FaceMesh_Preprocessor_wrapper:
 class AnimeLineArt_Preprocessor_wrapper:
     def apply(self, image, mask=None):
         if 'AnimeLineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'AnimeLineArt_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use AnimeLineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['AnimeLineArtPreprocessor']()
@@ -75,6 +83,8 @@ class AnimeLineArt_Preprocessor_wrapper:
 class Manga2Anime_LineArt_Preprocessor_wrapper:
     def apply(self, image, mask=None):
         if 'Manga2Anime_LineArt_Preprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'Manga2Anime_LineArt_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use Manga2Anime_LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['Manga2Anime_LineArt_Preprocessor']()
@@ -85,6 +95,8 @@ class Manga2Anime_LineArt_Preprocessor_wrapper:
 class Color_Preprocessor_wrapper:
     def apply(self, image, mask=None):
         if 'ColorPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'Color_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use Color_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['ColorPreprocessor']()
@@ -95,6 +107,8 @@ class Color_Preprocessor_wrapper:
 class InpaintPreprocessor_wrapper:
     def apply(self, image, mask=None):
         if 'InpaintPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'InpaintPreprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use InpaintPreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['InpaintPreprocessor']()
@@ -110,6 +124,8 @@ class TilePreprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'TilePreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'TilePreprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use TilePreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['TilePreprocessor']()
@@ -123,6 +139,8 @@ class LineArt_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'LineArtPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'LineArt_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use LineArt_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         coarse = 'enable' if self.coarse else 'disable'
@@ -141,6 +159,8 @@ class OpenPose_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'OpenposePreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'OpenPose_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use OpenPose_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         detect_hand = 'enable' if self.detect_hand else 'disable'
@@ -164,6 +184,8 @@ class DWPreprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'DWPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'DWPreprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use DWPreprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         detect_hand = 'enable' if self.detect_hand else 'disable'
@@ -186,6 +208,8 @@ class LeReS_DepthMap_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'LeReS-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'LeReS_DepthMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use LeReS_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         boost = 'enable' if self.boost else 'disable'
@@ -202,6 +226,8 @@ class MiDaS_DepthMap_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if 'MiDaS-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'MiDaS_DepthMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use MiDaS_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['MiDaS-DepthMapPreprocessor']()
@@ -212,6 +238,8 @@ class MiDaS_DepthMap_Preprocessor_wrapper:
 class Zoe_DepthMap_Preprocessor_wrapper:
     def apply(self, image, mask=None):
         if 'Zoe-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'Zoe_DepthMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use Zoe_DepthMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['Zoe-DepthMapPreprocessor']()
@@ -226,6 +254,8 @@ class HED_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         if self.nodename not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          f"To use '{self.nodename}_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use {self.nodename}_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
 
         obj = nodes.NODE_CLASS_MAPPINGS[self.nodename]()

@@ -332,7 +332,9 @@ class BNK_EncoderWrapper:
 
     def encode(self, clip, text):
         if 'BNK_CLIPTextEncodeAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
-            raise Exception(f"[ERROR] To use MediaPipeFaceMeshDetector, you need to install 'Advanced CLIP Text Encode'")
+            utils.try_install_custom_node('https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb',
+                                          "To use 'WildcardEncodeInspire' node, 'ComfyUI_ADV_CLIP_emb' extension is required.")
+            raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Advanced CLIP Text Encode'")
         return nodes.NODE_CLASS_MAPPINGS['BNK_CLIPTextEncodeAdvanced']().encode(clip, text, self.token_normalization, self.weight_interpretation)
 
 
@@ -365,6 +367,8 @@ class WildcardEncodeInspire:
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
 
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+                                          "To use 'WildcardEncodeInspire' node, 'Impact Pack' extension is required.")
             raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Impact Pack'")
 
         model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], clip_encoder=clip_encoder)

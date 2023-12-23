@@ -1,6 +1,7 @@
 import torch
 import nodes
 import inspect
+from .libs import utils
 
 
 class ConcatConditioningsWithMultiplier:
@@ -30,11 +31,14 @@ class ConcatConditioningsWithMultiplier:
         if "ConditioningMultiplier_PoP" in nodes.NODE_CLASS_MAPPINGS:
             obj = nodes.NODE_CLASS_MAPPINGS["ConditioningMultiplier_PoP"]()
         else:
+            utils.try_install_custom_node('https://github.com/picturesonpictures/comfy_PoP',
+                                          "To use 'ConcatConditioningsWithMultiplier' node, 'comfy_PoP' extension is required.")
             raise Exception("'comfy_PoP' node isn't installed.")
 
         conditioning_to = kwargs['conditioning1']
         conditioning_to = obj.multiply_conditioning_strength(conditioning=conditioning_to, multiplier=float(kwargs['multiplier1']))[0]
 
+        out = None
         for k, conditioning_from in kwargs.items():
             if k == 'conditioning1' or not k.startswith('conditioning'):
                 continue
@@ -56,7 +60,10 @@ class ConcatConditioningsWithMultiplier:
 
             conditioning_to = out
 
-        return (out,)
+        if out is None:
+            return (kwargs['conditioning1'], )
+        else:
+            return (out,)
 
 
 NODE_CLASS_MAPPINGS = {
