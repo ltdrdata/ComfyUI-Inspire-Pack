@@ -195,38 +195,40 @@ def prompt_sampler_update(json_data):
     sampler_name = None
     scheduler = None
 
-    updated_nodes = set()
-
     for v in prompt.values():
         cls = v.get('class_type')
         if cls == 'GlobalSampler //Inspire':
             sampler_name = v['inputs']['sampler_name']
             scheduler = v['inputs']['scheduler']
 
-    if sampler_name is not None:
-        for k, v in json_data['prompt'].items():
-            if v.get('class_type') == 'GlobalSampler //Inspire':
-                continue
-
-            if ('sampler_name' in v['inputs'] and 'scheduler' in v['inputs'] and
-                    isinstance(v['inputs']['sampler_name'], str) and 'scheduler' in v['inputs']):
-                v['inputs']['sampler_name'] = sampler_name
-                v['inputs']['scheduler'] = scheduler
-                server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": 'sampler_name', "type": "text", "data": sampler_name})
-                server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": 'scheduler', "type": "text", "data": scheduler})
-
-                updated_nodes.add(k)
+    if sampler_name is None:
+        return
 
     for node in nodes:
+        cls = node.get('type')
+        if cls == 'GlobalSampler //Inspire' or cls is None:
+            continue
+
         node_id = str(node['id'])
 
         if node_id in prompt and node_id in widget_idx_map:
             sampler_widget_idx = widget_idx_map[node_id].get('sampler_name')
             scheduler_widget_idx = widget_idx_map[node_id].get('scheduler')
-            if sampler_widget_idx is not None:
-                node['widgets_values'][sampler_widget_idx] = sampler_name
-            if scheduler_widget_idx is not None:
-                node['widgets_values'][scheduler_widget_idx] = scheduler
+
+            prompt_inputs = prompt[node_id]['inputs']
+
+            if ('sampler_name' in prompt_inputs and 'scheduler' in prompt_inputs and
+                    isinstance(prompt_inputs['sampler_name'], str) and 'scheduler' in prompt_inputs):
+
+                if sampler_widget_idx is not None:
+                    prompt_inputs['sampler_name'] = sampler_name
+                    node['widgets_values'][sampler_widget_idx] = sampler_name
+                    server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": node_id, "widget_name": 'sampler_name', "type": "text", "data": sampler_name})
+
+                if scheduler_widget_idx is not None:
+                    prompt_inputs['scheduler'] = scheduler
+                    node['widgets_values'][scheduler_widget_idx] = scheduler
+                    server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": node_id, "widget_name": 'scheduler', "type": "text", "data": scheduler})
 
 
 def workflow_loadimage_update(json_data):
