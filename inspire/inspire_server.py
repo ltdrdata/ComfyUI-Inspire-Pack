@@ -99,11 +99,10 @@ def control_seed(v):
 
 def prompt_seed_update(json_data):
     try:
-        seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
-    except:
+        widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
+    except Exception:
         return None
 
-    seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
     value = None
     mode = None
     node = None
@@ -132,7 +131,7 @@ def prompt_seed_update(json_data):
                 if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
                     v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
 
-            if k not in seed_widget_map:
+            if k not in widget_idx_map or ('seed' not in widget_idx_map[k] and 'noise_seed' not in widget_idx_map[k]):
                 continue
 
             if 'seed' in v['inputs']:
@@ -156,7 +155,7 @@ def prompt_seed_update(json_data):
 
 def workflow_seed_update(json_data):
     nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
-    seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
+    widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
     prompt = json_data['prompt']
 
     updated_seed_map = {}
@@ -167,18 +166,67 @@ def workflow_seed_update(json_data):
             if node['type'] == 'GlobalSeed //Inspire':
                 value = prompt[node_id]['inputs']['value']
                 node['widgets_values'][0] = value
-            elif node_id in seed_widget_map:
-                widget_idx = seed_widget_map[node_id]
-
+            elif node_id in widget_idx_map:
+                widget_idx = None
+                seed = None
                 if 'noise_seed' in prompt[node_id]['inputs']:
                     seed = prompt[node_id]['inputs']['noise_seed']
-                else:
+                    widget_idx = widget_idx_map[node_id].get('noise_seed')
+                elif 'seed' in prompt[node_id]['inputs']:
                     seed = prompt[node_id]['inputs']['seed']
+                    widget_idx = widget_idx_map[node_id].get('seed')
 
-                node['widgets_values'][widget_idx] = seed
-                updated_seed_map[node_id] = seed
+                if widget_idx is not None:
+                    node['widgets_values'][widget_idx] = seed
+                    updated_seed_map[node_id] = seed
 
-    server.PromptServer.instance.send_sync("inspire-global-seed", {"id": node_id, "value": value, "seed_map": updated_seed_map})
+    server.PromptServer.instance.send_sync("inspire-global-seed", {"value": value, "seed_map": updated_seed_map})
+
+
+def prompt_sampler_update(json_data):
+    try:
+        widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
+    except Exception:
+        return None
+
+    nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
+    prompt = json_data['prompt']
+
+    sampler_name = None
+    scheduler = None
+
+    updated_nodes = set()
+
+    for v in prompt.values():
+        cls = v.get('class_type')
+        if cls == 'GlobalSampler //Inspire':
+            sampler_name = v['inputs']['sampler_name']
+            scheduler = v['inputs']['scheduler']
+
+    if sampler_name is not None:
+        for k, v in json_data['prompt'].items():
+            if v.get('class_type') == 'GlobalSampler //Inspire':
+                continue
+
+            if ('sampler_name' in v['inputs'] and 'scheduler' in v['inputs'] and
+                    isinstance(v['inputs']['sampler_name'], str) and 'scheduler' in v['inputs']):
+                v['inputs']['sampler_name'] = sampler_name
+                v['inputs']['scheduler'] = scheduler
+                server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": 'sampler_name', "type": "text", "data": sampler_name})
+                server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": 'scheduler', "type": "text", "data": scheduler})
+
+                updated_nodes.add(k)
+
+    for node in nodes:
+        node_id = str(node['id'])
+
+        if node_id in prompt and node_id in widget_idx_map:
+            sampler_widget_idx = widget_idx_map[node_id].get('sampler_name')
+            scheduler_widget_idx = widget_idx_map[node_id].get('scheduler')
+            if sampler_widget_idx is not None:
+                node['widgets_values'][sampler_widget_idx] = sampler_name
+            if scheduler_widget_idx is not None:
+                node['widgets_values'][scheduler_widget_idx] = scheduler
 
 
 def workflow_loadimage_update(json_data):
@@ -239,6 +287,8 @@ def onprompt(json_data):
     is_changed = prompt_seed_update(json_data)
     if is_changed:
         workflow_seed_update(json_data)
+
+    prompt_sampler_update(json_data)
 
     workflow_loadimage_update(json_data)
     populate_wildcards(json_data)

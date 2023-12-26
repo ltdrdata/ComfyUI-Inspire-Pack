@@ -166,3 +166,31 @@ app.registerExtension({
 		}
 	}
 });
+
+
+
+
+const original_queuePrompt = api.queuePrompt;
+async function queuePrompt_with_widget_idxs(number, { output, workflow }) {
+	workflow.widget_idx_map = {};
+
+	for(let i in app.graph._nodes_by_id) {
+		let widgets = app.graph._nodes_by_id[i].widgets;
+		if(widgets) {
+			for(let j in widgets) {
+				if(['seed', 'noise_seed', 'sampler_name', 'scheduler'].includes(widgets[j].name)
+					&& widgets[j].type != 'converted-widget') {
+					if(workflow.widget_idx_map[i] == undefined) {
+						workflow.widget_idx_map[i] = {};
+					}
+
+					workflow.widget_idx_map[i][widgets[j].name] = parseInt(j);
+				}
+			}
+		}
+	}
+
+	return await original_queuePrompt.call(api, number, { output, workflow });
+}
+
+api.queuePrompt = queuePrompt_with_widget_idxs;

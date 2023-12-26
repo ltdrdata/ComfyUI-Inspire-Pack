@@ -335,6 +335,27 @@ class GlobalSeed:
         return {}
 
 
+class GlobalSampler:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+            }
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    OUTPUT_NODE = True
+
+    def doit(self, **kwargs):
+        return {}
+
+
 class BindImageListPromptList:
     @classmethod
     def INPUT_TYPES(s):
@@ -599,6 +620,7 @@ NODE_CLASS_MAPPINGS = {
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
     "GlobalSeed //Inspire": GlobalSeed,
+    "GlobalSampler //Inspire": GlobalSampler,
     "BindImageListPromptList //Inspire": BindImageListPromptList,
     "WildcardEncode //Inspire": WildcardEncodeInspire,
     "PromptBuilder //Inspire": PromptBuilder,
@@ -614,6 +636,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
     "GlobalSeed //Inspire": "Global Seed (Inspire)",
+    "GlobalSampler //Inspire": "Global Sampler (Inspire)",
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
     "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
