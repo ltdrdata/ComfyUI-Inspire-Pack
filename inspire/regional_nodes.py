@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from . import prompt_support
-from libs import utils
+from .libs import utils
 
 
 class RegionalPromptSimple:

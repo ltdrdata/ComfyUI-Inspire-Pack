@@ -1,7 +1,7 @@
 import nodes
 import numpy as np
 import torch
-from libs import utils
+from .libs import utils
 
 
 def normalize_size_base_64(w, h):
