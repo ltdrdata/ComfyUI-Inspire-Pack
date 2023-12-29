@@ -460,7 +460,7 @@ class PromptBuilder:
 
         presets = ["#PRESET"]
         return {"required": {
-                        "category": (list(prompt_builder_preset.keys()), ),
+                        "category": (list(prompt_builder_preset.keys()) + ["#PLACEHOLDER"], ),
                         "preset": (presets, ),
                         "text": ("STRING", {"multiline": True}),
                      },
@@ -471,8 +471,8 @@ class PromptBuilder:
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, category, preset, text):
-        return (text,)
+    def doit(self, **kwargs):
+        return (kwargs['text'],)
 
 
 class SeedExplorer:

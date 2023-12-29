@@ -283,6 +283,16 @@ def populate_wildcards(json_data):
                     node['widgets_values'][4] = False
 
 
+def force_reset_useless_params(json_data):
+    prompt = json_data['prompt']
+
+    for k, v in prompt.items():
+        if 'class_type' in v and v['class_type'] == 'PromptBuilder //Inspire':
+            v['inputs']['category'] = '#PLACEHOLDER'
+
+    return json_data
+
+
 def onprompt(json_data):
     prompt_support.list_counter_map = {}
 
@@ -294,6 +304,8 @@ def onprompt(json_data):
 
     workflow_loadimage_update(json_data)
     populate_wildcards(json_data)
+
+    force_reset_useless_params(json_data)
 
     return json_data
 
