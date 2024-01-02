@@ -135,6 +135,18 @@ class TilePreprocessor_wrapper:
         return obj.execute(image, self.pyrUp_iters, resolution=resolution)[0]
 
 
+class MeshGraphormerDepthMapPreprocessorProvider_wrapper:
+    def apply(self, image, mask=None):
+        if 'MeshGraphormer-DepthMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'MeshGraphormerDepthMapPreprocessorProvider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+            raise Exception(f"[ERROR] To use MeshGraphormerDepthMapPreprocessorProvider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['MeshGraphormer-DepthMapPreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
+
+
 class LineArt_Preprocessor_wrapper:
     def __init__(self, coarse):
         self.coarse = coarse
@@ -550,6 +562,20 @@ class TilePreprocessor_Provider_for_SEGS:
         return (obj, )
 
 
+class MeshGraphormerDepthMapPreprocessorProvider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = MeshGraphormerDepthMapPreprocessorProvider_wrapper()
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -566,6 +592,7 @@ NODE_CLASS_MAPPINGS = {
     "Color_Preprocessor_Provider_for_SEGS //Inspire": Color_Preprocessor_Provider_for_SEGS,
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": InpaintPreprocessor_Provider_for_SEGS,
     "TilePreprocessor_Provider_for_SEGS //Inspire": TilePreprocessor_Provider_for_SEGS,
+    "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire": MeshGraphormerDepthMapPreprocessorProvider_for_SEGS,
     "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -584,5 +611,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Color_Preprocessor_Provider_for_SEGS //Inspire": "Color Preprocessor Provider (SEGS)",
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": "Inpaint Preprocessor Provider (SEGS)",
     "TilePreprocessor_Provider_for_SEGS //Inspire": "Tile Preprocessor Provider (SEGS)",
+    "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire": "MeshGraphormer Depth Map Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
