@@ -149,11 +149,10 @@ def empty_pil_tensor(w=64, h=64):
 
 
 def try_install_custom_node(custom_node_url, msg):
-    import sys
     try:
-        confirm_try_install = sys.CM_api['cm.try-install-custom-node']
-        print(f"confirm_try_install: {confirm_try_install}")
-        confirm_try_install('Inspire Pack', custom_node_url, msg)
+        import cm_global
+        cm_global.try_call(api='cm.try-install-custom-node',
+                           sender="Inspire Pack", custom_node_url=custom_node_url, msg=msg)
     except Exception as e:
         print(msg)
         print(f"[Inspire Pack] ComfyUI-Manager is outdated. The custom node installation feature is not available.")
