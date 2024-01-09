@@ -262,20 +262,21 @@ class LatentBatchSplitter:
         del latent_base['samples']
 
         cnt = min(split_count, len(samples))
-        res = [samples.unsqueeze(0) for samples in samples[:cnt]]
+        res = []
 
         for single_samples in samples[:cnt]:
             item = latent_base.copy()
             item['samples'] = single_samples.unsqueeze(0)
             res.append(item)
 
-        if split_count > len(samples):
+        if split_count >= len(samples):
             lack_cnt = split_count - cnt + 1  # including remained
             item = latent_base.copy()
             item['samples'] = empty_latent()
 
             for x in range(0, lack_cnt):
                 res.append(item)
+
         elif cnt < len(samples):
             remained_cnt = len(samples) - cnt
             remained_latent = latent_base.copy()
