@@ -1,12 +1,11 @@
 import os
-from PIL import Image
 from PIL import ImageOps
-import numpy as np
-import torch
 import comfy
 import folder_paths
 import base64
 from io import BytesIO
+from .libs.utils import *
+
 
 class LoadImagesFromDirBatch:
     @classmethod
@@ -211,14 +210,93 @@ class ChangeImageBatchSize:
             return (image, )
 
 
+class ImageBatchSplitter:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "images": ("IMAGE",),
+                    "split_count": ("INT", {"default": 4, "min": 0, "max": 50, "step": 1}),
+                    },
+                }
+
+    RETURN_TYPES = ByPassTypeTuple(("IMAGE", ))
+    FUNCTION = "doit"
+
+    CATEGORY = "ImpactPack/Util"
+
+    def doit(self, images, split_count):
+        cnt = min(split_count, len(images))
+        res = [image.unsqueeze(0) for image in images[:cnt]]
+
+        if split_count >= len(images):
+            lack_cnt = split_count - cnt + 1  # including remained
+            empty_image = empty_pil_tensor()
+            for x in range(0, lack_cnt):
+                res.append(empty_image)
+        elif cnt < len(images):
+            remained_cnt = len(images) - cnt
+            remained_image = images[-remained_cnt:]
+            res.append(remained_image)
+
+        return tuple(res)
+
+
+class LatentBatchSplitter:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "latent": ("LATENT",),
+                    "split_count": ("INT", {"default": 4, "min": 0, "max": 50, "step": 1}),
+                    },
+                }
+
+    RETURN_TYPES = ByPassTypeTuple(("LATENT", ))
+    FUNCTION = "doit"
+
+    CATEGORY = "ImpactPack/Util"
+
+    def doit(self, latent, split_count):
+        samples = latent['samples']
+
+        latent_base = latent.copy()
+        del latent_base['samples']
+
+        cnt = min(split_count, len(samples))
+        res = [samples.unsqueeze(0) for samples in samples[:cnt]]
+
+        for single_samples in samples[:cnt]:
+            item = latent_base.copy()
+            item['samples'] = single_samples.unsqueeze(0)
+            res.append(item)
+
+        if split_count > len(samples):
+            lack_cnt = split_count - cnt + 1  # including remained
+            item = latent_base.copy()
+            item['samples'] = empty_latent()
+
+            for x in range(0, lack_cnt):
+                res.append(item)
+        elif cnt < len(samples):
+            remained_cnt = len(samples) - cnt
+            remained_latent = latent_base.copy()
+            remained_latent['samples'] = samples[-remained_cnt:]
+            res.append(remained_latent)
+
+        return tuple(res)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadImagesFromDir //Inspire": LoadImagesFromDirBatch,
     "LoadImageListFromDir //Inspire": LoadImagesFromDirList,
     "LoadImage //Inspire": LoadImageInspire,
     "ChangeImageBatchSize //Inspire": ChangeImageBatchSize,
+    "ImageBatchSplitter //Inspire": ImageBatchSplitter,
+    "LatentBatchSplitter //Inspire": LatentBatchSplitter,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagesFromDir //Inspire": "Load Image Batch From Dir (Inspire)",
     "LoadImageListFromDir //Inspire": "Load Image List From Dir (Inspire)",
-    "ChangeImageBatchSize //Inspire": "Change Image Batch Size (Inspire)"
+    "ChangeImageBatchSize //Inspire": "Change Image Batch Size (Inspire)",
+    "ImageBatchSplitter //Inspire": "Image Batch Splitter (Inspire)",
+    "LatentBatchSplitter //Inspire": "Latent Batch Splitter (Inspire)"
 }

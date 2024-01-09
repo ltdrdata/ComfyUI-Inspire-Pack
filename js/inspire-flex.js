@@ -200,3 +200,60 @@ export function register_concat_conditionings_with_multiplier_node(nodeType, nod
 		nodeType.prototype.onConnectionsChange = this_handler;
 	}
 }
+
+function ensure_splitter_outputs(node, output_name, value, type) {
+	if(node.outputs.length != (value + 1)) {
+		while(node.outputs.length != (value + 1)) {
+			if(node.outputs.length > value + 1) {
+				node.removeOutput(node.outputs.length-1);
+			}
+			else {
+				node.addOutput(`output${node.outputs.length+1}`, type);
+			}
+		}
+
+		for(let i in node.outputs) {
+			let output = node.outputs[i];
+			output.name = `${output_name} ${parseInt(i)+1}`;
+		}
+
+		if(node.outputs[0].label == type || node.outputs[0].label == 'remained')
+			delete node.outputs[0].label;
+
+
+		let last_output = node.outputs[node.outputs.length-1];
+		last_output.name = 'remained';
+	}
+}
+
+export function register_splitter(node, app) {
+	if(node.comfyClass === 'ImageBatchSplitter //Inspire' || node.comfyClass === 'LatentBatchSplitter //Inspire') {
+		let split_count = node.widgets[0];
+
+		let output_name = 'output';
+		let output_type = "*";
+
+		if(node.comfyClass === 'ImageBatchSplitter //Inspire') {
+			output_name = 'image';
+			output_type = "IMAGE";
+		}
+		else if(node.comfyClass === 'LatentBatchSplitter //Inspire') {
+			output_name = 'latent';
+			output_type = "LATENT";
+		}
+
+		ensure_splitter_outputs(node, output_name, split_count.value, output_type);
+
+		Object.defineProperty(split_count, "value", {
+			set: async function(value) {
+				if(value < 0 || value > 50)
+					return;
+
+				ensure_splitter_outputs(node, output_name, value, output_type);
+			},
+			get: function() {
+				return node.outputs.length - 1;
+			}
+		});
+	}
+}
