@@ -12,6 +12,7 @@ import torch
 import folder_paths
 import comfy
 import traceback
+import random
 
 from server import PromptServer
 from .libs import utils
@@ -612,6 +613,38 @@ class CLIPTextEncodeWithWeight:
         return ([[cond, {"pooled_output": pooled}]], )
 
 
+class RandomGeneratorForList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "signal": (utils.any_typ,),
+                    "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    },
+                "hidden": {"unique_id": "UNIQUE_ID"},
+                }
+
+    RETURN_TYPES = (utils.any_typ, "INT",)
+    RETURN_NAMES = ("signal", "random_value",)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, signal, seed, unique_id):
+        if unique_id not in list_counter_map:
+            count = 0
+        else:
+            count = list_counter_map[unique_id]
+
+        list_counter_map[unique_id] = count + 1
+
+        rn = random.Random()
+        rn.seed(seed + count)
+        new_seed = random.randint(0, 1125899906842624)
+
+        return (signal, new_seed)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -627,6 +660,7 @@ NODE_CLASS_MAPPINGS = {
     "SeedExplorer //Inspire": SeedExplorer,
     "ListCounter //Inspire": ListCounter,
     "CLIPTextEncodeWithWeight //Inspire": CLIPTextEncodeWithWeight,
+    "RandomGeneratorForList //Inspire": RandomGeneratorForList,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -642,5 +676,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptBuilder //Inspire": "Prompt Builder (Inspire)",
     "SeedExplorer //Inspire": "Seed Explorer (Inspire)",
     "ListCounter //Inspire": "List Counter (Inspire)",
-    "CLIPTextEncodeWithWeight //Inspire": "CLIPTextEncodeWithWeight (Inspire)"
+    "CLIPTextEncodeWithWeight //Inspire": "CLIPTextEncodeWithWeight (Inspire)",
+    "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)"
 }
