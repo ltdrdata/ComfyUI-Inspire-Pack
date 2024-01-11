@@ -55,7 +55,7 @@ class LoadPromptsFromDir:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, prompt_dir):
         global prompts_path
@@ -110,7 +110,7 @@ class LoadPromptsFromFile:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, prompt_file):
         prompt_path = os.path.join(prompts_path, prompt_file)
@@ -165,7 +165,7 @@ class LoadSinglePromptFromFile:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, prompt_file, index):
         prompt_path = os.path.join(prompts_path, prompt_file)
@@ -206,7 +206,7 @@ class UnzipPrompt:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, zipped_prompt):
         return zipped_prompt
@@ -228,7 +228,7 @@ class ZipPrompt:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     def doit(self, positive, negative, name_opt=""):
         return ((positive, negative, name_opt), )
@@ -252,7 +252,7 @@ class PromptExtractor:
                 "hidden": {"unique_id": "UNIQUE_ID"},
                 }
 
-    CATEGORY = "InspirePack/prompt"
+    CATEGORY = "InspirePack/Prompt"
 
     RETURN_TYPES = ("STRING", "STRING")
     RETURN_NAMES = ("positive", "negative")
