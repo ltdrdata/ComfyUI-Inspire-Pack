@@ -488,8 +488,6 @@ class MakeBasicPipe:
     RETURN_TYPES = ("BASIC_PIPE", )
     FUNCTION = "doit"
 
-    OUTPUT_NODE = True
-
     def doit(self, **kwargs):
         pos_populated = kwargs['positive_populated_text']
         neg_populated = kwargs['negative_populated_text']
