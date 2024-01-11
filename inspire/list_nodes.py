@@ -15,7 +15,7 @@ class FloatRange:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/util"
+    CATEGORY = "InspirePack/Util"
 
     def doit(self, start, stop, step, limit, ensure_end):
         if start >= stop or step == 0:
