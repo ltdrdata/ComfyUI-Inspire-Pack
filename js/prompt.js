@@ -103,6 +103,93 @@ app.registerExtension({
 					 }
 			});
 		}
+		else if(node.comfyClass == "MakeBasicPipe //Inspire") {
+			const pos_wildcard_text_widget = node.widgets.find((w) => w.name == 'positive_wildcard_text');
+			const pos_populated_text_widget = node.widgets.find((w) => w.name == 'positive_populated_text');
+			const neg_wildcard_text_widget = node.widgets.find((w) => w.name == 'negative_wildcard_text');
+			const neg_populated_text_widget = node.widgets.find((w) => w.name == 'negative_populated_text');
+
+			const mode_widget = node.widgets.find((w) => w.name == 'wildcard_mode');
+			const direction_widget = node.widgets.find((w) => w.name == 'Add selection to');
+
+			// lora selector, wildcard selector
+			let combo_id = 4;
+
+			Object.defineProperty(node.widgets[combo_id], "value", {
+				set: (value) => {
+				        const stackTrace = new Error().stack;
+                        if(stackTrace.includes('inner_value_change')) {
+							if(value != "Select the LoRA to add to the text") {
+								let lora_name = value;
+								if (lora_name.endsWith('.safetensors')) {
+									lora_name = lora_name.slice(0, -12);
+								}
+
+								if(direction_widget.value) {
+									pos_wildcard_text_widget.value += `<lora:${lora_name}>`;
+								}
+								else {
+									neg_wildcard_text_widget.value += `<lora:${lora_name}>`;
+								}
+							}
+                        }
+					},
+				get: () => { return "Select the LoRA to add to the text"; }
+			});
+
+			Object.defineProperty(node.widgets[combo_id+1], "value", {
+				set: (value) => {
+				        const stackTrace = new Error().stack;
+                        if(stackTrace.includes('inner_value_change')) {
+                            if(value != "Select the Wildcard to add to the text") {
+                                let w = null;
+								if(direction_widget.value) {
+									w = pos_wildcard_text_widget;
+								}
+								else {
+									w = neg_wildcard_text_widget;
+								}
+
+                                if(w.value != '')
+                                    w.value += ', '
+
+	                            w.value += value;
+                            }
+                        }
+					},
+				get: () => { return "Select the Wildcard to add to the text"; }
+			});
+
+			Object.defineProperty(node.widgets[combo_id+1].options, "values", {
+			    set: (x) => {},
+			    get: () => {
+			    	return get_wildcards_list();
+			    }
+			});
+
+			// Preventing validation errors from occurring in any situation.
+			node.widgets[combo_id].serializeValue = () => { return "Select the LoRA to add to the text"; }
+			node.widgets[combo_id+1].serializeValue = () => { return "Select the Wildcard to add to the text"; }
+
+			// wildcard populating
+			pos_populated_text_widget.inputEl.disabled = true;
+			neg_populated_text_widget.inputEl.disabled = true;
+
+			// mode combo
+			Object.defineProperty(mode_widget, "value", {
+				set: (value) => {
+						pos_populated_text_widget.inputEl.disabled = node._mode_value;
+						neg_populated_text_widget.inputEl.disabled = node._mode_value;
+						node._mode_value = value;
+					},
+				get: () => {
+						if(node._mode_value != undefined)
+							return node._mode_value;
+						else
+							return true;
+					 }
+			});
+		}
 		else if(node.comfyClass == "PromptBuilder //Inspire") {
 			const preset_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'preset')];
 			const category_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'category')];

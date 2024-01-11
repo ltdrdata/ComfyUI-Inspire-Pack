@@ -425,8 +425,8 @@ class WildcardEncodeInspire:
                         "clip": ("CLIP",),
                         "token_normalization": (["none", "mean", "length", "length+mean"], ),
                         "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
-                        "wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Wildcard Prmopt (User Input)'}),
-                        "populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Prmopt (Will be generated automatically)'}),
+                        "wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Wildcard Prompt (User Input)'}),
+                        "populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Prompt (Will be generated automatically)'}),
                         "mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
                         "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"), ),
                         "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
@@ -447,11 +447,68 @@ class WildcardEncodeInspire:
 
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-                                          "To use 'WildcardEncodeInspire' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Impact Pack'")
+                                          "To use 'Wildcard Encode (Inspire)' node, 'Impact Pack' extension is required.")
+            raise Exception(f"[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
 
         model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], clip_encoder=clip_encoder)
         return (model, clip, conditioning, populated)
+
+
+class MakeBasicPipe:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
+
+                        "positive_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Positive Prompt (User Input)'}),
+                        "negative_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Negative Prompt (User Input)'}),
+
+                        "Add selection to": ("BOOLEAN", {"default": True, "label_on": "Positive", "label_off": "Negative"}),
+                        "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"),),
+                        "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
+                        "wildcard_mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
+
+                        "positive_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Positive Prompt (Will be generated automatically)'}),
+                        "negative_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Negative Prompt (Will be generated automatically)'}),
+
+                        "token_normalization": (["none", "mean", "length", "length+mean"],),
+                        "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
+
+                        "stop_at_clip_layer": ("INT", {"default": -2, "min": -24, "max": -1, "step": 1}),
+            
+                        "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    },
+                "optional": {
+                        "vae_opt": ("VAE",)
+                    },
+                }
+
+    CATEGORY = "InspirePack/Prompt"
+
+    RETURN_TYPES = ("BASIC_PIPE", )
+    FUNCTION = "doit"
+
+    OUTPUT_NODE = True
+
+    def doit(self, **kwargs):
+        pos_populated = kwargs['positive_populated_text']
+        neg_populated = kwargs['negative_populated_text']
+
+        clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
+
+        if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+                                          "To use 'Make Basic Pipe (Inspire)' node, 'Impact Pack' extension is required.")
+            raise Exception(f"[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
+
+        model, clip, vae = nodes.CheckpointLoaderSimple().load_checkpoint(kwargs['ckpt_name'])
+        clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])
+        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+
+        basic_pipe = model, clip, vae, positive, negative
+
+        return (basic_pipe, )
 
 
 class PromptBuilder:
@@ -661,6 +718,7 @@ NODE_CLASS_MAPPINGS = {
     "ListCounter //Inspire": ListCounter,
     "CLIPTextEncodeWithWeight //Inspire": CLIPTextEncodeWithWeight,
     "RandomGeneratorForList //Inspire": RandomGeneratorForList,
+    "MakeBasicPipe //Inspire": MakeBasicPipe,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -677,5 +735,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SeedExplorer //Inspire": "Seed Explorer (Inspire)",
     "ListCounter //Inspire": "List Counter (Inspire)",
     "CLIPTextEncodeWithWeight //Inspire": "CLIPTextEncodeWithWeight (Inspire)",
-    "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)"
+    "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)",
+    "MakeBasicPipe //Inspire": "Make Basic Pipe (Inspire)",
 }

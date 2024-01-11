@@ -249,6 +249,7 @@ def populate_wildcards(json_data):
         
         wildcard_process = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process
         updated_widget_values = {}
+        mbp_updated_widget_values = {}
         for k, v in prompt.items():
             if 'class_type' in v and v['class_type'] == 'WildcardEncode //Inspire':
                 inputs = v['inputs']
@@ -275,12 +276,46 @@ def populate_wildcards(json_data):
                     server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "populated_text", "type": "text", "data": inputs['populated_text']})
                     updated_widget_values[k] = inputs['populated_text']
 
+            elif 'class_type' in v and v['class_type'] == 'MakeBasicPipe //Inspire':
+                inputs = v['inputs']
+                if inputs['wildcard_mode'] and (isinstance(inputs['positive_populated_text'], str) or isinstance(inputs['negative_populated_text'], str)):
+                    if isinstance(inputs['seed'], list):
+                        try:
+                            input_node = prompt[inputs['seed'][0]]
+                            if input_node['class_type'] == 'ImpactInt':
+                                input_seed = int(input_node['inputs']['value'])
+                                if not isinstance(input_seed, int):
+                                    continue
+                            else:
+                                print(
+                                    f"[Impact Pack] Only ImpactInt and Primitive Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
+                                continue
+                        except:
+                            continue
+                    else:
+                        input_seed = int(inputs['seed'])
+
+                    if isinstance(inputs['positive_populated_text'], str):
+                        inputs['positive_populated_text'] = wildcard_process(text=inputs['positive_wildcard_text'], seed=input_seed)
+                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "positive_populated_text", "type": "text", "data": inputs['positive_populated_text']})
+
+                    if isinstance(inputs['negative_populated_text'], str):
+                        inputs['negative_populated_text'] = wildcard_process(text=inputs['negative_wildcard_text'], seed=input_seed)
+                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "negative_populated_text", "type": "text", "data": inputs['negative_populated_text']})
+
+                    inputs['wildcard_mode'] = False
+                    mbp_updated_widget_values[k] = inputs['positive_populated_text'], inputs['negative_populated_text']
+
         if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
             for node in json_data['extra_data']['extra_pnginfo']['workflow']['nodes']:
                 key = str(node['id'])
                 if key in updated_widget_values:
                     node['widgets_values'][3] = updated_widget_values[key]
                     node['widgets_values'][4] = False
+                if key in mbp_updated_widget_values:
+                    node['widgets_values'][7] = mbp_updated_widget_values[key][0]
+                    node['widgets_values'][8] = mbp_updated_widget_values[key][1]
+                    node['widgets_values'][5] = False
 
 
 def force_reset_useless_params(json_data):

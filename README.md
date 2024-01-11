@@ -69,6 +69,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * Each prompt is separated by a comma, and from the second seed onwards, it should follow the format `seed:strength`.
     * Pressing the "Add to prompt" button will append `additional_seed:additional_strength` to the prompt.
   * `Random Generator for List (Inspire)`: When connecting the list output to the signal input, this node generates random values for all items in the list.
+  * `Make Basic Pipe (Inspire)`: This is a node that creates a BASIC_PIPE using Wildcard Encode. The `Add select to` determines whether the selected item from the `Select to...` combo will be input as positive wildcard text or negative wildcard text.
 
 * Regional Nodes - These node simplifies the application of prompts by region.
   * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.

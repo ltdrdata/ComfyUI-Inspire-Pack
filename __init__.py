@@ -7,9 +7,9 @@
 
 import importlib
 
-version_code = [0, 57, 1]
+version_code = [0, 58]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
-print(f"### Loading: ComfyUI-Inspire-Pack ({version_code})")
+print(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 
 node_list = [
     "lora_block_weight",
