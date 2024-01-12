@@ -3,6 +3,9 @@ import torch
 import numpy as np
 import latent_preview
 from .libs import utils
+from einops import rearrange
+import random
+import math
 
 
 def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
@@ -124,11 +127,118 @@ class KSamplerAdvanced_inspire:
                                variation_seed=variation_seed, variation_strength=variation_strength, noise=noise_opt)
 
 
+# Modified version of ComfyUI main code
+# https://github.com/comfyanonymous/ComfyUI/blob/master/comfy_extras/nodes_hypertile.py
+# def get_closest_divisors(hw: int, aspect_ratio: float) -> tuple[int, int]:
+#     pairs = [(i, hw // i) for i in range(int(math.sqrt(hw)), 1, -1) if hw % i == 0]
+#     pair = min(((i, hw // i) for i in range(2, hw + 1) if hw % i == 0),
+#                key=lambda x: abs(x[1] / x[0] - aspect_ratio))
+#     pairs.append(pair)
+#     res = min(pairs, key=lambda x: max(x) / min(x))
+#     return res
+#
+#
+# def calc_optimal_hw(hw: int, aspect_ratio: float) -> tuple[int, int]:
+#     hcand = round(math.sqrt(hw * aspect_ratio))
+#     wcand = hw // hcand
+#
+#     if hcand * wcand != hw:
+#         wcand = round(math.sqrt(hw / aspect_ratio))
+#         hcand = hw // wcand
+#
+#         if hcand * wcand != hw:
+#             return get_closest_divisors(hw, aspect_ratio)
+#
+#     return hcand, wcand
+
+
+def random_divisor(value: int, min_value: int, /, max_options: int = 1, rand_obj=random.Random()) -> int:
+    min_value = min(min_value, value)
+
+    # All big divisors of value (inclusive)
+    divisors = [i for i in range(min_value, value + 1) if value % i == 0]
+
+    ns = [value // i for i in divisors[:max_options]]  # has at least 1 element
+
+    if len(ns) - 1 > 0:
+        idx = rand_obj.randint(0, len(ns) - 1)
+    else:
+        idx = 0
+
+    return ns[idx]
+
+
+class HyperTileInspire:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"model": ("MODEL",),
+                             "tile_size": ("INT", {"default": 256, "min": 1, "max": 2048}),
+                             "swap_size": ("INT", {"default": 2, "min": 1, "max": 128}),
+                             "max_depth": ("INT", {"default": 0, "min": 0, "max": 10}),
+                             "scale_depth": ("BOOLEAN", {"default": False}),
+                             "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                             }}
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "patch"
+
+    CATEGORY = "InspirePack/__for_testing"
+
+    def patch(self, model, tile_size, swap_size, max_depth, scale_depth, seed):
+        latent_tile_size = max(32, tile_size) // 8
+        temp = None
+
+        rand_obj = random.Random()
+        rand_obj.seed()
+
+        def hypertile_in(q, k, v, extra_options):
+            nonlocal temp
+            model_chans = q.shape[-2]
+            orig_shape = extra_options['original_shape']
+            apply_to = []
+            for i in range(max_depth + 1):
+                apply_to.append((orig_shape[-2] / (2 ** i)) * (orig_shape[-1] / (2 ** i)))
+
+            if model_chans in apply_to:
+                shape = extra_options["original_shape"]
+                aspect_ratio = shape[-1] / shape[-2]
+
+                hw = q.size(1)
+                # h, w = calc_optimal_hw(hw, aspect_ratio)
+                h, w = round(math.sqrt(hw * aspect_ratio)), round(math.sqrt(hw / aspect_ratio))
+
+                factor = (2 ** apply_to.index(model_chans)) if scale_depth else 1
+                nh = random_divisor(h, latent_tile_size * factor, swap_size)
+                nw = random_divisor(w, latent_tile_size * factor, swap_size)
+
+                if nh * nw > 1:
+                    q = rearrange(q, "b (nh h nw w) c -> (b nh nw) (h w) c", h=h // nh, w=w // nw, nh=nh, nw=nw)
+                    temp = (nh, nw, h, w)
+                return q, k, v
+
+            return q, k, v
+
+        def hypertile_out(out, extra_options):
+            nonlocal temp
+            if temp is not None:
+                nh, nw, h, w = temp
+                temp = None
+                out = rearrange(out, "(b nh nw) hw c -> b nh nw hw c", nh=nh, nw=nw)
+                out = rearrange(out, "b nh nw (h w) c -> b (nh h nw w) c", h=h // nh, w=w // nw)
+            return out
+
+        m = model.clone()
+        m.set_model_attn1_patch(hypertile_in)
+        m.set_model_attn1_output_patch(hypertile_out)
+        return (m, )
+
+
 NODE_CLASS_MAPPINGS = {
     "KSampler //Inspire": KSampler_inspire,
     "KSamplerAdvanced //Inspire": KSamplerAdvanced_inspire,
+    "HyperTile //Inspire": HyperTileInspire
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "KSampler //Inspire": "KSampler (inspire)",
-    "KSamplerAdvanced //Inspire": "KSamplerAdvanced (inspire)"
+    "KSamplerAdvanced //Inspire": "KSamplerAdvanced (inspire)",
+    "HyperTile //Inspire": "HyperTile (Inspire)"
 }
