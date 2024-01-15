@@ -16,6 +16,7 @@ import random
 
 from server import PromptServer
 from .libs import utils
+from .backend_support import CheckpointLoaderSimpleShared
 
 prompt_builder_preset = {}
 
@@ -459,6 +460,7 @@ class MakeBasicPipe:
     def INPUT_TYPES(s):
         return {"required": {
                         "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
+                        "ckpt_key_opt": ("STRING", {"multiline": False, "placeholder": "If empty, use 'ckpt_name' as the key." }),
 
                         "positive_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Positive Prompt (User Input)'}),
                         "negative_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Negative Prompt (User Input)'}),
@@ -499,10 +501,13 @@ class MakeBasicPipe:
                                           "To use 'Make Basic Pipe (Inspire)' node, 'Impact Pack' extension is required.")
             raise Exception(f"[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
 
-        model, clip, vae = nodes.CheckpointLoaderSimple().load_checkpoint(kwargs['ckpt_name'])
+        model, clip, vae = CheckpointLoaderSimpleShared().load_checkpoint(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
         model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder)
         model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+
+        if 'vae_opt' in kwargs:
+            vae = kwargs['vae_opt']
 
         basic_pipe = model, clip, vae, positive, negative
 
