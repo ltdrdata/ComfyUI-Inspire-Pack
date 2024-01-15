@@ -113,7 +113,7 @@ app.registerExtension({
 			const direction_widget = node.widgets.find((w) => w.name == 'Add selection to');
 
 			// lora selector, wildcard selector
-			let combo_id = 4;
+			let combo_id = 5;
 
 			Object.defineProperty(node.widgets[combo_id], "value", {
 				set: (value) => {
