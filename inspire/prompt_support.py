@@ -706,6 +706,29 @@ class RandomGeneratorForList:
         return (signal, new_seed)
 
 
+class RemoveControlNet:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"conditioning": ("CONDITIONING", )}}
+    RETURN_TYPES = ("CONDITIONING",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, conditioning):
+        c = []
+        for t in conditioning:
+            n = [t[0], t[1].copy()]
+
+            if 'control' in n[1]:
+                del n[1]['control']
+            if 'control_apply_to_uncond' in n[1]:
+                del n[1]['control_apply_to_uncond']
+            c.append(n)
+
+        return (c, )
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -723,6 +746,7 @@ NODE_CLASS_MAPPINGS = {
     "CLIPTextEncodeWithWeight //Inspire": CLIPTextEncodeWithWeight,
     "RandomGeneratorForList //Inspire": RandomGeneratorForList,
     "MakeBasicPipe //Inspire": MakeBasicPipe,
+    "RemoveControlNet //Inspire": RemoveControlNet,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -741,4 +765,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "CLIPTextEncodeWithWeight //Inspire": "CLIPTextEncodeWithWeight (Inspire)",
     "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)",
     "MakeBasicPipe //Inspire": "Make Basic Pipe (Inspire)",
+    "RemoveControlNet //Inspire": "Remove ControlNet (Inspire)",
 }

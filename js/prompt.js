@@ -3,10 +3,10 @@ import { api } from "../../scripts/api.js";
 
 let get_wildcards_list;
 try {
-  const ImpactPack = await import("../ComfyUI-Impact-Pack/impact-pack.js");
-  get_wildcards_list = ImpactPack.get_wildcards_list;
-} catch (error) {
+	const ImpactPack = await import("../ComfyUI-Impact-Pack/impact-pack.js");
+	get_wildcards_list = ImpactPack.get_wildcards_list;
 }
+catch (error) {}
 
 // fallback
 if(!get_wildcards_list) {
@@ -44,8 +44,8 @@ app.registerExtension({
 
 			Object.defineProperty(node.widgets[combo_id], "value", {
 				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
+						const stackTrace = new Error().stack;
+						if(stackTrace.includes('inner_value_change')) {
 							if(value != "Select the LoRA to add to the text") {
 								let lora_name = value;
 								if (lora_name.endsWith('.safetensors')) {
@@ -54,31 +54,31 @@ app.registerExtension({
 
 								wildcard_text_widget.value += `<lora:${lora_name}>`;
 							}
-                        }
+						}
 					},
 				get: () => { return "Select the LoRA to add to the text"; }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
-                            if(value != "Select the Wildcard to add to the text") {
-                                if(wildcard_text_widget.value != '')
-                                    wildcard_text_widget.value += ', '
+						const stackTrace = new Error().stack;
+						if(stackTrace.includes('inner_value_change')) {
+							if(value != "Select the Wildcard to add to the text") {
+								if(wildcard_text_widget.value != '')
+									wildcard_text_widget.value += ', '
 
-	                            wildcard_text_widget.value += value;
-                            }
-                        }
+								wildcard_text_widget.value += value;
+							}
+						}
 					},
 				get: () => { return "Select the Wildcard to add to the text"; }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1].options, "values", {
-			    set: (x) => {},
-			    get: () => {
-			    	return get_wildcards_list();
-			    }
+				set: (x) => {},
+				get: () => {
+					return get_wildcards_list();
+				}
 			});
 
 			// Preventing validation errors from occurring in any situation.
@@ -117,8 +117,8 @@ app.registerExtension({
 
 			Object.defineProperty(node.widgets[combo_id], "value", {
 				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
+						const stackTrace = new Error().stack;
+						if(stackTrace.includes('inner_value_change')) {
 							if(value != "Select the LoRA to add to the text") {
 								let lora_name = value;
 								if (lora_name.endsWith('.safetensors')) {
@@ -132,17 +132,17 @@ app.registerExtension({
 									neg_wildcard_text_widget.value += `<lora:${lora_name}>`;
 								}
 							}
-                        }
+						}
 					},
 				get: () => { return "Select the LoRA to add to the text"; }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
-                            if(value != "Select the Wildcard to add to the text") {
-                                let w = null;
+						const stackTrace = new Error().stack;
+						if(stackTrace.includes('inner_value_change')) {
+							if(value != "Select the Wildcard to add to the text") {
+								let w = null;
 								if(direction_widget.value) {
 									w = pos_wildcard_text_widget;
 								}
@@ -150,21 +150,21 @@ app.registerExtension({
 									w = neg_wildcard_text_widget;
 								}
 
-                                if(w.value != '')
-                                    w.value += ', '
+								if(w.value != '')
+									w.value += ', '
 
-	                            w.value += value;
-                            }
-                        }
+								w.value += value;
+							}
+						}
 					},
 				get: () => { return "Select the Wildcard to add to the text"; }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1].options, "values", {
-			    set: (x) => {},
-			    get: () => {
-			    	return get_wildcards_list();
-			    }
+				set: (x) => {},
+				get: () => {
+					return get_wildcards_list();
+				}
 			});
 
 			// Preventing validation errors from occurring in any situation.
@@ -195,18 +195,18 @@ app.registerExtension({
 			const category_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'category')];
 
 			Object.defineProperty(preset_widget.options, "values", {
-			    set: (x) => {},
-			    get: () => {
-			    	get_prompt_builder_items(category_widget.value);
-			    	if(pb_cache[category_widget.value] == undefined) {
-			    		return ["#PRESET"];
-			    	}
+				set: (x) => {},
+				get: () => {
+					get_prompt_builder_items(category_widget.value);
+					if(pb_cache[category_widget.value] == undefined) {
+						return ["#PRESET"];
+					}
 					return pb_cache[category_widget.value];
-			    }
+				}
 			});
 
 			Object.defineProperty(preset_widget, "value", {
-			    set: (x) => {
+				set: (x) => {
 					const stackTrace = new Error().stack;
 					if(stackTrace.includes('inner_value_change')) {
 						if(node.widgets[2].value) {
@@ -220,11 +220,11 @@ app.registerExtension({
 							node.widgets[2].value += x.trim();
 
 						if(node.widgets_values) {
-			    			node.widgets_values[2] = node.widgets[2].values;
+							node.widgets_values[2] = node.widgets[2].values;
 						}
 					};
-			    },
-			    get: () => { return '#PRESET'; }
+				},
+				get: () => { return '#PRESET'; }
 			});
 
 			preset_widget.serializeValue = (workflowNode, widgetIndex) => { return "#PRESET"; };
