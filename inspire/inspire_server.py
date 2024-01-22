@@ -8,6 +8,9 @@ from aiohttp import web
 from . import backend_support
 
 
+max_seed = 2**32 - 1
+
+
 @server.PromptServer.instance.routes.get("/inspire/prompt_builder")
 def prompt_builder(request):
     result = {"presets": []}
@@ -65,14 +68,14 @@ class SeedGenerator:
 
         if self.action == SGmode.INCR:
             self.base_value += 1
-            if self.base_value > 1125899906842624:
+            if self.base_value > max_seed:
                 self.base_value = 0
         elif self.action == SGmode.DECR:
             self.base_value -= 1
             if self.base_value < 0:
-                self.base_value = 1125899906842624
+                self.base_value = max_seed
         elif self.action == SGmode.RAND:
-            self.base_value = random.randint(0, 1125899906842624)
+            self.base_value = random.randint(0, max_seed)
 
         return seed
 
@@ -83,14 +86,14 @@ def control_seed(v):
 
     if action == 'increment' or action == 'increment for each node':
         value += 1
-        if value > 1125899906842624:
+        if value > max_seed:
             value = 0
     elif action == 'decrement' or action == 'decrement for each node':
         value -= 1
         if value < 0:
-            value = 1125899906842624
+            value = max_seed
     elif action == 'randomize' or action == 'randomize for each node':
-        value = random.randint(0, 1125899906842624)
+        value = random.randint(0, max_seed)
 
     v['inputs']['value'] = value
 
