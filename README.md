@@ -116,6 +116,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 
 * Models - Nodes for models
   * `IPAdapter Model Helper (Inspire)`: This provides presets that allow for easy loading of the IPAdapter related models. However, it is essential for the model's name to be accurate.
+    * You can download the appropriate model through ComfyUI-Manager.
 
 * Util - Utilities
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
