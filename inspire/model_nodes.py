@@ -31,7 +31,7 @@ def lookup_model(model_dir, name):
     if name is None:
         return None, "N/A"
 
-    names = [(os.path.splitext(os.path.basename(x)), x) for x in folder_paths.get_filename_list(model_dir)]
+    names = [(os.path.splitext(os.path.basename(x))[0], x) for x in folder_paths.get_filename_list(model_dir)]
     resolved_name = [y for x, y in names if x == name]
 
     if len(resolved_name) > 0:
