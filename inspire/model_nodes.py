@@ -3,6 +3,7 @@ import folder_paths
 import os
 import server
 from .libs import utils
+from . import backend_support
 
 model_preset = {
     # base
@@ -56,7 +57,8 @@ class IPAdapterModelHelper:
             "hidden": {"unique_id": "UNIQUE_ID"}
         }
 
-    RETURN_TYPES = ("IPADAPTER_PIPE", "MODEL", "CLIP", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE")
+    RETURN_TYPES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "STRING")
+    RETURN_NAMES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "insightface_cache_key")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/models"
@@ -83,15 +85,15 @@ class IPAdapterModelHelper:
         else:
             ok2 = f"CLIP_VISION ({ok2})"
 
-        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": ok1})
-        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": ok2})
+        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": ok1})
+        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": ok2})
 
         if ok3 == "FAIL":
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "MODEL (fail)"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": "CLIP (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP (fail)"})
         else:
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "MODEL"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": "CLIP"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP"})
 
         if ok1 == "FAIL" or ok2 == "FAIL" and ok3 == "FAIL":
             raise Exception("ERROR: Failed to load several models in IPAdapterModelHelper.")
@@ -103,17 +105,21 @@ class IPAdapterModelHelper:
             clipvision = nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]
 
         if lora is not None:
-            model, clip = nodes.LoraLoader().load_lora(model=model, clip=clip, lora_name=lora, strength_model=lora_strength_model, strength_clip=lora_strength_clip)[0]
+            model, clip = nodes.LoraLoader().load_lora(model=model, clip=clip, lora_name=lora, strength_model=lora_strength_model, strength_clip=lora_strength_clip)
 
+        cache_key = ""
         if is_insightface:
-            insightface = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "INSIGHTFACE"})
+            cache_key = 'insightface-' + insightface_provider
+            if cache_key not in backend_support.cache:
+                backend_support.cache[cache_key] = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
+            insightface = backend_support.cache[cache_key]
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE"})
         else:
             insightface = None
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "INSIGHTFACE (N/A)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (N/A)"})
 
         pipe = ipadapter, clipvision, model
-        return pipe, model, clip, ipadapter, clipvision, insightface
+        return pipe, ipadapter, clipvision, insightface, model, clip, cache_key
 
 
 NODE_CLASS_MAPPINGS = {
