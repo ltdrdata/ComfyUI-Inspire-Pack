@@ -214,9 +214,9 @@ class IPAdapterConditioning:
 
     def doit(self, ipadapter, clip_vision, model):
         if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
-            utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-                                          "To use 'Regional IPAdapter' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use Regional IPAdapter, you need to install 'ComfyUI_IPAdapter_plus'")
+            utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
+                                          "To use 'Regional IPAdapter' node, 'ComfyUI IPAdapter Plus' extension is required.")
+            raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
         obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterApply']
 
