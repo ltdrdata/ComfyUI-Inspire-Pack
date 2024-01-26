@@ -4,6 +4,7 @@ import os
 import server
 from .libs import utils
 from . import backend_support
+from comfy import sdxl_clip
 
 model_preset = {
     # base
@@ -38,7 +39,7 @@ def lookup_model(model_dir, name):
     if len(resolved_name) > 0:
         return resolved_name[0], "OK"
     else:
-        print(f"The `{name}` model file does not exist in `{model_dir}` model dir.")
+        print(f"[ERROR] IPAdapterModelHelper: The `{name}` model file does not exist in `{model_dir}` model dir.")
         return None, "FAIL"
 
 
@@ -53,21 +54,34 @@ class IPAdapterModelHelper:
                 "lora_strength_model": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
                 "lora_strength_clip": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
                 "insightface_provider": (["CPU", "CUDA", "ROCM"], ),
+                "cache_mode": (["insightface only", "clip_vision only", "all", "none"], {"default": "insightface only"}),
             },
             "hidden": {"unique_id": "UNIQUE_ID"}
         }
 
-    RETURN_TYPES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "STRING")
-    RETURN_NAMES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "insightface_cache_key")
+    RETURN_TYPES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "STRING", "STRING")
+    RETURN_NAMES = ("IPADAPTER_PIPE", "IPADAPTER", "CLIP_VISION", "INSIGHTFACE", "MODEL", "CLIP", "insightface_cache_key", "clip_vision_cache_key")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/models"
 
-    def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, unique_id=None):
+    def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode="none", unique_id=None):
         if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
             raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
+
+        is_sdxl_preset = 'SDXL' in preset
+        is_sdxl_model = isinstance(clip.tokenizer, sdxl_clip.SDXLTokenizer)
+
+        if is_sdxl_preset != is_sdxl_model:
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "IPADAPTER (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": "CLIP_VISION (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL (fail)"})
+            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP (fail)"})
+            print(f"[ERROR] IPAdapterModelHelper: You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
+            raise Exception("[ERROR] You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
 
         ipadapter, clipvision, lora, is_insightface = model_preset[preset]
 
@@ -95,31 +109,43 @@ class IPAdapterModelHelper:
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL"})
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP"})
 
-        if ok1 == "FAIL" or ok2 == "FAIL" and ok3 == "FAIL":
+        if ok1 == "FAIL" or ok2 == "FAIL" or ok3 == "FAIL":
+            self.is_failed = True
             raise Exception("ERROR: Failed to load several models in IPAdapterModelHelper.")
 
         if ipadapter is not None:
             ipadapter = nodes.NODE_CLASS_MAPPINGS["IPAdapterModelLoader"]().load_ipadapter_model(ipadapter_file=ipadapter)[0]
 
+        ccache_key = ""
         if clipvision is not None:
-            clipvision = nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]
+            if cache_mode in ["clip_vision only", "all"]:
+                ccache_key = clipvision
+                if ccache_key not in backend_support.cache:
+                    backend_support.cache[ccache_key] = False, nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]
+                clipvision = backend_support.cache[ccache_key][1]
+            else:
+                clipvision = nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]
 
         if lora is not None:
             model, clip = nodes.LoraLoader().load_lora(model=model, clip=clip, lora_name=lora, strength_model=lora_strength_model, strength_clip=lora_strength_clip)
 
-        cache_key = ""
+        icache_key = ""
         if is_insightface:
-            cache_key = 'insightface-' + insightface_provider
-            if cache_key not in backend_support.cache:
-                backend_support.cache[cache_key] = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
-            insightface = backend_support.cache[cache_key]
+            if cache_mode in ["insightface only", "all"]:
+                icache_key = 'insightface-' + insightface_provider
+                if icache_key not in backend_support.cache:
+                    backend_support.cache[icache_key] = False, nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
+                insightface = backend_support.cache[icache_key][1]
+            else:
+                insightface = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
+
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE"})
         else:
             insightface = None
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (N/A)"})
 
         pipe = ipadapter, clipvision, model
-        return pipe, ipadapter, clipvision, insightface, model, clip, cache_key
+        return pipe, ipadapter, clipvision, insightface, model, clip, icache_key, ccache_key
 
 
 NODE_CLASS_MAPPINGS = {
