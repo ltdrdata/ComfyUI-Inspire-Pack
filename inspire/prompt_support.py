@@ -27,8 +27,6 @@ resource_path = os.path.abspath(resource_path)
 prompts_path = os.path.join(os.path.dirname(__file__), "..", "prompts")
 prompts_path = os.path.abspath(prompts_path)
 
-max_seed = 2**32 - 1
-
 
 try:
     pb_yaml_path = os.path.join(resource_path, 'prompt-builder.yaml')
@@ -321,7 +319,7 @@ class GlobalSeed:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "value": ("INT", {"default": 0, "min": 0, "max": max_seed}),
+                "value": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "mode": ("BOOLEAN", {"default": True, "label_on": "control_before_generate", "label_off": "control_after_generate"}),
                 "action": (["fixed", "increment", "decrement", "randomize",
                             "increment for each node", "decrement for each node", "randomize for each node"], ),
