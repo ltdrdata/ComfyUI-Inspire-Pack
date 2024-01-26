@@ -17,6 +17,7 @@ class LoadImagesFromDirBatch:
             "optional": {
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
             }
         }
 
@@ -25,7 +26,14 @@ class LoadImagesFromDirBatch:
 
     CATEGORY = "image"
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0):
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        if 'load_always' in kwargs and kwargs['load_always']:
+            return float("NaN")
+        else:
+            return hash(frozenset(kwargs))
+
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
         dir_files = os.listdir(directory)
@@ -90,6 +98,7 @@ class LoadImagesFromDirList:
             "optional": {
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
             }
         }
 
@@ -100,7 +109,14 @@ class LoadImagesFromDirList:
 
     CATEGORY = "image"
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0):
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        if 'load_always' in kwargs and kwargs['load_always']:
+            return float("NaN")
+        else:
+            return hash(frozenset(kwargs))
+
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
         dir_files = os.listdir(directory)
