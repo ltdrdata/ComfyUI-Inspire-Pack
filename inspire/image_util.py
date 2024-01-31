@@ -118,7 +118,7 @@ class LoadImagesFromDirList:
 
     def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
         if not os.path.isdir(directory):
-            raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
+            raise FileNotFoundError(f"Directory '{directory}' cannot be found.")
         dir_files = os.listdir(directory)
         if len(dir_files) == 0:
             raise FileNotFoundError(f"No files in directory '{directory}'.")
