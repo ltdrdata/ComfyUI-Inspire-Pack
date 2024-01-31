@@ -144,7 +144,7 @@ class IPAdapterModelHelper:
             insightface = None
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (N/A)"})
 
-        pipe = ipadapter, clipvision, model
+        pipe = ipadapter, model, clipvision, insightface
         return pipe, ipadapter, clipvision, insightface, model, clip, icache_key, ccache_key
 
 
