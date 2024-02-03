@@ -153,10 +153,10 @@ def prompt_seed_update(json_data):
     if mode is not None and not mode:
         control_seed(node[1])
 
-    return value is not None
+    return value is not None, mode
 
 
-def workflow_seed_update(json_data):
+def workflow_seed_update(json_data, mode):
     nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
     widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
     prompt = json_data['prompt']
@@ -167,8 +167,11 @@ def workflow_seed_update(json_data):
         node_id = str(node['id'])
         if node_id in prompt:
             if node['type'] == 'GlobalSeed //Inspire':
+                # if mode is True:
+                #     node['widgets_values'][0] = prompt[node_id]['inputs']['value']
+
                 value = prompt[node_id]['inputs']['value']
-                node['widgets_values'][0] = value
+
             elif node_id in widget_idx_map:
                 widget_idx = None
                 seed = None
@@ -340,9 +343,9 @@ def force_reset_useless_params(json_data):
 def onprompt(json_data):
     prompt_support.list_counter_map = {}
 
-    is_changed = prompt_seed_update(json_data)
+    is_changed, mode = prompt_seed_update(json_data)
     if is_changed:
-        workflow_seed_update(json_data)
+        workflow_seed_update(json_data, mode)
 
     prompt_sampler_update(json_data)
 

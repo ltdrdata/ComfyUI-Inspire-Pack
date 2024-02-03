@@ -11,7 +11,8 @@ function globalSeedHandler(event) {
 				const w = node.widgets.find((w) => w.name == 'value');
 				const last_w = node.widgets.find((w) => w.name == 'last_seed');
 				last_w.value = w.value;
-				w.value = event.detail.value;
+				if(event.detail.value != null)
+					w.value = event.detail.value;
 			}
 		}
 		else
