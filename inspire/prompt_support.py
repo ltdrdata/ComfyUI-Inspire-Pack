@@ -730,6 +730,26 @@ class RemoveControlNet:
         return (c, )
 
 
+class RemoveControlNetFromRegionalPrompts:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"regional_prompts": ("REGIONAL_PROMPTS", )}}
+    RETURN_TYPES = ("REGIONAL_PROMPTS",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, regional_prompts):
+        rcn = RemoveControlNet()
+        res = []
+        for rp in regional_prompts:
+            _, _, _, _, positive, negative = rp.sampler.params
+            positive, negative = rcn.doit(positive)[0], rcn.doit(negative)[0]
+            sampler = rp.sampler.clone_with_conditionings(positive, negative)
+            res.append(rp.clone_with_sampler(sampler))
+        return (res, )
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": LoadPromptsFromDir,
     "LoadPromptsFromFile //Inspire": LoadPromptsFromFile,
@@ -748,6 +768,7 @@ NODE_CLASS_MAPPINGS = {
     "RandomGeneratorForList //Inspire": RandomGeneratorForList,
     "MakeBasicPipe //Inspire": MakeBasicPipe,
     "RemoveControlNet //Inspire": RemoveControlNet,
+    "RemoveControlNetFromRegionalPrompts //Inspire": RemoveControlNetFromRegionalPrompts,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
@@ -767,4 +788,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)",
     "MakeBasicPipe //Inspire": "Make Basic Pipe (Inspire)",
     "RemoveControlNet //Inspire": "Remove ControlNet (Inspire)",
+    "RemoveControlNetFromRegionalPrompts //Inspire": "Remove ControlNet [RegionalPrompts] (Inspire)"
 }
