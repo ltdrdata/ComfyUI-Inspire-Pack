@@ -104,7 +104,7 @@ def prompt_seed_update(json_data):
     try:
         widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
     except Exception:
-        return None
+        return False, None
 
     value = None
     mode = None
