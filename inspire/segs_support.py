@@ -190,11 +190,13 @@ class OpenPose_Preprocessor_wrapper:
 
 
 class DWPreprocessor_wrapper:
-    def __init__(self, detect_hand, detect_body, detect_face, upscale_factor=1.0):
+    def __init__(self, detect_hand, detect_body, detect_face, upscale_factor=1.0, bbox_detector="yolox_l.onnx", pose_estimator="dw-ll_ucoco_384.onnx"):
         self.detect_hand = detect_hand
         self.detect_body = detect_body
         self.detect_face = detect_face
         self.upscale_factor = upscale_factor
+        self.bbox_detector = bbox_detector
+        self.pose_estimator = pose_estimator
 
     def apply(self, image, mask=None):
         if 'DWPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
@@ -211,7 +213,7 @@ class DWPreprocessor_wrapper:
 
         obj = nodes.NODE_CLASS_MAPPINGS['DWPreprocessor']()
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
-        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution)['result'][0]
+        return obj.estimate_pose(image, detect_hand, detect_body, detect_face, resolution=resolution, bbox_detector=self.bbox_detector, pose_estimator=self.pose_estimator)['result'][0]
 
 
 class LeReS_DepthMap_Preprocessor_wrapper:
@@ -317,6 +319,11 @@ class DWPreprocessor_Provider_for_SEGS:
                 "detect_body": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "detect_face": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
                 "resolution_upscale_by": ("FLOAT", {"default": 1.0, "min": 0.5, "max": 100, "step": 0.1}),
+                "bbox_detector": (
+                    ["yolox_l.torchscript.pt", "yolox_l.onnx", "yolo_nas_l_fp16.onnx", "yolo_nas_m_fp16.onnx", "yolo_nas_s_fp16.onnx"],
+                    {"default": "yolox_l.onnx"}
+                ),
+                "pose_estimator": (["dw-ll_ucoco_384_bs5.torchscript.pt", "dw-ll_ucoco_384.onnx", "dw-ll_ucoco.onnx"], {"default": "dw-ll_ucoco_384_bs5.torchscript.pt"})
             }
         }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
@@ -324,8 +331,8 @@ class DWPreprocessor_Provider_for_SEGS:
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self, detect_hand, detect_body, detect_face, resolution_upscale_by):
-        obj = DWPreprocessor_wrapper(detect_hand, detect_body, detect_face, upscale_factor=resolution_upscale_by)
+    def doit(self, detect_hand, detect_body, detect_face, resolution_upscale_by, bbox_detector, pose_estimator):
+        obj = DWPreprocessor_wrapper(detect_hand, detect_body, detect_face, upscale_factor=resolution_upscale_by, bbox_detector=bbox_detector, pose_estimator=pose_estimator)
         return (obj, )
 
 
