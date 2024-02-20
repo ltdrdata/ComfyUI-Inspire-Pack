@@ -355,10 +355,10 @@ class StableCascade_CheckpointLoader:
             if key_b not in cache:
                 res_b = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
                 cache[key_b] = ("ckpt", (False, res_b))
-                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{stage_b}' is cached to '{key_b}'.")
+                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_b}' is cached to '{key_b}'.")
             else:
                 _, (_, res_b) = cache[key_b]
-                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key_b}' is loaded. (Loading skip)")
+                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_b}' is loaded. (Loading skip)")
             b_model, clip, b_vae = res_b
         else:
             b_model, clip, b_vae = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
@@ -367,10 +367,10 @@ class StableCascade_CheckpointLoader:
             if key_c not in cache:
                 res_c = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_c)
                 cache[key_c] = ("unclip_ckpt", (False, res_c))
-                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{stage_c}' is cached to '{key_c}'.")
+                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_c}' is cached to '{key_c}'.")
             else:
                 _, (_, res_c) = cache[key_c]
-                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key_c}' is loaded. (Loading skip)")
+                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_c}' is loaded. (Loading skip)")
             c_model, _, c_vae, clip_vision = res_c
         else:
             c_model, _, c_vae, clip_vision = nodes.unCLIPCheckpointLoader().load_checkpoint(ckpt_name=stage_c)
