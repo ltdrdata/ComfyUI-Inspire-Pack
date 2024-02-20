@@ -17,6 +17,7 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
 
     if noise is None:
         if disable_noise:
+            torch.manual_seed(seed)
             noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device=noise_device)
         else:
             batch_inds = latent["batch_index"] if "batch_index" in latent else None
