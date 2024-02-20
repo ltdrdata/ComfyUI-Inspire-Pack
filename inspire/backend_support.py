@@ -300,6 +300,84 @@ class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
         return model, clip, vae, key
 
 
+class StableCascade_CheckpointLoader:
+    @classmethod
+    def INPUT_TYPES(s):
+        ckpts = folder_paths.get_filename_list("checkpoints")
+        default_stage_b = ''
+        default_stage_c = ''
+
+        sc_ckpts = [x for x in ckpts if 'cascade' in x.lower()]
+        sc_b_ckpts = [x for x in sc_ckpts if 'stage_b' in x.lower()]
+        sc_c_ckpts = [x for x in sc_ckpts if 'stage_c' in x.lower()]
+
+        if len(sc_b_ckpts) == 0:
+            sc_b_ckpts = [x for x in ckpts if 'stage_b' in x.lower()]
+        if len(sc_c_ckpts) == 0:
+            sc_c_ckpts = [x for x in ckpts if 'stage_c' in x.lower()]
+
+        if len(sc_b_ckpts) == 0:
+            sc_b_ckpts = ckpts
+        if len(sc_c_ckpts) == 0:
+            sc_c_ckpts = ckpts
+
+        if len(sc_b_ckpts) > 0:
+            default_stage_b = sc_b_ckpts[0]
+        if len(sc_c_ckpts) > 0:
+            default_stage_c = sc_c_ckpts[0]
+
+        return {"required": {
+                        "stage_b": (ckpts, {'default': default_stage_b}),
+                        "key_opt_b": ("STRING", {"multiline": False, "placeholder": "If empty, use 'stage_b' as the key."}),
+                        "stage_c": (ckpts, {'default': default_stage_c}),
+                        "key_opt_c": ("STRING", {"multiline": False, "placeholder": "If empty, use 'stage_c' as the key."}),
+                        "cache_mode": (["none", "stage_b", "stage_c", "all"], {"default": "none"}),
+                     }}
+
+    RETURN_TYPES = ("MODEL", "VAE", "MODEL", "VAE", "CLIP_VISION", "CLIP", "STRING", "STRING")
+    RETURN_NAMES = ("b_model", "b_vae", "c_model", "c_vae", "c_clip_vision", "clip", "key_b", "key_c")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    def doit(self, stage_b, key_opt_b, stage_c, key_opt_c, cache_mode):
+        if key_opt_b.strip() == '':
+            key_b = stage_b
+        else:
+            key_b = key_opt_b.strip()
+
+        if key_opt_c.strip() == '':
+            key_c = stage_c
+        else:
+            key_c = key_opt_c.strip()
+
+        if cache_mode in ['stage_b', "all"]:
+            if key_b not in cache:
+                res_b = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
+                cache[key_b] = ("ckpt", (False, res_b))
+                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{stage_b}' is cached to '{key_b}'.")
+            else:
+                _, (_, res_b) = cache[key_b]
+                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key_b}' is loaded. (Loading skip)")
+            b_model, clip, b_vae = res_b
+        else:
+            b_model, clip, b_vae = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
+
+        if cache_mode in ['stage_c', "all"]:
+            if key_c not in cache:
+                res_c = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_c)
+                cache[key_c] = ("unclip_ckpt", (False, res_c))
+                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{stage_c}' is cached to '{key_c}'.")
+            else:
+                _, (_, res_c) = cache[key_c]
+                print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key_c}' is loaded. (Loading skip)")
+            c_model, _, c_vae, clip_vision = res_c
+        else:
+            c_model, _, c_vae, clip_vision = nodes.unCLIPCheckpointLoader().load_checkpoint(ckpt_name=stage_c)
+
+        return b_model, b_vae, c_model, c_vae, clip_vision, clip, key_b, key_c
+
+
 NODE_CLASS_MAPPINGS = {
     "CacheBackendData //Inspire": CacheBackendData,
     "CacheBackendDataNumberKey //Inspire": CacheBackendDataNumberKey,
@@ -310,7 +388,8 @@ NODE_CLASS_MAPPINGS = {
     "RemoveBackendData //Inspire": RemoveBackendData,
     "RemoveBackendDataNumberKey //Inspire": RemoveBackendDataNumberKey,
     "ShowCachedInfo //Inspire": ShowCachedInfo,
-    "CheckpointLoaderSimpleShared //Inspire": CheckpointLoaderSimpleShared
+    "CheckpointLoaderSimpleShared //Inspire": CheckpointLoaderSimpleShared,
+    "StableCascade_CheckpointLoader //Inspire": StableCascade_CheckpointLoader
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -323,5 +402,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RemoveBackendData //Inspire": "Remove Backend Data (Inspire)",
     "RemoveBackendDataNumberKey //Inspire": "Remove Backend Data [NumberKey] (Inspire)",
     "ShowCachedInfo //Inspire": "Show Cached Info (Inspire)",
-    "CheckpointLoaderSimpleShared //Inspire": "Shared Checkpoint Loader (Inspire)"
+    "CheckpointLoaderSimpleShared //Inspire": "Shared Checkpoint Loader (Inspire)",
+    "StableCascade_CheckpointLoader //Inspire": "Stable Cascade Checkpoint Loader (Inspire)"
 }

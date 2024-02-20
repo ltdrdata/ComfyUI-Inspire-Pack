@@ -114,6 +114,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Shared Checkpoint Loader (Inspire)`: When loading a checkpoint through this loader, it is automatically cached in the backend cache. Additionally, if it is already cached, it retrieves it from the cache instead of loading it anew.
     * When `key_opt` is empty, the `ckpt_name` is set as the cache key. The cache key output can be used for deletion purposes with Remove Back End.
     * This node resolves the issue of reloading checkpoints during workflow switching.
+  * `Stable Cascade Checkpoint Loader (Inspire)`: This node provides a feature that allows you to load the `stage_b` and `stage_c` checkpoints of Stable Cascade at once, and it also provides a backend caching feature, optionally.
 
 * Conditioning - Nodes for conditionings
   * `Concat Conditionings with Multiplier (Inspire)`: Concatenating an arbitrary number of Conditionings while applying a multiplier for each Conditioning. The multiplier depends on `comfy_PoP`, so [comfy_PoP](https://github.com/picturesonpictures/comfy_PoP) must be installed.
