@@ -133,7 +133,7 @@ class IPAdapterModelHelper:
             lora_loader = f
         else:
             def f(x):
-                x
+                return x
             lora_loader = f
 
         icache_key = ""
