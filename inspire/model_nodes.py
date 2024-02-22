@@ -110,7 +110,6 @@ class IPAdapterModelHelper:
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP"})
 
         if ok1 == "FAIL" or ok2 == "FAIL" or ok3 == "FAIL":
-            self.is_failed = True
             raise Exception("ERROR: Failed to load several models in IPAdapterModelHelper.")
 
         if ipadapter is not None:
@@ -129,6 +128,14 @@ class IPAdapterModelHelper:
         if lora is not None:
             model, clip = nodes.LoraLoader().load_lora(model=model, clip=clip, lora_name=lora, strength_model=lora_strength_model, strength_clip=lora_strength_clip)
 
+            def f(x):
+                return nodes.LoraLoader().load_lora(model=x, clip=clip, lora_name=lora, strength_model=lora_strength_model, strength_clip=lora_strength_clip)
+            lora_loader = f
+        else:
+            def f(x):
+                x
+            lora_loader = f
+
         icache_key = ""
         if is_insightface:
             if cache_mode in ["insightface only", "all"]:
@@ -144,7 +151,7 @@ class IPAdapterModelHelper:
             insightface = None
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (N/A)"})
 
-        pipe = ipadapter, model, clipvision, insightface
+        pipe = ipadapter, model, clipvision, insightface, lora_loader
         return pipe, ipadapter, clipvision, insightface, model, clip, icache_key, ccache_key
 
 

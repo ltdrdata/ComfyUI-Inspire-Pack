@@ -180,7 +180,7 @@ class ToIPAdapterPipe:
     CATEGORY = "InspirePack/Util"
 
     def doit(self, ipadapter, model, clip_vision, insightface=None):
-        pipe = ipadapter, model, clip_vision, insightface
+        pipe = ipadapter, model, clip_vision, insightface, lambda x: x
 
         return (pipe,)
 
@@ -201,7 +201,8 @@ class FromIPAdapterPipe:
     CATEGORY = "InspirePack/Util"
 
     def doit(self, ipadapter_pipe):
-        return ipadapter_pipe
+        ipadapter, model, clip_vision, insightface, _ = ipadapter_pipe
+        return ipadapter, model, clip_vision, insightface
 
 
 class IPAdapterConditioning:
@@ -219,7 +220,7 @@ class IPAdapterConditioning:
         self.weight_v2 = weight_v2
 
     def doit(self, ipadapter_pipe):
-        ipadapter, model, clip_vision, insightface = ipadapter_pipe
+        ipadapter, model, clip_vision, insightface, _ = ipadapter_pipe
 
         if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
@@ -373,12 +374,12 @@ class ApplyRegionalIPAdapters:
 
     def doit(self, **kwargs):
         ipadapter_pipe = kwargs['ipadapter_pipe']
-        ipadapter, model, clip_vision, insightface = ipadapter_pipe
+        ipadapter, model, clip_vision, insightface, lora_loader = ipadapter_pipe
 
         del kwargs['ipadapter_pipe']
 
         for k, v in kwargs.items():
-            ipadapter_pipe = ipadapter, model, clip_vision, insightface
+            ipadapter_pipe = ipadapter, model, clip_vision, insightface, lora_loader
             model = v.doit(ipadapter_pipe)
 
         return (model, )
