@@ -195,7 +195,7 @@ class FromIPAdapterPipe:
         }
 
     RETURN_TYPES = ("IPADAPTER", "MODEL", "CLIP_VISION", "INSIGHTFACE")
-    RETURN_TYPES = ("ipadapter", "model", "clip_vision", "insight_face")
+    RETURN_NAMES = ("ipadapter", "model", "clip_vision", "insight_face")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Util"
