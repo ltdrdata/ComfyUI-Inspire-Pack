@@ -238,7 +238,7 @@ class ImageBatchSplitter:
     RETURN_TYPES = ByPassTypeTuple(("IMAGE", ))
     FUNCTION = "doit"
 
-    CATEGORY = "ImpactPack/Util"
+    CATEGORY = "InspirePack/Util"
 
     def doit(self, images, split_count):
         cnt = min(split_count, len(images))
@@ -269,7 +269,7 @@ class LatentBatchSplitter:
     RETURN_TYPES = ByPassTypeTuple(("LATENT", ))
     FUNCTION = "doit"
 
-    CATEGORY = "ImpactPack/Util"
+    CATEGORY = "InspirePack/Util"
 
     def doit(self, latent, split_count):
         samples = latent['samples']
