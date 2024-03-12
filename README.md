@@ -97,6 +97,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Load Image (Inspire)`: This node is similar to LoadImage, but the loaded image information is stored in the workflow. The image itself is stored in the workflow, making it easier to reproduce image generation on other computers.
   * `Change Image Batch Size (Inspire)`: Change Image Batch Size
     * `simple`: if the `batch_size` is larger than the batch size of the input image, the last frame will be duplicated. If it is smaller, it will be simply cropped.
+  * `Change Latent Batch Size (Inspire)`: Change Latent Batch Size
   * `ImageBatchSplitter //Inspire`, `LatentBatchSplitter //Inspire`: The script divides a batch of images/latents into individual images/latents, each with a quantity equal to the specified `split_count`. An additional output slot is added for each `split_count`. If the number of images/latents exceeds the `split_count`, the remaining ones are returned as the "remained" output.
   
 * KSampler Progress - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
