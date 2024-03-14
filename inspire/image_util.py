@@ -58,6 +58,8 @@ class LoadImagesFromDirBatch:
             limit_images = True
         image_count = 0
 
+        has_non_empty_mask = False
+
         for image_path in dir_files:
             if os.path.isdir(image_path) and os.path.ex:
                 continue
@@ -71,6 +73,7 @@ class LoadImagesFromDirBatch:
             if 'A' in i.getbands():
                 mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
                 mask = 1. - torch.from_numpy(mask)
+                has_non_empty_mask = True
             else:
                 mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             images.append(image)
@@ -78,14 +81,33 @@ class LoadImagesFromDirBatch:
             image_count += 1
 
         if len(images) == 1:
-            return (images[0], 1)
+            return (images[0], masks[0], 1)
+
         elif len(images) > 1:
             image1 = images[0]
+            mask1 = None
+
             for image2 in images[1:]:
                 if image1.shape[1:] != image2.shape[1:]:
                     image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
                 image1 = torch.cat((image1, image2), dim=0)
-            return (image1, len(images))
+
+            for mask2 in masks[1:]:
+                if has_non_empty_mask:
+                    if image1.shape[1:3] != mask2.shape:
+                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[2], image1.shape[1]), mode='bilinear', align_corners=False)
+                        mask2 = mask2.squeeze(0)
+                    else:
+                        mask2 = mask2.unsqueeze(0)
+                else:
+                    mask2 = mask2.unsqueeze(0)
+
+                if mask1 is None:
+                    mask1 = mask2
+                else:
+                    mask1 = torch.cat((mask1, mask2), dim=0)
+
+            return (image1, mask1, len(images))
 
 
 class LoadImagesFromDirList:
