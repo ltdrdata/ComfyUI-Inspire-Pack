@@ -1,9 +1,21 @@
-from .libs.utils import any_typ
-from server import PromptServer
+import json
+import os
+
 import folder_paths
 import nodes
+from server import PromptServer
 
-cache = {}
+from .libs.utils import TaggedCache, any_typ
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+settings_file = os.path.join(root_dir, 'tag_settings.json')
+try:
+    with open(settings_file) as f:
+        tag_settings = json.load(f)
+except Exception as e:
+    print(e)
+    tag_settings = {}
+cache = TaggedCache(tag_settings)
 cache_count = {}
 
 
@@ -218,7 +230,7 @@ class RemoveBackendData:
         global cache
 
         if key == '*':
-            cache = {}
+            cache = TaggedCache(tag_settings)
         elif key in cache:
             del cache[key]
         else:
