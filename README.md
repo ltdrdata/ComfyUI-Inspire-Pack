@@ -110,6 +110,8 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `signal_opt` is used to control the order of execution for this node; it will still run without a `signal_opt` input.
     * When using '*' as the key, it clears all data.
   * `Show Cached Info (Inspire)`: Displays information about cached data.
+    * Default tag cache size is 5. You can edit the default size of each tag in `cache_settings.json`.
+    * Runtime tag cache size can be modified on the `Show Cached Info (Inspire)` node. For example: `ckpt: 10`.
   * `Cache Backend Data [NumberKey] (Inspire)`, `Retrieve Backend Data [NumberKey] (Inspire)`, `Remove Backend Data [NumberKey] (Inspire)`: These nodes are provided for convenience in the automation process, allowing the use of numbers as keys.
   * `Cache Backend Data List (Inspire)`, `Cache Backend Data List [NumberKey] (Inspire)`: This node allows list input for backend cache. Conversely, nodes like `Cache Backend Data [NumberKey] (Inspire)` that do not accept list input will attempt to cache redundantly and overwrite existing data if provided with a list input. Therefore, it is necessary to use a unique key for each element to prevent this. This node caches the combined list. When retrieving cached backend data through this node, the output is in the form of a list.
   * `Shared Checkpoint Loader (Inspire)`: When loading a checkpoint through this loader, it is automatically cached in the backend cache. Additionally, if it is already cached, it retrieves it from the cache instead of loading it anew.

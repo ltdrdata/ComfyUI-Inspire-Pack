@@ -43,6 +43,16 @@ def cache_refresh(request):
     return web.Response(text=backend_support.ShowCachedInfo.get_data(), status=200)
 
 
+@server.PromptServer.instance.routes.post("/inspire/cache/settings")
+async def set_cache_settings(request):
+    data = await request.text()
+    try:
+        backend_support.ShowCachedInfo.set_cache_settings(data)
+        return web.Response(text='OK', status=200)
+    except Exception as e: # pylint: disable=broad-except
+        return web.Response(text=f"{e}", status=500)
+
+
 class SGmode(Enum):
     FIX = 1
     INCR = 2
