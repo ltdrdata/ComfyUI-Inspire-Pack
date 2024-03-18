@@ -24,7 +24,7 @@ def prompt_builder(request):
 
 
 @server.PromptServer.instance.routes.get("/inspire/cache/remove")
-def cache_clear(request):
+def cache_remove(request):
     if "key" in request.rel_url.query:
         key = request.rel_url.query["key"]
         del backend_support.cache[key]
@@ -34,7 +34,7 @@ def cache_clear(request):
 
 @server.PromptServer.instance.routes.get("/inspire/cache/clear")
 def cache_clear(request):
-    backend_support.cache = {}
+    backend_support.cache.clear()
     return web.Response(status=200)
 
 

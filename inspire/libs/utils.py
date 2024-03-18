@@ -238,3 +238,7 @@ class TaggedCache:
             if key in tag_data:
                 return tag_data[key]
         return default
+
+    def clear(self):
+        # clear all cache
+        self._data = {}
