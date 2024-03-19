@@ -24,7 +24,7 @@ def prompt_builder(request):
 
 
 @server.PromptServer.instance.routes.get("/inspire/cache/remove")
-def cache_clear(request):
+def cache_remove(request):
     if "key" in request.rel_url.query:
         key = request.rel_url.query["key"]
         del backend_support.cache[key]
@@ -34,13 +34,23 @@ def cache_clear(request):
 
 @server.PromptServer.instance.routes.get("/inspire/cache/clear")
 def cache_clear(request):
-    backend_support.cache = {}
+    backend_support.cache.clear()
     return web.Response(status=200)
 
 
 @server.PromptServer.instance.routes.get("/inspire/cache/list")
 def cache_refresh(request):
     return web.Response(text=backend_support.ShowCachedInfo.get_data(), status=200)
+
+
+@server.PromptServer.instance.routes.post("/inspire/cache/settings")
+async def set_cache_settings(request):
+    data = await request.text()
+    try:
+        backend_support.ShowCachedInfo.set_cache_settings(data)
+        return web.Response(text='OK', status=200)
+    except Exception as e: # pylint: disable=broad-except
+        return web.Response(text=f"{e}", status=500)
 
 
 class SGmode(Enum):

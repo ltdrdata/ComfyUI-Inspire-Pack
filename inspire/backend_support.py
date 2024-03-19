@@ -1,9 +1,21 @@
-from .libs.utils import any_typ
-from server import PromptServer
+import json
+import os
+
 import folder_paths
 import nodes
+from server import PromptServer
 
-cache = {}
+from .libs.utils import TaggedCache, any_typ
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+settings_file = os.path.join(root_dir, 'cache_settings.json')
+try:
+    with open(settings_file) as f:
+        cache_settings = json.load(f)
+except Exception as e:
+    print(e)
+    cache_settings = {}
+cache = TaggedCache(cache_settings)
 cache_count = {}
 
 
@@ -218,7 +230,7 @@ class RemoveBackendData:
         global cache
 
         if key == '*':
-            cache = {}
+            cache = TaggedCache(cache_settings)
         elif key in cache:
             del cache[key]
         else:
@@ -277,17 +289,36 @@ class ShowCachedInfo:
         text1 = "---- [String Key Caches] ----\n"
         text2 = "---- [Number Key Caches] ----\n"
         for k, v in cache.items():
-            if v[0] == '':
-                tag = 'N/A(tag)'
-            else:
-                tag = v[0]
-
+            tag = 'N/A(tag)' if v[0] == '' else v[0]
             if isinstance(k, str):
                 text1 += f'{k}: {tag}\n'
             else:
                 text2 += f'{k}: {tag}\n'
 
-        return text1 + "\n" + text2
+        text3 = "---- [TagCache Settings] ----\n"
+        for k, v in cache._tag_settings.items():
+            text3 += f'{k}: {v}\n'
+
+        return f'{text1}\n{text2}\n{text3}'
+
+    @staticmethod
+    def set_cache_settings(data: str):
+        global cache
+        settings = data.split("---- [TagCache Settings] ----\n")[-1].strip().split("\n")
+
+        new_tag_settings = {}
+        for s in settings:
+            k, v = s.split(":")
+            new_tag_settings[k] = int(v.strip())
+        if new_tag_settings == cache._tag_settings:
+            # tag settings is not changed
+            return
+
+        # print(f'set to {new_tag_settings}')
+        new_cache = TaggedCache(new_tag_settings)
+        for k, v in cache.items():
+            new_cache[k] = v
+        cache = new_cache
 
     def doit(self, cache_info, key, unique_id):
         text = ShowCachedInfo.get_data()
