@@ -299,6 +299,10 @@ class ShowCachedInfo:
         for k, v in cache._tag_settings.items():
             text3 += f'{k}: {v}\n'
 
+        for k, v in cache._data.items():
+            if k not in cache._tag_settings:
+                text3 += f'{k}: {v.maxsize}\n'
+
         return f'{text1}\n{text2}\n{text3}'
 
     @staticmethod

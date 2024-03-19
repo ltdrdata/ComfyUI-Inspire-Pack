@@ -190,7 +190,7 @@ class ByPassTypeTuple(tuple):
 
 class TaggedCache:
     def __init__(self, tag_settings: Optional[dict]=None):
-        self._tag_settings = tag_settings or {} # tag cache size
+        self._tag_settings = tag_settings or {}  # tag cache size
         self._data = {}
 
     def __getitem__(self, key):
@@ -210,10 +210,18 @@ class TaggedCache:
 
         tag = value[0]
         if tag not in self._data:
-            # init tag cache, default tag size is 5
+
             try:
                 from cachetools import LRUCache
-                self._data[tag] = LRUCache(maxsize=self._tag_settings.get(tag, 5))
+
+                default_size = 20
+                if 'ckpt' in tag:
+                    default_size = 5
+                elif tag in ['latent', 'image']:
+                    default_size = 100
+
+                self._data[tag] = LRUCache(maxsize=self._tag_settings.get(tag, default_size))
+
             except (ImportError, ModuleNotFoundError):
                 # TODO: implement a simple lru dict
                 self._data[tag] = {}

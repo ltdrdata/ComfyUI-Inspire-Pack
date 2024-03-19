@@ -1,3 +1,5 @@
 {
-    "ckpt": 5
+    "ckpt": 5,
+    "latent": 100,
+    "image": 100
 }
