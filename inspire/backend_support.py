@@ -19,8 +19,8 @@ cache = TaggedCache(cache_settings)
 cache_count = {}
 
 
-def update_cache(k, v):
-    cache[k] = v
+def update_cache(k, tag, v):
+    cache[k] = (tag, v)
     cnt = cache_count.get(k)
     if cnt is None:
         cnt = 0
@@ -63,7 +63,7 @@ class CacheBackendData:
         if key == '*':
             print(f"[Inspire Pack] CacheBackendData: '*' is reserved key. Cannot use that key")
 
-        update_cache(key, (tag, (False, data)))
+        update_cache(key, tag, (False, data))
         return (data,)
 
 
@@ -90,7 +90,7 @@ class CacheBackendDataNumberKey:
     def doit(self, key, tag, data):
         global cache
 
-        update_cache(key, (tag, (False, data)))
+        update_cache(key, tag, (False, data))
         return (data,)
 
 
@@ -123,7 +123,7 @@ class CacheBackendDataList:
         if key == '*':
             print(f"[Inspire Pack] CacheBackendDataList: '*' is reserved key. Cannot use that key")
 
-        update_cache(key[0], (tag[0], (True, data)))
+        update_cache(key[0], tag[0], (True, data))
         return (data,)
 
 
@@ -152,7 +152,7 @@ class CacheBackendDataNumberKeyList:
 
     def doit(self, key, tag, data):
         global cache
-        update_cache(key[0], (tag[0], (True, data)))
+        update_cache(key[0], tag[0], (True, data))
         return (data,)
 
 
@@ -364,7 +364,7 @@ class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
 
         if key not in cache or mode == 'Override Cache':
             res = self.load_checkpoint(ckpt_name)
-            update_cache(key, ("ckpt", (False, res)))
+            update_cache(key, "ckpt", (False, res))
             cache_kind = 'ckpt'
             print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{ckpt_name}' is cached to '{key}'.")
         else:
@@ -453,7 +453,7 @@ class StableCascade_CheckpointLoader:
         if cache_mode in ['stage_b', "all"]:
             if key_b not in cache:
                 res_b = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
-                update_cache(key_b, ("ckpt", (False, res_b)))
+                update_cache(key_b, "ckpt", (False, res_b))
                 print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_b}' is cached to '{key_b}'.")
             else:
                 _, (_, res_b) = cache[key_b]
@@ -465,7 +465,7 @@ class StableCascade_CheckpointLoader:
         if cache_mode in ['stage_c', "all"]:
             if key_c not in cache:
                 res_c = nodes.unCLIPCheckpointLoader().load_checkpoint(ckpt_name=stage_c)
-                update_cache(key_c, ("unclip_ckpt", (False, res_c)))
+                update_cache(key_c, "unclip_ckpt", (False, res_c))
                 print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_c}' is cached to '{key_c}'.")
             else:
                 _, (_, res_c) = cache[key_c]

@@ -120,8 +120,8 @@ class IPAdapterModelHelper:
             if cache_mode in ["clip_vision only", "all"]:
                 ccache_key = clipvision
                 if ccache_key not in backend_support.cache:
-                    backend_support.update_cache(ccache_key, (False, nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]))
-                clipvision = backend_support.cache[ccache_key][1]
+                    backend_support.update_cache(ccache_key, "clipvision", (False, nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]))
+                _, (_, clipvision) = backend_support.cache[ccache_key]
             else:
                 clipvision = nodes.CLIPVisionLoader().load_clip(clip_name=clipvision)[0]
 
@@ -141,8 +141,8 @@ class IPAdapterModelHelper:
             if cache_mode in ["insightface only", "all"]:
                 icache_key = 'insightface-' + insightface_provider
                 if icache_key not in backend_support.cache:
-                    backend_support.update_cache(icache_key, (False, nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]))
-                insightface = backend_support.cache[icache_key][1]
+                    backend_support.update_cache(icache_key, "insightface", (False, nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]))
+                _, (_, insightface) = backend_support.cache[icache_key]
             else:
                 insightface = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
 
