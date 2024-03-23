@@ -178,6 +178,7 @@ def workflow_seed_update(json_data, mode):
         if node_id in prompt:
             if node['type'] == 'GlobalSeed //Inspire':
                 if mode is True:
+                    node['widgets_values'][3] = node['widgets_values'][0]
                     node['widgets_values'][0] = prompt[node_id]['inputs']['value']
                     node['widgets_values'][2] = 'fixed'
 
