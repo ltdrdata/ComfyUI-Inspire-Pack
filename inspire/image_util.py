@@ -364,6 +364,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagesFromDir //Inspire": "Load Image Batch From Dir (Inspire)",
     "LoadImageListFromDir //Inspire": "Load Image List From Dir (Inspire)",
+    "LoadImage //Inspire": "Load Image (Inspire)",
     "ChangeImageBatchSize //Inspire": "Change Image Batch Size (Inspire)",
     "ChangeLatentBatchSize //Inspire": "Change Latent Batch Size (Inspire)",
     "ImageBatchSplitter //Inspire": "Image Batch Splitter (Inspire)",
