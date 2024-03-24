@@ -206,9 +206,10 @@ class FromIPAdapterPipe:
 
 
 class IPAdapterConditioning:
-    def __init__(self, mask, weight, weight_type, noise=None, image=None, embeds=None, start_at=0.0, end_at=1.0, combine_embeds='concat', unfold_batch=False, weight_v2=False, neg_embeds=None):
+    def __init__(self, mask, weight, weight_type, noise=None, image=None, neg_image=None, embeds=None, start_at=0.0, end_at=1.0, combine_embeds='concat', unfold_batch=False, weight_v2=False, neg_embeds=None):
         self.mask = mask
         self.image = image
+        self.neg_image = neg_image
         self.embeds = embeds
         self.neg_embeds = neg_embeds
         self.weight = weight
@@ -232,7 +233,7 @@ class IPAdapterConditioning:
             obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']
             model = obj().apply_ipadapter(model=model, ipadapter=ipadapter, weight=self.weight, weight_type=self.weight_type,
                                           start_at=self.start_at, end_at=self.end_at, combine_embeds=self.combine_embeds,
-                                          clip_vision=clip_vision, image=self.image, attn_mask=self.mask,
+                                          clip_vision=clip_vision, image=self.image, image_negative=self.neg_image, attn_mask=self.mask,
                                           insightface=insightface, weight_faceidv2=self.weight_v2)[0]
         else:
             obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterEmbeds']
@@ -262,6 +263,7 @@ class RegionalIPAdapterMask:
                 "faceid_v2": ("BOOLEAN", {"default": False}),
                 "weight_v2": ("FLOAT", {"default": 1.0, "min": -1, "max": 3, "step": 0.05}),
                 "combine_embeds": (["concat", "add", "subtract", "average", "norm average"],),
+                "neg_image": ("IMAGE",),
             }
         }
 
@@ -270,8 +272,8 @@ class RegionalIPAdapterMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat"):
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
+    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, neg_image=neg_image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, )
 
 
@@ -295,6 +297,7 @@ class RegionalIPAdapterColorMask:
                 "faceid_v2": ("BOOLEAN", {"default": False }),
                 "weight_v2": ("FLOAT", {"default": 1.0, "min": -1, "max": 3, "step": 0.05}),
                 "combine_embeds": (["concat", "add", "subtract", "average", "norm average"],),
+                "neg_image": ("IMAGE",),
             }
         }
 
@@ -303,9 +306,9 @@ class RegionalIPAdapterColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat"):
+    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
         mask = color_to_mask(color_mask, mask_color)
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, neg_image=neg_image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, mask)
 
 
