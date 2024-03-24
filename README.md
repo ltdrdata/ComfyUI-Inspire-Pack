@@ -2,6 +2,7 @@
 This repository offers various extension nodes for ComfyUI. Nodes here have different characteristics compared to those in the ComfyUI Impact Pack. The Impact Pack has become too large now...
 
 ## Notice:
+* V0.69 incompatible with the outdated **ComfyUI IPAdapter Plus**. (A version dated March 24th or later is required.)
 * V0.64 add sigma_factor to RegionalPrompt... nodes required Impact Pack V4.76 or later.
 * V0.62 support faceid in Regional IPAdapter
 * V0.48 optimized wildcard node. This update requires Impact Pack V4.39.2 or later.

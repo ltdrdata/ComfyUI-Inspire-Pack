@@ -24,7 +24,7 @@ model_preset = {
     "SD1.5 FaceID Plus": ("ip-adapter-faceid-plus_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plus_sd15_lora", True),
     "SD1.5 FaceID Plus v2": ("ip-adapter-faceid-plusv2_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sd15_lora", True),
     "SD1.5 FaceID Portrait": ("ip-adapter-faceid-portrait_sd15", None, None, True),
-    "SDXL FaceID": ("ip-adapter-faceid_sdxl", None, "ip-adapter-faceid_sdxl_lora", True),
+    "SDXL FaceID": ("ip-adapter-faceid_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
     "SDXL FaceID v2": ("ip-adapter-faceid-plusv2_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sdxl_lora", True),
     }
 
@@ -66,7 +66,7 @@ class IPAdapterModelHelper:
     CATEGORY = "InspirePack/models"
 
     def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode="none", unique_id=None):
-        if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
+        if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
             raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
@@ -136,15 +136,24 @@ class IPAdapterModelHelper:
                 return x
             lora_loader = f
 
+        if 'IPAdapterInsightFaceLoader' in nodes.NODE_CLASS_MAPPINGS:
+            insight_face_loader = nodes.NODE_CLASS_MAPPINGS['IPAdapterInsightFaceLoader']().load_insightface
+        else:
+            print("'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
+            insight_face_loader = None
+
         icache_key = ""
         if is_insightface:
+            if insight_face_loader is None:
+                raise Exception(f"[ERROR] 'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
+
             if cache_mode in ["insightface only", "all"]:
                 icache_key = 'insightface-' + insightface_provider
                 if icache_key not in backend_support.cache:
-                    backend_support.update_cache(icache_key, "insightface", (False, nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]))
+                    backend_support.update_cache(icache_key, "insightface", (False, insight_face_loader(insightface_provider)[0]))
                 _, (_, insightface) = backend_support.cache[icache_key]
             else:
-                insightface = nodes.NODE_CLASS_MAPPINGS["InsightFaceLoader"]().load_insight_face(insightface_provider)[0]
+                insightface = insight_face_loader(insightface_provider)[0]
 
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE"})
         else:

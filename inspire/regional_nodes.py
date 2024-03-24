@@ -206,36 +206,39 @@ class FromIPAdapterPipe:
 
 
 class IPAdapterConditioning:
-    def __init__(self, mask, weight, weight_type, noise=None, image=None, embeds=None, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False):
+    def __init__(self, mask, weight, weight_type, noise=None, image=None, embeds=None, start_at=0.0, end_at=1.0, combine_embeds='concat', unfold_batch=False, weight_v2=False, neg_embeds=None):
         self.mask = mask
         self.image = image
         self.embeds = embeds
+        self.neg_embeds = neg_embeds
         self.weight = weight
         self.noise = noise
         self.weight_type = weight_type
         self.start_at = start_at
         self.end_at = end_at
         self.unfold_batch = unfold_batch
-        self.faceid_v2 = faceid_v2
         self.weight_v2 = weight_v2
+        self.combine_embeds = combine_embeds
 
     def doit(self, ipadapter_pipe):
         ipadapter, model, clip_vision, insightface, _ = ipadapter_pipe
 
-        if 'IPAdapterApply' not in nodes.NODE_CLASS_MAPPINGS:
+        if 'IPAdapterAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'Regional IPAdapter' node, 'ComfyUI IPAdapter Plus' extension is required.")
             raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
-        obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterApply']
-
-        if self.image is None:
-            clip_vision = None
-
-        model = obj().apply_ipadapter(ipadapter, model, self.weight, clip_vision=clip_vision, image=self.image,
-                                      embeds=self.embeds, weight_type=self.weight_type, noise=self.noise,
-                                      attn_mask=self.mask, start_at=self.start_at, end_at=self.end_at,
-                                      unfold_batch=self.unfold_batch, insightface=insightface, faceid_v2=self.faceid_v2, weight_v2=self.weight_v2)[0]
+        if self.embeds is None:
+            obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']
+            model = obj().apply_ipadapter(model=model, ipadapter=ipadapter, weight=self.weight, weight_type=self.weight_type,
+                                          start_at=self.start_at, end_at=self.end_at, combine_embeds=self.combine_embeds,
+                                          clip_vision=clip_vision, image=self.image, attn_mask=self.mask,
+                                          insightface=insightface, weight_faceidv2=self.weight_v2)[0]
+        else:
+            obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterEmbeds']
+            model = obj().apply_ipadapter(model=model, ipadapter=ipadapter, pos_embed=self.embeds, weight=self.weight, weight_type=self.weight_type,
+                                          start_at=self.start_at, end_at=self.end_at, neg_embed=self.neg_embeds,
+                                          attn_mask=self.mask, clip_vision=clip_vision)[0]
 
         return model
 
@@ -256,8 +259,9 @@ class RegionalIPAdapterMask:
                 "unfold_batch": ("BOOLEAN", {"default": False}),
             },
             "optional": {
-                "faceid_v2": ("BOOLEAN", { "default": False }),
-                "weight_v2": ("FLOAT", { "default": 1.0, "min": -1, "max": 3, "step": 0.05 }),
+                "faceid_v2": ("BOOLEAN", {"default": False}),
+                "weight_v2": ("FLOAT", {"default": 1.0, "min": -1, "max": 3, "step": 0.05}),
+                "combine_embeds": (["concat", "add", "subtract", "average", "norm average"],),
             }
         }
 
@@ -266,8 +270,8 @@ class RegionalIPAdapterMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False):
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, faceid_v2=faceid_v2, weight_v2=weight_v2)
+    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat"):
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, )
 
 
@@ -288,8 +292,9 @@ class RegionalIPAdapterColorMask:
                 "unfold_batch": ("BOOLEAN", {"default": False}),
             },
             "optional": {
-                "faceid_v2": ("BOOLEAN", { "default": False }),
-                "weight_v2": ("FLOAT", { "default": 1.0, "min": -1, "max": 3, "step": 0.05 })
+                "faceid_v2": ("BOOLEAN", {"default": False }),
+                "weight_v2": ("FLOAT", {"default": 1.0, "min": -1, "max": 3, "step": 0.05}),
+                "combine_embeds": (["concat", "add", "subtract", "average", "norm average"],),
             }
         }
 
@@ -298,9 +303,9 @@ class RegionalIPAdapterColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False):
+    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat"):
         mask = color_to_mask(color_mask, mask_color)
-        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, faceid_v2=faceid_v2, weight_v2=weight_v2)
+        cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, mask)
 
 
@@ -311,13 +316,16 @@ class RegionalIPAdapterEncodedMask:
             "required": {
                 "mask": ("MASK",),
 
-                "embeds": ("embeds",),
+                "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "weight_type": (["original", "linear", "channel penalty"],),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
             },
+            "optional": {
+                "neg_embeds": ("EMBEDS",),
+            }
         }
 
     RETURN_TYPES = ("REGIONAL_IPADAPTER", )
@@ -325,8 +333,8 @@ class RegionalIPAdapterEncodedMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
-        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
+    def doit(self, mask, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
+        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, neg_embeds=neg_embeds)
         return (cond, )
 
 
@@ -345,6 +353,9 @@ class RegionalIPAdapterEncodedColorMask:
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
             },
+            "optional": {
+                "neg_embeds": ("EMBEDS",),
+            }
         }
 
     RETURN_TYPES = ("REGIONAL_IPADAPTER", "MASK")
@@ -352,9 +363,9 @@ class RegionalIPAdapterEncodedColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False):
+    def doit(self, color_mask, mask_color, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
         mask = color_to_mask(color_mask, mask_color)
-        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch)
+        cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, neg_embeds=neg_embeds)
         return (cond, mask)
 
 
