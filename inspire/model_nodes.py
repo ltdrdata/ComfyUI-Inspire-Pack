@@ -20,10 +20,10 @@ model_preset = {
     "SDXL Plus Face ViT-H": ("ip-adapter-plus-face_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
 
     # faceid
-    "SD1.5 FaceID": ("ip-adapter-faceid_sd15", None, "ip-adapter-faceid_sd15_lora", True),
+    "SD1.5 FaceID": ("ip-adapter-faceid_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sd15_lora", True),
     "SD1.5 FaceID Plus": ("ip-adapter-faceid-plus_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plus_sd15_lora", True),
     "SD1.5 FaceID Plus v2": ("ip-adapter-faceid-plusv2_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sd15_lora", True),
-    "SD1.5 FaceID Portrait": ("ip-adapter-faceid-portrait_sd15", None, None, True),
+    "SD1.5 FaceID Portrait": ("ip-adapter-faceid-portrait_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
     "SDXL FaceID": ("ip-adapter-faceid_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
     "SDXL FaceID v2": ("ip-adapter-faceid-plusv2_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sdxl_lora", True),
     }
