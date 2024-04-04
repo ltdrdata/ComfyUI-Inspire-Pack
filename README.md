@@ -146,3 +146,5 @@ Fannovel16/[comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_contro
 Kosinkadink/[ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet) - `Load Images From Dir (Inspire)` code is came from here. 
 
 Trung0246/[ComfyUI-0246](https://github.com/Trung0246/ComfyUI-0246) - Nice bypass hack!
+
+cubiq/[ComfyUI_IPAdapter_plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) - IPAdapter related nodes depend on this extension.
