@@ -180,7 +180,8 @@ class RetrieveBackendData:
         v = cache.get(key)
 
         if v is None:
-            raise Exception(f"[RetrieveBackendData] '{key}' is unregistered key.")
+            print(f"[RetrieveBackendData] '{key}' is unregistered key.")
+            return (None,)
 
         is_list, data = v[1]
 
