@@ -8,24 +8,31 @@ from comfy import sdxl_clip
 
 model_preset = {
     # base
-    "SD1.5": ("ip-adapter_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Light": ("ip-adapter_sd15_light", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Plus": ("ip-adapter-plus_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Plus Face": ("ip-adapter-plus-face_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Full Face": ("ip-adapter-full-face_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 ViT-G": ("ip-adapter_sd15_vit-G", "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
-    "SDXL": ("ip-adapter_sdxl", "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
-    "SDXL ViT-H": ("ip-adapter_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SDXL Plus ViT-H": ("ip-adapter-plus_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5":                ("ip-adapter_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 Light v11":      ("ip-adapter_sd15_light_v11",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 Light":          ("ip-adapter_sd15_light",           "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 Plus":           ("ip-adapter-plus_sd15",            "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 Plus Face":      ("ip-adapter-plus-face_sd15",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 Full Face":      ("ip-adapter-full-face_sd15",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SD1.5 ViT-G":          ("ip-adapter_sd15_vit-G",           "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
+    "SDXL":                 ("ip-adapter_sdxl",                 "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
+    "SDXL ViT-H":           ("ip-adapter_sdxl_vit-h",           "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SDXL Plus ViT-H":      ("ip-adapter-plus_sdxl_vit-h",      "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
     "SDXL Plus Face ViT-H": ("ip-adapter-plus-face_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
 
     # faceid
-    "SD1.5 FaceID": ("ip-adapter-faceid_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sd15_lora", True),
-    "SD1.5 FaceID Plus": ("ip-adapter-faceid-plus_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plus_sd15_lora", True),
-    "SD1.5 FaceID Plus v2": ("ip-adapter-faceid-plusv2_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sd15_lora", True),
-    "SD1.5 FaceID Portrait": ("ip-adapter-faceid-portrait_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
-    "SDXL FaceID": ("ip-adapter-faceid_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
-    "SDXL FaceID v2": ("ip-adapter-faceid-plusv2_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sdxl_lora", True),
+    "SD1.5 FaceID":                ("ip-adapter-faceid_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sd15_lora", True),
+    "SD1.5 FaceID Plus v2":        ("ip-adapter-faceid-plusv2_sd15",          "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sd15_lora", True),
+    "SD1.5 FaceID Plus":           ("ip-adapter-faceid-plus_sd15",            "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plus_sd15_lora", True),
+    "SD1.5 FaceID Portrait v11":   ("ip-adapter-faceid-portrait-v11_sd15",    "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
+    "SD1.5 FaceID Portrait":       ("ip-adapter-faceid-portrait_sd15",        "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
+    "SDXL FaceID":                 ("ip-adapter-faceid_sdxl",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
+    "SDXL FaceID Portrait":        ("ip-adapter-faceid-portrait_sdxl",        "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
+    "SDXL FaceID Portrait unnorm": ("ip-adapter-faceid-portrait_sdxl_unnorm", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
+
+    # composition
+    "SD1.5 Plus Composition":      ("ip-adapter_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SDXL Plus Composition":       ("ip-adapter_sdxl", "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
     }
 
 
