@@ -1,11 +1,10 @@
 import comfy
 import torch
-import numpy as np
-import latent_preview
 from .libs import utils
 from einops import rearrange
 import random
 import math
+from .libs import common
 
 
 def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
@@ -23,29 +22,8 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
             batch_inds = latent["batch_index"] if "batch_index" in latent else None
             noise = utils.prepare_noise(latent_image, seed, batch_inds, noise_device, incremental_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)
 
-    noise_mask = None
-    if "noise_mask" in latent:
-        noise_mask = latent["noise_mask"]
-
-    preview_format = "JPEG"
-    if preview_format not in ["JPEG", "PNG"]:
-        preview_format = "JPEG"
-
-    previewer = latent_preview.get_previewer(device, model.model.latent_format)
-
-    pbar = comfy.utils.ProgressBar(steps)
-    def callback(step, x0, x, total_steps):
-        preview_bytes = None
-        if previewer:
-            preview_bytes = previewer.decode_latent_to_preview_image(preview_format, x0)
-        pbar.update_absolute(step + 1, total_steps, preview_bytes)
-
-    samples = comfy.sample.sample(model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
-                                  denoise=denoise, disable_noise=disable_noise, start_step=start_step, last_step=last_step,
-                                  force_full_denoise=force_full_denoise, noise_mask=noise_mask, callback=callback, seed=seed)
-    out = latent.copy()
-    out["samples"] = samples
-    return (out, )
+    samples = common.impact_sampling(model, not disable_noise, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, start_step, last_step, not force_full_denoise, noise=noise)
+    return (samples, )
 
 
 class KSampler_inspire:
@@ -57,7 +35,7 @@ class KSampler_inspire:
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "positive": ("CONDITIONING", ),
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
@@ -88,7 +66,7 @@ class KSamplerAdvanced_inspire:
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "positive": ("CONDITIONING", ),
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
@@ -137,7 +115,7 @@ class KSampler_inspire_pipe:
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                      "noise_mode": (["GPU(=A1111)", "CPU"],),
@@ -168,7 +146,7 @@ class KSamplerAdvanced_inspire_pipe:
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "latent_image": ("LATENT", ),
                      "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),

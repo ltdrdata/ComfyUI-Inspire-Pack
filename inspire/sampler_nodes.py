@@ -1,6 +1,8 @@
 import torch
 from . import a1111_compat
 import comfy
+from .libs import common
+
 
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
@@ -11,7 +13,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "positive": ("CONDITIONING", ),
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
@@ -63,7 +65,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
                      "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                      "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
                      "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                     "scheduler": (common.SCHEDULERS, ),
                      "positive": ("CONDITIONING", ),
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
@@ -92,11 +94,10 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         else:
             result = [latent_image['samples']]
 
-        for i in range(start_at_step, end_at_step+1):
+        for i in range(start_at_step, min(end_at_step+1, steps+1)):
             cur_add_noise = i == start_at_step and add_noise
             cur_return_with_leftover_noise = i != steps or return_with_leftover_noise
             latent_image = sampler.sample(model, cur_add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, cur_return_with_leftover_noise)[0]
-            print(f"{i}, {i+1}")
             if i % interval == 0 or i == steps:
                 result.append(latent_image['samples'])
 

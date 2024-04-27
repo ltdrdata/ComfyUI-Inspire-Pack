@@ -15,7 +15,7 @@ import traceback
 import random
 
 from server import PromptServer
-from .libs import utils
+from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
 
 prompt_builder_preset = {}
@@ -344,7 +344,7 @@ class GlobalSampler:
         return {
             "required": {
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
+                "scheduler": (common.SCHEDULERS, ),
             }
         }
 
