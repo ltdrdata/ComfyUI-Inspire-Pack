@@ -22,7 +22,17 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
             batch_inds = latent["batch_index"] if "batch_index" in latent else None
             noise = utils.prepare_noise(latent_image, seed, batch_inds, noise_device, incremental_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)
 
-    samples = common.impact_sampling(model, not disable_noise, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, start_step, last_step, not force_full_denoise, noise=noise)
+    if start_step is None:
+        if denoise == 1.0:
+            start_step = 0
+        else:
+            advanced_steps = math.floor(steps / denoise)
+            start_step = advanced_steps - steps
+            steps = advanced_steps
+
+    samples = common.impact_sampling(
+        model=model, add_noise=not disable_noise, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
+        latent_image=latent, start_at_step=start_step, end_at_step=last_step, return_with_leftover_noise=not force_full_denoise, noise=noise)
     return (samples, )
 
 
