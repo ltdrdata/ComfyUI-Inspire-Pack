@@ -39,10 +39,12 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
         else:
             result = [latent_image['samples']]
 
-        for i in range(0, adv_steps+1):
-            add_noise = i == 0
+        start_step = adv_steps - steps
+
+        for i in range(start_step, adv_steps    ):
+            add_noise = i == start_step
             return_with_leftover_noise = i != adv_steps
-            latent_image = sampler.sample(model, add_noise, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, return_with_leftover_noise)[0]
+            latent_image = sampler.sample(model, add_noise, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, return_with_leftover_noise)[0]
             if i % interval == 0 or i == adv_steps:
                 result.append(latent_image['samples'])
 
@@ -94,7 +96,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         else:
             result = [latent_image['samples']]
 
-        for i in range(start_at_step, min(end_at_step+1, steps+1)):
+        for i in range(start_at_step, min(end_at_step, steps)):
             cur_add_noise = i == start_at_step and add_noise
             cur_return_with_leftover_noise = i != steps or return_with_leftover_noise
             latent_image = sampler.sample(model, cur_add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, cur_return_with_leftover_noise)[0]
