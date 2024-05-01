@@ -1,9 +1,9 @@
 import itertools
 from typing import Optional
-
 import numpy as np
 import torch
 from PIL import Image, ImageDraw
+import math
 
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None):
@@ -63,8 +63,13 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
                 strength += strength_up
 
             variation_noise = variation_latent.expand(input_latent.size()[0], -1, -1, -1)
-            result = (1 - strength) * input_latent + strength * variation_noise
-            return result
+            mixed_noise = (1 - strength) * input_latent + strength * variation_noise
+
+            # NOTE: mixed_noise is not gaussian noise; therefore, adjust the scale to correct it to gaussian noise.
+            scale_factor = math.sqrt((1 - strength) ** 2 + strength ** 2)
+            corrected_noise = mixed_noise / scale_factor
+
+            return corrected_noise
 
     # method: incremental seed batch noise
     if noise_inds is None and incremental_seed_mode == "incremental":
