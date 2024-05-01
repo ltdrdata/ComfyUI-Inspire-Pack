@@ -1,4 +1,6 @@
 import os
+
+import torch
 from PIL import ImageOps
 import comfy
 import folder_paths
@@ -352,6 +354,79 @@ class LatentBatchSplitter:
         return tuple(res)
 
 
+def top_k_colors(image_tensor, k, min_pixels):
+    flattened_image = image_tensor.view(-1, image_tensor.size(-1))
+
+    unique_colors, counts = torch.unique(flattened_image, dim=0, return_counts=True)
+
+    sorted_counts, sorted_indices = torch.sort(counts, descending=True)
+    sorted_colors = unique_colors[sorted_indices]
+
+    filtered_colors = sorted_colors[sorted_counts >= min_pixels]
+
+    return filtered_colors[:k]
+
+
+def create_mask(image_tensor, color):
+    mask_tensor = torch.zeros_like(image_tensor[:, :, :, 0])
+    mask_tensor = torch.where(torch.all(image_tensor == color, dim=-1, keepdim=False), 1, mask_tensor)
+    return mask_tensor
+
+
+class ColorMapToMasks:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "color_map": ("IMAGE",),
+                    "min_pixels": ("INT", {"default": 500, "min": 1, "max": 0xffffffffffffffff, "step": 1}),
+                    "max_count": ("INT", {"default": 5, "min": 0, "max": 1000, "step": 1}),
+                    },
+                }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, color_map, max_count, min_pixels):
+        if len(color_map) > 0:
+            print(f"[Inspire Pack] WARN: ColorMapToMasks - Sure, here's the translation: `color_map` can only be a single image. Only the first image will be processed. If you want to utilize the remaining images, convert the Image Batch to an Image List.")
+
+        top_colors = top_k_colors(color_map[0], max_count, min_pixels)
+
+        masks = None
+
+        for color in top_colors:
+            this_mask = create_mask(color_map, color)
+            if masks is None:
+                masks = this_mask
+            else:
+                masks = torch.concat((masks, this_mask), dim=0)
+
+        if masks is None:
+            masks = torch.zeros_like(color_map[0, :, :, 0])
+            masks.unsqueeze(0)
+
+        return (masks,)
+
+
+class SelectNthMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "masks": ("MASK",),
+                    "idx": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
+                    },
+                }
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "doit"
+    CATEGORY = "InspirePack/Util"
+
+    def doit(self, masks, idx):
+        return (masks[idx].unsqueeze(0),)
+
+
 NODE_CLASS_MAPPINGS = {
     "LoadImagesFromDir //Inspire": LoadImagesFromDirBatch,
     "LoadImageListFromDir //Inspire": LoadImagesFromDirList,
@@ -360,7 +435,10 @@ NODE_CLASS_MAPPINGS = {
     "ChangeLatentBatchSize //Inspire": ChangeLatentBatchSize,
     "ImageBatchSplitter //Inspire": ImageBatchSplitter,
     "LatentBatchSplitter //Inspire": LatentBatchSplitter,
+    "ColorMapToMasks //Inspire": ColorMapToMasks,
+    "SelectNthMask //Inspire": SelectNthMask
 }
+
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImagesFromDir //Inspire": "Load Image Batch From Dir (Inspire)",
     "LoadImageListFromDir //Inspire": "Load Image List From Dir (Inspire)",
@@ -368,5 +446,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ChangeImageBatchSize //Inspire": "Change Image Batch Size (Inspire)",
     "ChangeLatentBatchSize //Inspire": "Change Latent Batch Size (Inspire)",
     "ImageBatchSplitter //Inspire": "Image Batch Splitter (Inspire)",
-    "LatentBatchSplitter //Inspire": "Latent Batch Splitter (Inspire)"
+    "LatentBatchSplitter //Inspire": "Latent Batch Splitter (Inspire)",
+    "ColorMapToMasks //Inspire": "Color Map To Masks (Inspire)",
+    "SelectNthMask //Inspire": "Select Nth Mask (Inspire)"
 }

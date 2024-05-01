@@ -100,6 +100,8 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `simple`: if the `batch_size` is larger than the batch size of the input image, the last frame will be duplicated. If it is smaller, it will be simply cropped.
   * `Change Latent Batch Size (Inspire)`: Change Latent Batch Size
   * `ImageBatchSplitter //Inspire`, `LatentBatchSplitter //Inspire`: The script divides a batch of images/latents into individual images/latents, each with a quantity equal to the specified `split_count`. An additional output slot is added for each `split_count`. If the number of images/latents exceeds the `split_count`, the remaining ones are returned as the "remained" output.
+  * `Color Map To Masks (Inspire)`: From the color_map, it extracts the top max_count number of colors and creates masks. min_pixels represents the minimum number of pixels for each color.
+  * `Select Nth Mask (Inspire)`: Extracts the nth mask from the mask batch.
   
 * KSampler Progress - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
 
