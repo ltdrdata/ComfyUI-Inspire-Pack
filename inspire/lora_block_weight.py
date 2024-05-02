@@ -225,6 +225,8 @@ class LoraLoaderBlockWeight:
 
         if inverse:
             populated_ratio = 1 - ratio
+        else:
+            populated_ratio = 1
 
         populated_vector_list.insert(0, LoraLoaderBlockWeight.norm_value(populated_ratio))
 
