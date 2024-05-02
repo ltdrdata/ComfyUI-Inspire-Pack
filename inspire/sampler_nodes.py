@@ -2,6 +2,7 @@ import torch
 from . import a1111_compat
 import comfy
 from .libs import common
+from comfy import model_management
 
 
 class KSampler_progress(a1111_compat.KSampler_inspire):
@@ -29,24 +30,28 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
     RETURN_TYPES = ("LATENT", "LATENT")
     RETURN_NAMES = ("latent", "progress_latent")
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent):
+    def doit(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent):
         adv_steps = int(steps / denoise)
-
-        sampler = a1111_compat.KSamplerAdvanced_inspire()
 
         if omit_start_latent:
             result = []
         else:
             result = [latent_image['samples']]
 
-        start_step = adv_steps - steps
+        result = []
 
-        for i in range(start_step, adv_steps    ):
-            add_noise = i == start_step
-            return_with_leftover_noise = i != adv_steps
-            latent_image = sampler.sample(model, add_noise, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, return_with_leftover_noise)[0]
-            if i % interval == 0 or i == adv_steps:
-                result.append(latent_image['samples'])
+        if model.model.__class__.__name__ == 'SDXL':
+            multiplier = 1.0 / 0.13025
+        else:
+            # assume 'SD1.5'
+            multiplier = 1.0 / 0.18215
+
+        def progress_callback(step, x0, x, total_steps):
+            x0 = x.clone() * multiplier
+            x0 = x0.to(model_management.intermediate_device())
+            result.append(x0)
+
+        latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, True, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, (adv_steps-steps), adv_steps, noise_mode, False, callback=progress_callback)
 
         if len(result) > 0:
             result = torch.cat(result)
@@ -54,7 +59,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
         else:
             result = latent_image
 
-        return (latent_image, result)
+        return latent_image, result
 
 
 class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
@@ -81,27 +86,35 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
                 "optional": {"prev_progress_latent_opt": ("LATENT",), }
                 }
 
-    FUNCTION = "sample"
+    FUNCTION = "doit"
 
     CATEGORY = "InspirePack/analysis"
 
     RETURN_TYPES = ("LATENT", "LATENT")
     RETURN_NAMES = ("latent", "progress_latent")
 
-    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, interval, omit_start_latent, prev_progress_latent_opt=None):
-        sampler = a1111_compat.KSamplerAdvanced_inspire()
-
+    def doit(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
+             noise_mode, return_with_leftover_noise, interval, omit_start_latent, prev_progress_latent_opt=None):
         if omit_start_latent:
             result = []
         else:
             result = [latent_image['samples']]
 
-        for i in range(start_at_step, min(end_at_step, steps)):
-            cur_add_noise = i == start_at_step and add_noise
-            cur_return_with_leftover_noise = i != steps or return_with_leftover_noise
-            latent_image = sampler.sample(model, cur_add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, i, i+1, noise_mode, cur_return_with_leftover_noise)[0]
-            if i % interval == 0 or i == steps:
-                result.append(latent_image['samples'])
+        if model.model.__class__.__name__ == 'SDXL':
+            multiplier = 1.0 / 0.13025
+        else:
+            # assume 'SD1.5'
+            multiplier = 1.0 / 0.18215
+
+        result = []
+
+        def progress_callback(step, x0, x, total_steps):
+            x0 = x.clone() * multiplier
+            x0 = x0.to(model_management.intermediate_device())
+            result.append(x0)
+
+        latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
+                                                                           noise_mode, False, callback=progress_callback)
 
         if len(result) > 0:
             result = torch.cat(result)
@@ -112,7 +125,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         if prev_progress_latent_opt is not None:
             result['samples'] = torch.cat((prev_progress_latent_opt['samples'], result['samples']), dim=0)
 
-        return (latent_image, result)
+        return latent_image, result
 
 
 NODE_CLASS_MAPPINGS = {

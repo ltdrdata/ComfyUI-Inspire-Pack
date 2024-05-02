@@ -7,9 +7,9 @@ import math
 from .libs import common
 
 
-def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
-                    noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False,
-                    incremental_seed_mode="comfy", variation_seed=None, variation_strength=None, noise=None):
+def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
+                     noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False,
+                     incremental_seed_mode="comfy", variation_seed=None, variation_strength=None, noise=None, callback=None):
     device = comfy.model_management.get_torch_device()
     noise_device = "cpu" if noise_mode == "CPU" else device
     latent_image = latent["samples"]
@@ -32,8 +32,8 @@ def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, 
 
     samples = common.impact_sampling(
         model=model, add_noise=not disable_noise, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
-        latent_image=latent, start_at_step=start_step, end_at_step=last_step, return_with_leftover_noise=not force_full_denoise, noise=noise)
-    return (samples, )
+        latent_image=latent, start_at_step=start_step, end_at_step=last_step, return_with_leftover_noise=not force_full_denoise, noise=noise, callback=callback)
+    return samples, noise
 
 
 class KSampler_inspire:
@@ -58,12 +58,12 @@ class KSampler_inspire:
                 }
 
     RETURN_TYPES = ("LATENT",)
-    FUNCTION = "sample"
+    FUNCTION = "doit"
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, batch_seed_mode="comfy", variation_seed=None, variation_strength=None):
-        return common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)
+    def doit(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, batch_seed_mode="comfy", variation_seed=None, variation_strength=None):
+        return (inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)[0],)
 
 
 class KSamplerAdvanced_inspire:
@@ -95,11 +95,12 @@ class KSamplerAdvanced_inspire:
                 }
 
     RETURN_TYPES = ("LATENT",)
-    FUNCTION = "sample"
+    FUNCTION = "doit"
 
     CATEGORY = "InspirePack/a1111_compat"
 
-    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0, batch_seed_mode="comfy", variation_seed=None, variation_strength=None, noise_opt=None):
+    @staticmethod
+    def sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step, noise_mode, return_with_leftover_noise, denoise=1.0, batch_seed_mode="comfy", variation_seed=None, variation_strength=None, noise_opt=None, callback=None):
         force_full_denoise = True
 
         if return_with_leftover_noise:
@@ -110,10 +111,13 @@ class KSamplerAdvanced_inspire:
         if not add_noise:
             disable_noise = True
 
-        return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
-                               denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
-                               force_full_denoise=force_full_denoise, noise_mode=noise_mode, incremental_seed_mode=batch_seed_mode,
-                               variation_seed=variation_seed, variation_strength=variation_strength, noise=noise_opt)
+        return inspire_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
+                                denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step,
+                                force_full_denoise=force_full_denoise, noise_mode=noise_mode, incremental_seed_mode=batch_seed_mode,
+                                variation_seed=variation_seed, variation_strength=variation_strength, noise=noise_opt, callback=callback)
+
+    def doit(self, *args, **kwargs):
+        return (self.sample(*args, **kwargs)[0],)
 
 
 class KSampler_inspire_pipe:
@@ -142,8 +146,8 @@ class KSampler_inspire_pipe:
 
     def sample(self, basic_pipe, seed, steps, cfg, sampler_name, scheduler, latent_image, denoise, noise_mode, batch_seed_mode="comfy", variation_seed=None, variation_strength=None):
         model, clip, vae, positive, negative = basic_pipe
-        latent = common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)[0]
-        return (latent, vae)
+        latent = inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, incremental_seed_mode=batch_seed_mode, variation_seed=variation_seed, variation_strength=variation_strength)[0]
+        return latent, vae
 
 
 class KSamplerAdvanced_inspire_pipe:
@@ -186,7 +190,7 @@ class KSamplerAdvanced_inspire_pipe:
                                                    noise_mode=noise_mode, return_with_leftover_noise=return_with_leftover_noise,
                                                    denoise=denoise, batch_seed_mode=batch_seed_mode, variation_seed=variation_seed,
                                                    variation_strength=variation_strength, noise_opt=noise_opt)[0]
-        return (latent, vae)
+        return latent, vae
 
 
 # Modified version of ComfyUI main code
