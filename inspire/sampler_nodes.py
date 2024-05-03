@@ -1,9 +1,10 @@
 import torch
 from . import a1111_compat
 import comfy
-from .libs import common
+from .libs import common, utils
 from comfy import model_management
-
+from comfy_extras import nodes_custom_sampler
+import nodes
 
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
@@ -30,7 +31,8 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
     RETURN_TYPES = ("LATENT", "LATENT")
     RETURN_NAMES = ("latent", "progress_latent")
 
-    def doit(self, model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent):
+    @staticmethod
+    def doit(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent):
         adv_steps = int(steps / denoise)
 
         if omit_start_latent:
@@ -40,16 +42,10 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
 
         result = []
 
-        if model.model.__class__.__name__ == 'SDXL':
-            multiplier = 1.0 / 0.13025
-        else:
-            # assume 'SD1.5'
-            multiplier = 1.0 / 0.18215
-
         def progress_callback(step, x0, x, total_steps):
-            x0 = x.clone() * multiplier
-            x0 = x0.to(model_management.intermediate_device())
-            result.append(x0)
+            x = model.model.process_latent_out(x)
+            x = x.to(model_management.intermediate_device())
+            result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, True, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, (adv_steps-steps), adv_steps, noise_mode, False, callback=progress_callback)
 
@@ -100,18 +96,12 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         else:
             result = [latent_image['samples']]
 
-        if model.model.__class__.__name__ == 'SDXL':
-            multiplier = 1.0 / 0.13025
-        else:
-            # assume 'SD1.5'
-            multiplier = 1.0 / 0.18215
-
         result = []
 
         def progress_callback(step, x0, x, total_steps):
-            x0 = x.clone() * multiplier
-            x0 = x0.to(model_management.intermediate_device())
-            result.append(x0)
+            x = model.model.process_latent_out(x)
+            x = x.to(model_management.intermediate_device())
+            result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
                                                                            noise_mode, False, callback=progress_callback)
