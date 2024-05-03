@@ -40,14 +40,8 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
 
         result = []
 
-        if model.model.__class__.__name__ == 'SDXL':
-            multiplier = 1.0 / 0.13025
-        else:
-            # assume 'SD1.5'
-            multiplier = 1.0 / 0.18215
-
         def progress_callback(step, x0, x, total_steps):
-            x0 = x.clone() * multiplier
+            x0 = model.model.process_latent_out(x0)
             x0 = x0.to(model_management.intermediate_device())
             result.append(x0)
 
@@ -100,16 +94,10 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         else:
             result = [latent_image['samples']]
 
-        if model.model.__class__.__name__ == 'SDXL':
-            multiplier = 1.0 / 0.13025
-        else:
-            # assume 'SD1.5'
-            multiplier = 1.0 / 0.18215
-
         result = []
 
         def progress_callback(step, x0, x, total_steps):
-            x0 = x.clone() * multiplier
+            x0 = model.model.process_latent_out(x0)
             x0 = x0.to(model_management.intermediate_device())
             result.append(x0)
 
