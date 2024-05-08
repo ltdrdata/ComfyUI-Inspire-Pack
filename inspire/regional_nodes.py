@@ -41,7 +41,7 @@ class RegionalPromptSimple:
         rp = nodes.NODE_CLASS_MAPPINGS['RegionalPrompt']()
 
         if wildcard_prompt != "":
-            model, clip, new_positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt)
+            model, clip, new_positive, _ = iwe.doit(model=model, clip=clip, populated_text=wildcard_prompt, seed=None)
 
             if controlnet_in_pipe:
                 prev_cnet = None
