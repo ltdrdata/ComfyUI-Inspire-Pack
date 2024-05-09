@@ -6,6 +6,7 @@ from comfy import model_management
 from comfy_extras import nodes_custom_sampler
 import nodes
 
+
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
     def INPUT_TYPES(s):
@@ -43,6 +44,9 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
         result = []
 
         def progress_callback(step, x0, x, total_steps):
+            if (total_steps-1) != step and step % interval != 0:
+                return
+
             x = model.model.process_latent_out(x)
             x = x.to(model_management.intermediate_device())
             result.append(x)
@@ -99,6 +103,9 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         result = []
 
         def progress_callback(step, x0, x, total_steps):
+            if (total_steps-1) != step and step % interval != 0:
+                return
+
             x = model.model.process_latent_out(x)
             x = x.to(model_management.intermediate_device())
             result.append(x)
