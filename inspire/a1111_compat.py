@@ -7,6 +7,42 @@ import math
 from .libs import common
 
 
+class Inspire_RandomNoise:
+    def __init__(self, seed, mode, incremental_seed_mode, variation_seed, variation_strength):
+        device = comfy.model_management.get_torch_device()
+        self.seed = seed
+        self.noise_device = "cpu" if mode == "CPU" else device
+        self.incremental_seed_mode = incremental_seed_mode
+        self.variation_seed = variation_seed
+        self.variation_strength = variation_strength
+
+    def generate_noise(self, input_latent):
+        latent_image = input_latent["samples"]
+        batch_inds = input_latent["batch_index"] if "batch_index" in input_latent else None
+        noise = utils.prepare_noise(latent_image, self.seed, batch_inds, self.noise_device, self.incremental_seed_mode, variation_seed=self.variation_seed, variation_strength=self.variation_strength)
+        return noise.cpu()
+
+
+class RandomNoise:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "noise_mode": (["GPU(=A1111)", "CPU"],),
+                    "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
+                    "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    }
+                }
+
+    RETURN_TYPES = ("NOISE",)
+    FUNCTION = "get_noise"
+    CATEGORY = "InspirePack/a1111_compat"
+
+    def get_noise(self, noise_seed, noise_mode, batch_seed_mode, variation_seed, variation_strength):
+        return (Inspire_RandomNoise(noise_seed, noise_mode, batch_seed_mode, variation_seed, variation_strength),)
+
+
 def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0,
                      noise_mode="CPU", disable_noise=False, start_step=None, last_step=None, force_full_denoise=False,
                      incremental_seed_mode="comfy", variation_seed=None, variation_strength=None, noise=None, callback=None):
@@ -339,6 +375,7 @@ NODE_CLASS_MAPPINGS = {
     "KSamplerAdvanced //Inspire": KSamplerAdvanced_inspire,
     "KSamplerPipe //Inspire": KSampler_inspire_pipe,
     "KSamplerAdvancedPipe //Inspire": KSamplerAdvanced_inspire_pipe,
+    "RandomNoise //Inspire": RandomNoise,
     "HyperTile //Inspire": HyperTileInspire
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -346,5 +383,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "KSamplerAdvanced //Inspire": "KSamplerAdvanced (inspire)",
     "KSamplerPipe //Inspire": "KSampler [pipe] (inspire)",
     "KSamplerAdvancedPipe //Inspire": "KSamplerAdvanced [pipe] (inspire)",
+    "RandomNoise //Inspire": "RandomNoise (inspire)",
     "HyperTile //Inspire": "HyperTile (Inspire)"
 }

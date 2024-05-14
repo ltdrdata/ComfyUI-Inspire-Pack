@@ -34,6 +34,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
         * Other point #1 : Please make sure you haven't forgotten to include 'embedding:' in the embedding used in the prompt, like 'embedding:easynegative.'
         * Other point #2 : ComfyUI and A1111 have different interpretations of weighting. To align them, you need to use [BlenderNeko/Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb).
     * `KSamplerAdvanced (Inspire)`: Inspire Pack version of `KSampler (Advanced)`.
+    * `RandomNoise (inspire)`: Inspire Pack version of `RandomNoise`.
     * Common Parameters
       * `batch_seed_mode` determines how seeds are applied to batch latents:
         * `comfy`: This method applies the noise to batch latents all at once. This is advantageous to prevent duplicate images from being generated due to seed duplication when creating images.
