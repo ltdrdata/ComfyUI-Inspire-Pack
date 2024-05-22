@@ -125,6 +125,8 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 
 * Conditioning - Nodes for conditionings
   * `Concat Conditionings with Multiplier (Inspire)`: Concatenating an arbitrary number of Conditionings while applying a multiplier for each Conditioning. The multiplier depends on `comfy_PoP`, so [comfy_PoP](https://github.com/picturesonpictures/comfy_PoP) must be installed.
+  * `Conditioning Upscale (Inspire)`: When upscaling an image, it helps to expand the conditioning area according to the upscale factor. Taken from [ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode)
+  * `Conditioning Stretch (Inspire)`: When upscaling an image, it helps to expand the conditioning area by specifying the original resolution and the new resolution to be applied. Taken from [ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode)
 
 * Models - Nodes for models
   * `IPAdapter Model Helper (Inspire)`: This provides presets that allow for easy loading of the IPAdapter related models. However, it is essential for the model's name to be accurate.
@@ -151,3 +153,5 @@ Kosinkadink/[ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI
 Trung0246/[ComfyUI-0246](https://github.com/Trung0246/ComfyUI-0246) - Nice bypass hack!
 
 cubiq/[ComfyUI_IPAdapter_plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) - IPAdapter related nodes depend on this extension.
+
+Davemane42/[ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode) - Original author of ConditioningStretch, ConditioningUpscale
