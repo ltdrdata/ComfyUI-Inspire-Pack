@@ -32,7 +32,42 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
     return result
 
 
-def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incremental_seed_mode="comfy", variation_seed=None, variation_strength=None):
+# CREDIT: https://github.com/BlenderNeko/ComfyUI_Noise/blob/afb14757216257b12268c91845eac248727a55e2/nodes.py#L68
+#         https://discuss.pytorch.org/t/help-regarding-slerp-function-for-generative-model-sampling/32475/3
+def slerp(val, low, high):
+    dims = low.shape
+
+    low = low.reshape(dims[0], -1)
+    high = high.reshape(dims[0], -1)
+
+    low_norm = low/torch.norm(low, dim=1, keepdim=True)
+    high_norm = high/torch.norm(high, dim=1, keepdim=True)
+
+    low_norm[low_norm != low_norm] = 0.0
+    high_norm[high_norm != high_norm] = 0.0
+
+    omega = torch.acos((low_norm*high_norm).sum(1))
+    so = torch.sin(omega)
+    res = (torch.sin((1.0-val)*omega)/so).unsqueeze(1)*low + (torch.sin(val*omega)/so).unsqueeze(1) * high
+
+    return res.reshape(dims)
+
+
+def mix_noise(from_noise, to_noise, strength, variation_method):
+    if variation_method == 'slerp':
+        mixed_noise = slerp(strength, from_noise, to_noise)
+    else:
+        # linear
+        mixed_noise = (1 - strength) * from_noise + strength * to_noise
+
+        # NOTE: Since the variance of the Gaussian noise in mixed_noise has changed, it must be corrected through scaling.
+        scale_factor = math.sqrt((1 - strength) ** 2 + strength ** 2)
+        mixed_noise /= scale_factor
+
+    return mixed_noise
+
+
+def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incremental_seed_mode="comfy", variation_seed=None, variation_strength=None, variation_method="linear"):
     """
     creates random noise given a latent image and a seed.
     optional arg skip can be used to skip and discard x number of noise generations for a given seed
@@ -63,13 +98,10 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
                 strength += strength_up
 
             variation_noise = variation_latent.expand(input_latent.size()[0], -1, -1, -1)
-            mixed_noise = (1 - strength) * input_latent + strength * variation_noise
 
-            # NOTE: Since the variance of the Gaussian noise in mixed_noise has changed, it must be corrected through scaling.
-            scale_factor = math.sqrt((1 - strength) ** 2 + strength ** 2)
-            corrected_noise = mixed_noise / scale_factor
+            mixed_noise = mix_noise(input_latent, variation_noise, strength, variation_method)
 
-            return corrected_noise
+            return mixed_noise
 
     # method: incremental seed batch noise
     if noise_inds is None and incremental_seed_mode == "incremental":

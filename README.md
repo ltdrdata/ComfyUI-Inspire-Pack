@@ -155,3 +155,5 @@ Trung0246/[ComfyUI-0246](https://github.com/Trung0246/ComfyUI-0246) - Nice bypas
 cubiq/[ComfyUI_IPAdapter_plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) - IPAdapter related nodes depend on this extension.
 
 Davemane42/[ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode) - Original author of ConditioningStretch, ConditioningUpscale
+
+BlenderNeko/[ComfyUI_Noise](https://github.com/BlenderNeko/ComfyUI_Noise) - slerp code for noise variation
