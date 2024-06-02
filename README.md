@@ -93,6 +93,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
+  * `Regional CFG (Inspire)` - By applying a mask as a multiplier to the configured cfg, it allows different areas to have different cfg settings.
 
 * Image Util
   * `Load Image Batch From Dir (Inspire)`: This is almost same as `LoadImagesFromDirectory` of [ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet). This is just a modified version. Just note that this node forcibly normalizes the size of the loaded image to match the size of the first image, even if they are not the same size, to create a batch image.  

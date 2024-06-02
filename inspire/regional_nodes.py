@@ -528,6 +528,53 @@ class RegionalSeedExplorerColorMask:
         return (noise, original_mask)
 
 
+class RegionalCFG:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"model": ("MODEL",),
+                             "mask": ("MASK",),
+                             }}
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(model, mask):
+        if len(mask.shape) == 2:
+            mask = mask.unsqueeze(0).unsqueeze(0)
+        elif len(mask.shape) == 3:
+            mask = mask.unsqueeze(0)
+
+        size = None
+
+        def regional_cfg(args):
+            nonlocal mask
+            nonlocal size
+
+            x = args['input']
+
+            if mask.device != x.device:
+                mask = mask.to(x.device)
+
+            if size != (x.shape[2], x.shape[3]):
+                size = (x.shape[2], x.shape[3])
+                mask = torch.nn.functional.interpolate(mask, size=size, mode='bilinear', align_corners=False)
+
+            cond_pred = args["cond_denoised"]
+            uncond_pred = args["uncond_denoised"]
+            cond_scale = args["cond_scale"]
+
+            cfg_result = uncond_pred + (cond_pred - uncond_pred) * cond_scale * mask
+
+            return x - cfg_result
+
+        m = model.clone()
+        m.set_model_sampler_cfg_function(regional_cfg)
+        return (m,)
+
+
 NODE_CLASS_MAPPINGS = {
     "RegionalPromptSimple //Inspire": RegionalPromptSimple,
     "RegionalPromptColorMask //Inspire": RegionalPromptColorMask,
@@ -542,6 +589,7 @@ NODE_CLASS_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": ToIPAdapterPipe,
     "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
+    "RegionalCFG //Inspire": RegionalCFG,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -557,5 +605,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RegionalSeedExplorerColorMask //Inspire": "Regional Seed Explorer By Color Mask (Inspire)",
     "ToIPAdapterPipe //Inspire": "ToIPAdapterPipe (Inspire)",
     "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
-    "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)"
+    "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
+    "RegionalCFG //Inspire": "Regional CFG (Inspire)"
 }
