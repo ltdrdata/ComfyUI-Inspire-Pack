@@ -549,7 +549,9 @@ class SeedExplorer:
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "noise_mode": (["GPU(=A1111)", "CPU"],),
                 "initial_batch_seed_mode": (["incremental", "comfy"],),
-            }
+            },
+            "optional":
+                {"variation_method": (["linear", "slerp"],), }
         }
 
     RETURN_TYPES = ("NOISE",)
@@ -558,7 +560,7 @@ class SeedExplorer:
     CATEGORY = "InspirePack/Prompt"
 
     @staticmethod
-    def apply_variation(start_noise, seed_items, noise_device, mask=None):
+    def apply_variation(start_noise, seed_items, noise_device, mask=None, variation_method='linear'):
         noise = start_noise
         for x in seed_items:
             if isinstance(x, str):
@@ -571,14 +573,15 @@ class SeedExplorer:
                     variation_seed = int(item[0])
                     variation_strength = float(item[1])
 
-                    noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength, mask=mask)
+                    noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength, mask=mask, variation_method=variation_method)
                 except Exception:
                     print(f"[ERROR] IGNORED: SeedExplorer failed to processing '{x}'")
                     traceback.print_exc()
         return noise
 
-    def doit(self, latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode,
-             initial_batch_seed_mode):
+    @staticmethod
+    def doit(latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode,
+             initial_batch_seed_mode, variation_method='linear'):
         latent_image = latent["samples"]
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
@@ -603,7 +606,7 @@ class SeedExplorer:
 
             noise = utils.prepare_noise(latent_image, hd_seed, None, noise_device, initial_batch_seed_mode)
             noise = noise.to(device)
-            noise = SeedExplorer.apply_variation(noise, tl, noise_device)
+            noise = SeedExplorer.apply_variation(noise, tl, noise_device, variation_method=variation_method)
             noise = noise.cpu()
 
             return (noise,)

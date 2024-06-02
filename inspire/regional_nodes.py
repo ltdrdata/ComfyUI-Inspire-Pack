@@ -21,6 +21,11 @@ class RegionalPromptSimple:
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
             },
+            "optional": {
+                "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "variation_method": (["linear", "slerp"],),
+            }
         }
 
     RETURN_TYPES = ("REGIONAL_PROMPTS", )
@@ -28,7 +33,8 @@ class RegionalPromptSimple:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe=False, sigma_factor=1.0):
+    def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt,
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear'):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'RegionalPromptSimple' node, 'Impact Pack' extension is required.")
@@ -61,7 +67,10 @@ class RegionalPromptSimple:
         basic_pipe = model, clip, vae, new_positive, negative
 
         sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe, sigma_factor=sigma_factor)[0]
-        regional_prompts = rp.doit(mask, sampler)[0]
+        try:
+            regional_prompts = rp.doit(mask, sampler, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
+        except:
+            raise Exception("[Inspire-Pack] ERROR: Impact Pack is outdated. Update Impact Pack to latest version to use this.")
 
         return (regional_prompts, )
 
@@ -96,6 +105,11 @@ class RegionalPromptColorMask:
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
             },
+            "optional": {
+                "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "variation_method": (["linear", "slerp"],),
+            }
         }
 
     RETURN_TYPES = ("REGIONAL_PROMPTS", "MASK")
@@ -103,10 +117,12 @@ class RegionalPromptColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe=False, sigma_factor=1.0):
+    def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt,
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear"):
         mask = color_to_mask(color_mask, mask_color)
-        rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe, sigma_factor=sigma_factor)[0]
-        return (rp, mask)
+        rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe,
+                                         sigma_factor=sigma_factor, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
+        return rp, mask
 
 
 class RegionalConditioningSimple:
@@ -413,6 +429,8 @@ class RegionalSeedExplorerMask:
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "noise_mode": (["GPU(=A1111)", "CPU"],),
             },
+            "optional":
+                {"variation_method": (["linear", "slerp"],), }
         }
 
     RETURN_TYPES = ("NOISE",)
@@ -420,7 +438,7 @@ class RegionalSeedExplorerMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode):
+    def doit(self, mask, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
@@ -442,7 +460,7 @@ class RegionalSeedExplorerMask:
             if enable_additional:
                 items.append((additional_seed, additional_strength))
 
-            noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask)
+            noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
             print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()
@@ -467,6 +485,8 @@ class RegionalSeedExplorerColorMask:
                 "additional_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "noise_mode": (["GPU(=A1111)", "CPU"],),
             },
+            "optional":
+                {"variation_method": (["linear", "slerp"],), }
         }
 
     RETURN_TYPES = ("NOISE", "MASK")
@@ -474,7 +494,7 @@ class RegionalSeedExplorerColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode):
+    def doit(self, color_mask, mask_color, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
@@ -497,7 +517,7 @@ class RegionalSeedExplorerColorMask:
             if enable_additional:
                 items.append((additional_seed, additional_strength))
 
-            noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask)
+            noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
             print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()

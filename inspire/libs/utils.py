@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 import math
 
 
-def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None):
+def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
     latent_size = latent_image.size()
     latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
 
@@ -27,7 +27,8 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
         result = (1 - variation_strength) * latent_image + variation_strength * variation_noise
     else:
         # this seems precision is not enough when variation_strength is 0.0
-        result = (mask == 1).float() * ((1 - variation_strength) * latent_image + variation_strength * variation_noise * mask) + (mask == 0).float() * latent_image
+        mixed_noise = mix_noise(latent_image, variation_noise, variation_strength, variation_method=variation_method)
+        result = (mask == 1).float() * mixed_noise + (mask == 0).float() * latent_image
 
     return result
 
