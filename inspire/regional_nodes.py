@@ -3,6 +3,8 @@ import traceback
 import comfy
 import nodes
 import torch
+import re
+
 from . import prompt_support
 from .libs import utils, common
 
@@ -33,7 +35,8 @@ class RegionalPromptSimple:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt,
+    @staticmethod
+    def doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt,
              controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear'):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
@@ -117,7 +120,8 @@ class RegionalPromptColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt,
+    @staticmethod
+    def doit(basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt,
              controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear"):
         mask = color_to_mask(color_mask, mask_color)
         rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe,
@@ -143,7 +147,8 @@ class RegionalConditioningSimple:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, clip, mask, strength, set_cond_area, prompt):
+    @staticmethod
+    def doit(clip, mask, strength, set_cond_area, prompt):
         conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
         conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]
         return (conditioning, )
@@ -168,12 +173,13 @@ class RegionalConditioningColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, clip, color_mask, mask_color, strength, set_cond_area, prompt):
+    @staticmethod
+    def doit(clip, color_mask, mask_color, strength, set_cond_area, prompt):
         mask = color_to_mask(color_mask, mask_color)
 
         conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
         conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]
-        return (conditioning, mask)
+        return conditioning, mask
 
 
 class ToIPAdapterPipe:
@@ -195,7 +201,8 @@ class ToIPAdapterPipe:
 
     CATEGORY = "InspirePack/Util"
 
-    def doit(self, ipadapter, model, clip_vision, insightface=None):
+    @staticmethod
+    def doit(ipadapter, model, clip_vision, insightface=None):
         pipe = ipadapter, model, clip_vision, insightface, lambda x: x
 
         return (pipe,)
@@ -288,7 +295,8 @@ class RegionalIPAdapterMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
+    @staticmethod
+    def doit(mask, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
         cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, neg_image=neg_image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, )
 
@@ -322,7 +330,8 @@ class RegionalIPAdapterColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
+    @staticmethod
+    def doit(color_mask, mask_color, image, weight, noise, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, faceid_v2=False, weight_v2=False, combine_embeds="concat", neg_image=None):
         mask = color_to_mask(color_mask, mask_color)
         cond = IPAdapterConditioning(mask, weight, weight_type, noise=noise, image=image, neg_image=neg_image, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, weight_v2=weight_v2, combine_embeds=combine_embeds)
         return (cond, mask)
@@ -352,7 +361,8 @@ class RegionalIPAdapterEncodedMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
+    @staticmethod
+    def doit(mask, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
         cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, neg_embeds=neg_embeds)
         return (cond, )
 
@@ -382,7 +392,8 @@ class RegionalIPAdapterEncodedColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
+    @staticmethod
+    def doit(color_mask, mask_color, embeds, weight, weight_type, start_at=0.0, end_at=1.0, unfold_batch=False, neg_embeds=None):
         mask = color_to_mask(color_mask, mask_color)
         cond = IPAdapterConditioning(mask, weight, weight_type, embeds=embeds, start_at=start_at, end_at=end_at, unfold_batch=unfold_batch, neg_embeds=neg_embeds)
         return (cond, mask)
@@ -402,7 +413,8 @@ class ApplyRegionalIPAdapters:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, **kwargs):
+    @staticmethod
+    def doit(**kwargs):
         ipadapter_pipe = kwargs['ipadapter_pipe']
         ipadapter, model, clip_vision, insightface, lora_loader = ipadapter_pipe
 
@@ -438,7 +450,8 @@ class RegionalSeedExplorerMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, mask, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
+    @staticmethod
+    def doit(mask, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
@@ -494,7 +507,8 @@ class RegionalSeedExplorerColorMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, mask_color, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
+    @staticmethod
+    def doit(color_mask, mask_color, noise, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode, variation_method='linear'):
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
@@ -526,6 +540,41 @@ class RegionalSeedExplorerColorMask:
         noise = noise.cpu()
         original_mask = original_mask.cpu()
         return (noise, original_mask)
+
+
+class ColorMaskToDepthMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "color_mask": ("IMAGE",),
+                "spec": ("STRING", {"multiline": True, "default": "#FF0000:1.0"}),
+            },
+        }
+
+    RETURN_TYPES = ("MASK", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    def doit(self, color_mask, spec):
+        specs = spec.split('\n')
+        pat = re.compile("(?P<color_code>#[A-F0-9]+):(?P<cfg>[0-9]+(.[0-9]*)?)")
+
+        masks = []
+        for x in specs:
+            match = pat.match(x)
+            if match:
+                mask = color_to_mask(color_mask, match['color_code']) * float(match['cfg'])
+                masks.append(mask)
+
+        if masks:
+            masks = torch.cat(masks, dim=0)
+            masks = torch.sum(masks, dim=0)
+        else:
+            masks = torch.tensor([])
+
+        return (masks, )
 
 
 class RegionalCFG:
@@ -590,6 +639,7 @@ NODE_CLASS_MAPPINGS = {
     "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
     "RegionalCFG //Inspire": RegionalCFG,
+    "ColorMaskToDepthMask //Inspire": ColorMaskToDepthMask,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -606,5 +656,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": "ToIPAdapterPipe (Inspire)",
     "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
     "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
-    "RegionalCFG //Inspire": "Regional CFG (Inspire)"
+    "RegionalCFG //Inspire": "Regional CFG (Inspire)",
+    "ColorMaskToDepthMask //Inspire": "Color Mask To Depth Mask (Inspire)",
 }
