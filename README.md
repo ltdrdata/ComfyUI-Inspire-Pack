@@ -11,40 +11,44 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 * WARN: If you use version **0.12 to 0.12.2** without a GlobalSeed node, your workflow's seed may have been erased. Please update immediately.
 
 ## Nodes
-* Lora Block Weight - This is a node that provides functionality related to Lora block weight.
-    * This provides similar functionality to [sd-webui-lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight)
-    * `Lora Loader (Block Weight)`: When loading Lora, the block weight vector is applied.
-        * In the block vector, you can use numbers, R, A, a, B, and b.
-        * R is determined sequentially based on a random seed, while A and B represent the values of the A and B parameters, respectively. a and b are half of the values of A and B, respectively.
-    * `XY Input: Lora Block Weight`: This is a node in the [Efficiency Nodes](https://github.com/LucianoCirino/efficiency-nodes-comfyui)' XY Plot that allows you to use Lora block weight.
-        * You must ensure that X and Y connections are made, and dependencies should be connected to the XY Plot.
-        * Note: To use this feature, update `Efficient Nodes` to a version released after September 3rd.
+### Lora Block Weight - This is a node that provides functionality related to Lora block weight.
+  * This provides similar functionality to [sd-webui-lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight)
+  * `Lora Loader (Block Weight)`: When loading Lora, the block weight vector is applied.
+      * In the block vector, you can use numbers, R, A, a, B, and b.
+      * R is determined sequentially based on a random seed, while A and B represent the values of the A and B parameters, respectively. a and b are half of the values of A and B, respectively.
+  * `XY Input: Lora Block Weight`: This is a node in the [Efficiency Nodes](https://github.com/LucianoCirino/efficiency-nodes-comfyui)' XY Plot that allows you to use Lora block weight.
+      * You must ensure that X and Y connections are made, and dependencies should be connected to the XY Plot.
+      * Note: To use this feature, update `Efficient Nodes` to a version released after September 3rd.
 
-* SEGS Supports nodes - This is a node that supports ApplyControlNet (SEGS) from the Impact Pack.
-    * `OpenPose Preprocessor Provider (SEGS)`: OpenPose preprocessor is applied for the purpose of using OpenPose ControlNet in SEGS.
-        * You need to install [ControlNet Auxiliary Preprocessors](https://github.com/Fannovel16/comfyui_controlnet_aux) to use this.
-    * `Canny Preprocessor Provider (SEGS)`: Canny preprocessor is applied for the purpose of using Canny ControlNet in SEGS.
-    * `DW Preprocessor Provider (SEGS)`, `MiDaS Depth Map Preprocessor Provider (SEGS)`, `LeReS Depth Map Preprocessor Provider (SEGS)`, 
-      `MediaPipe FaceMesh Preprocessor Provider (SEGS)`, `HED Preprocessor Provider (SEGS)`, `Fake Scribble Preprocessor (SEGS)`, 
-      `AnimeLineArt Preprocessor Provider (SEGS)`, `Manga2Anime LineArt Preprocessor Provider (SEGS)`, `LineArt Preprocessor Provider (SEGS)`,
-      `Color Preprocessor Provider (SEGS)`, `Inpaint Preprocessor Provider (SEGS)`, `Tile Preprocessor Provider (SEGS)`, `MeshGraphormer Depth Map Preprocessor Provider (SEGS)`  
-    * `MediaPipeFaceMeshDetectorProvider`: This node provides `BBOX_DETECTOR` and `SEGM_DETECTOR` that can be used in Impact Pack's Detector using the `MediaPipe-FaceMesh Preprocessor` of ControlNet Auxiliary Preprocessors.
+### SEGS Supports nodes - This is a node that supports ApplyControlNet (SEGS) from the Impact Pack.
+  * `OpenPose Preprocessor Provider (SEGS)`: OpenPose preprocessor is applied for the purpose of using OpenPose ControlNet in SEGS.
+      * You need to install [ControlNet Auxiliary Preprocessors](https://github.com/Fannovel16/comfyui_controlnet_aux) to use this.
+  * `Canny Preprocessor Provider (SEGS)`: Canny preprocessor is applied for the purpose of using Canny ControlNet in SEGS.
+  * `DW Preprocessor Provider (SEGS)`, `MiDaS Depth Map Preprocessor Provider (SEGS)`, `LeReS Depth Map Preprocessor Provider (SEGS)`, 
+    `MediaPipe FaceMesh Preprocessor Provider (SEGS)`, `HED Preprocessor Provider (SEGS)`, `Fake Scribble Preprocessor (SEGS)`, 
+    `AnimeLineArt Preprocessor Provider (SEGS)`, `Manga2Anime LineArt Preprocessor Provider (SEGS)`, `LineArt Preprocessor Provider (SEGS)`,
+    `Color Preprocessor Provider (SEGS)`, `Inpaint Preprocessor Provider (SEGS)`, `Tile Preprocessor Provider (SEGS)`, `MeshGraphormer Depth Map Preprocessor Provider (SEGS)`  
+  * `MediaPipeFaceMeshDetectorProvider`: This node provides `BBOX_DETECTOR` and `SEGM_DETECTOR` that can be used in Impact Pack's Detector using the `MediaPipe-FaceMesh Preprocessor` of ControlNet Auxiliary Preprocessors.
 
-* A1111 Compatibility support - These nodes assists in replicating the creation of A1111 in ComfyUI exactly.
-    * `KSampler (Inspire)`: ComfyUI uses the CPU for generating random noise, while A1111 uses the GPU. One of the three factors that significantly impact reproducing A1111's results in ComfyUI can be addressed using `KSampler (Inspire)`.
-        * Other point #1 : Please make sure you haven't forgotten to include 'embedding:' in the embedding used in the prompt, like 'embedding:easynegative.'
-        * Other point #2 : ComfyUI and A1111 have different interpretations of weighting. To align them, you need to use [BlenderNeko/Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb).
-    * `KSamplerAdvanced (Inspire)`: Inspire Pack version of `KSampler (Advanced)`.
-    * `RandomNoise (inspire)`: Inspire Pack version of `RandomNoise`.
-    * Common Parameters
-      * `batch_seed_mode` determines how seeds are applied to batch latents:
-        * `comfy`: This method applies the noise to batch latents all at once. This is advantageous to prevent duplicate images from being generated due to seed duplication when creating images.
-        * `incremental`: Similar to the A1111 case, this method incrementally increases the seed and applies noise sequentially for each batch. This approach is beneficial for straightforward reproduction using only the seed.
-        * `variation_strength`: In each batch, the variation strength starts from the set `variation_strength` and increases by `xxx`.
-      * `variation_seed` and `variation_strength` - Initial noise generated by the seed is transformed to the shape of `variation_seed` by `variation_strength`. If `variation_strength` is 0, it only relies on the influence of the seed, and if `variation_strength` is 1.0, it is solely influenced by `variation_seed`.
-        * These parameters are used when you want to maintain the composition of an image generated by the seed but wish to introduce slight changes.
+### A1111 Compatibility support - These nodes assists in replicating the creation of A1111 in ComfyUI exactly.
+  * `KSampler (Inspire)`: ComfyUI uses the CPU for generating random noise, while A1111 uses the GPU. One of the three factors that significantly impact reproducing A1111's results in ComfyUI can be addressed using `KSampler (Inspire)`.
+      * Other point #1 : Please make sure you haven't forgotten to include 'embedding:' in the embedding used in the prompt, like 'embedding:easynegative.'
+      * Other point #2 : ComfyUI and A1111 have different interpretations of weighting. To align them, you need to use [BlenderNeko/Advanced CLIP Text Encode](https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb).
+  * `KSamplerAdvanced (Inspire)`: Inspire Pack version of `KSampler (Advanced)`.
+  * `RandomNoise (inspire)`: Inspire Pack version of `RandomNoise`.
+  * Common Parameters
+    * `batch_seed_mode` determines how seeds are applied to batch latents:
+      * `comfy`: This method applies the noise to batch latents all at once. This is advantageous to prevent duplicate images from being generated due to seed duplication when creating images.
+      * `incremental`: Similar to the A1111 case, this method incrementally increases the seed and applies noise sequentially for each batch. This approach is beneficial for straightforward reproduction using only the seed.
+      * `variation_strength`: In each batch, the variation strength starts from the set `variation_strength` and increases by `xxx`.
+    * `variation_seed` and `variation_strength` - Initial noise generated by the seed is transformed to the shape of `variation_seed` by `variation_strength`. If `variation_strength` is 0, it only relies on the influence of the seed, and if `variation_strength` is 1.0, it is solely influenced by `variation_seed`.
+      * These parameters are used when you want to maintain the composition of an image generated by the seed but wish to introduce slight changes.
 
-* Prompt Support - These are nodes for supporting prompt processing.
+### Sampler nodes
+  * `KSampler Progress (Inspire)` - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
+
+
+### Prompt Support - These are nodes for supporting prompt processing.
   * `Load Prompts From Dir (Inspire)`: It sequentially reads prompts files from the specified directory. The output it returns is ZIPPED_PROMPT.
     * Specify the directories located under `ComfyUI-Inspire-Pack/prompts/`
     * One prompts file can have multiple prompts separated by `---`. 
@@ -78,7 +82,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Remove ControlNet (Inspire)`, `Remove ControlNet [RegionalPrompts] (Inspire)`: Remove ControlNet from CONDITIONING or REGIONAL_PROMPTS.
     * `Remove ControlNet [RegionalPrompts] (Inspire)` requires Impact Pack V4.73.1 or above.
 
-* Regional Nodes - These node simplifies the application of prompts by region.
+### Regional Nodes - These node simplifies the application of prompts by region.
   * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.
     * `Regional Prompt Simple (Inspire)`: This node takes `mask` and `basic_pipe` as inputs and simplifies the creation of `REGIONAL_PROMPTS`.
     * `Regional Prompt By Color Mask (Inspire)`: Similar to `Regional Prompt Simple (Inspire)`, this function accepts a color mask image as input and defines the region using the color value that will be used as the mask, instead of directly receiving the mask.
@@ -94,9 +98,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
   * `Regional CFG (Inspire)` - By applying a mask as a multiplier to the configured cfg, it allows different areas to have different cfg settings.
-  * `Color Mask To Depth Mask` - Convert the color map from the spec text into a mask with depth values ranging from 0.0 to 1.0.
+  * `Color Mask To Depth Mask (Inspire)` - Convert the color map from the spec text into a mask with depth values ranging from 0.0 to 1.0.
 
-* Image Util
+### Image Util
   * `Load Image Batch From Dir (Inspire)`: This is almost same as `LoadImagesFromDirectory` of [ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet). This is just a modified version. Just note that this node forcibly normalizes the size of the loaded image to match the size of the first image, even if they are not the same size, to create a batch image.  
   * `Load Image List From Dir (Inspire)`: This is almost same as `Load Image Batch From Dir (Inspire)`. However, note that this node loads data in a list format, not as a batch, so it returns images at their original size without normalizing the size.
   * `Load Image (Inspire)`: This node is similar to LoadImage, but the loaded image information is stored in the workflow. The image itself is stored in the workflow, making it easier to reproduce image generation on other computers.
@@ -106,10 +110,8 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `ImageBatchSplitter //Inspire`, `LatentBatchSplitter //Inspire`: The script divides a batch of images/latents into individual images/latents, each with a quantity equal to the specified `split_count`. An additional output slot is added for each `split_count`. If the number of images/latents exceeds the `split_count`, the remaining ones are returned as the "remained" output.
   * `Color Map To Masks (Inspire)`: From the color_map, it extracts the top max_count number of colors and creates masks. min_pixels represents the minimum number of pixels for each color.
   * `Select Nth Mask (Inspire)`: Extracts the nth mask from the mask batch.
-  
-* KSampler Progress - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
 
-* Backend Cache - Nodes for storing arbitrary data from the backend in a cache and sharing it across multiple workflows.
+### Backend Cache - Nodes for storing arbitrary data from the backend in a cache and sharing it across multiple workflows.
   * `Cache Backend Data (Inspire)`: Stores any backend data in the cache using a string key. Tags are for quick reference.
   * `Retrieve Backend Data (Inspire)`: Retrieves cached backend data using a string key.
   * `Remove Backend Data (Inspire)`: Removes cached backend data. 
@@ -126,16 +128,16 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * This node resolves the issue of reloading checkpoints during workflow switching.
   * `Stable Cascade Checkpoint Loader (Inspire)`: This node provides a feature that allows you to load the `stage_b` and `stage_c` checkpoints of Stable Cascade at once, and it also provides a backend caching feature, optionally.
 
-* Conditioning - Nodes for conditionings
+### Conditioning - Nodes for conditionings
   * `Concat Conditionings with Multiplier (Inspire)`: Concatenating an arbitrary number of Conditionings while applying a multiplier for each Conditioning. The multiplier depends on `comfy_PoP`, so [comfy_PoP](https://github.com/picturesonpictures/comfy_PoP) must be installed.
   * `Conditioning Upscale (Inspire)`: When upscaling an image, it helps to expand the conditioning area according to the upscale factor. Taken from [ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode)
   * `Conditioning Stretch (Inspire)`: When upscaling an image, it helps to expand the conditioning area by specifying the original resolution and the new resolution to be applied. Taken from [ComfyUI_Dave_CustomNode](https://github.com/Davemane42/ComfyUI_Dave_CustomNode)
 
-* Models - Nodes for models
+### Models - Nodes for models
   * `IPAdapter Model Helper (Inspire)`: This provides presets that allow for easy loading of the IPAdapter related models. However, it is essential for the model's name to be accurate.
     * You can download the appropriate model through ComfyUI-Manager.
 
-* Util - Utilities
+### Util - Utilities
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
   * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.
   * `List Counter (Inspire)`: When each item in the list traverses through this node, it increments a counter by one, generating an integer value.
