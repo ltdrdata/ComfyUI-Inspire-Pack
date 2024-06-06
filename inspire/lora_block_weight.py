@@ -572,8 +572,8 @@ class LoraBlockInfo:
                 else:
                     output_blocks_map[k_unet_int] = [k_unet]
 
-            elif k_unet.startswith("_model.encoder.layers."):
-                k_unet_num = k_unet[len("_model.encoder.layers."):len("_model.encoder.layers.")+2]
+            elif k_unet.startswith("er.text_model.encoder.layers."):
+                k_unet_num = k_unet[len("er.text_model.encoder.layers."):len("er.text_model.encoder.layers.")+2]
                 k_unet_int = parse_unet_num(k_unet_num)
 
                 text_block_count.add(k_unet_int)
@@ -608,12 +608,11 @@ class LoraBlockInfo:
         for x in output_keys:
             text += f" OUT{x}: {len(output_blocks_map[x])}\n"
 
-        text += f"\n-------[Text blocks] ({len(text_block_count)}, Subs={len(text_blocks)})-------\n"
+        text += f"\n-------[Base blocks] ({len(text_block_count) + len(others)}, Subs={len(text_blocks) + len(others)})-------\n"
         text_keys = sorted(text_blocks_map.keys())
         for x in text_keys:
-            text += f" CLIP{x}: {len(text_blocks_map[x])}\n"
+            text += f" TXT_ENC{x}: {len(text_blocks_map[x])}\n"
 
-        text += f"\n-------[Base blocks] ({len(others)})-------\n"
         for x in others:
             text += f" {x}\n"
 
