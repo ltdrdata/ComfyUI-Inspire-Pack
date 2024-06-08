@@ -99,6 +99,14 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * `Regional Seed Explorer By Color Mask (Inspire)`
   * `Regional CFG (Inspire)` - By applying a mask as a multiplier to the configured cfg, it allows different areas to have different cfg settings.
   * `Color Mask To Depth Mask (Inspire)` - Convert the color map from the spec text into a mask with depth values ranging from 0.0 to 1.0.
+    * The range of the mask value is limited to 0.0 to 1.0.
+    * base_value: Sets the value of the base mask.
+    * dilation: Dilation applied to each mask layer before flattening.
+    * flatten_method: The method of flattening the mask layers.
+      * The layers are flattened including the base layer set by base_value.
+      * override: Each pixel is overwritten by the non-zero value of the upper layer.
+      * sum: Each pixel is flattened by summing the values of all layers.
+      * max: Each pixel is flattened by taking the maximum value from all layers.
 
 ### Image Util
   * `Load Image Batch From Dir (Inspire)`: This is almost same as `LoadImagesFromDirectory` of [ComfyUI-Advanced-Controlnet](https://github.com/Kosinkadink/ComfyUI-Advanced-ControlNet). This is just a modified version. Just note that this node forcibly normalizes the size of the loaded image to match the size of the first image, even if they are not the same size, to create a batch image.  
