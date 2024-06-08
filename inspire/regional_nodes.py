@@ -548,7 +548,10 @@ class ColorMaskToDepthMask:
         return {
             "required": {
                 "color_mask": ("IMAGE",),
-                "spec": ("STRING", {"multiline": True, "default": "#FF0000:1.0"}),
+                "spec": ("STRING", {"multiline": True, "default": "#FF0000:1.0\n#000000:1.0"}),
+                "base_value": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0}),
+                "dilation": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
+                "flatten_method": (["override", "sum", "max"],),
             },
         }
 
@@ -557,20 +560,29 @@ class ColorMaskToDepthMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, spec):
+    def doit(self, color_mask, spec, base_value, dilation, flatten_method):
         specs = spec.split('\n')
         pat = re.compile("(?P<color_code>#[A-F0-9]+):(?P<cfg>[0-9]+(.[0-9]*)?)")
 
-        masks = []
+        masks = [torch.ones((1, color_mask.shape[1], color_mask.shape[2])) * base_value]
         for x in specs:
             match = pat.match(x)
             if match:
-                mask = color_to_mask(color_mask, match['color_code']) * float(match['cfg'])
+                mask = color_to_mask(color_mask=color_mask, mask_color=match['color_code']) * float(match['cfg'])
+                mask = utils.dilate_mask(mask, dilation)
                 masks.append(mask)
 
         if masks:
             masks = torch.cat(masks, dim=0)
-            masks = torch.sum(masks, dim=0)
+            if flatten_method == 'override':
+                masks = utils.flatten_non_zero_override(masks)
+            elif flatten_method == 'max':
+                masks = torch.max(masks, dim=0)[0]
+            else:  # flatten_method == 'sum':
+                masks = torch.sum(masks, dim=0)
+
+            masks = torch.clamp(masks, min=0.0, max=1.0)
+            masks = masks.unsqueeze(0)
         else:
             masks = torch.tensor([])
 

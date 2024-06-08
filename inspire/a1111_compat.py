@@ -53,6 +53,8 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
     device = comfy.model_management.get_torch_device()
     noise_device = "cpu" if noise_mode == "CPU" else device
     latent_image = latent["samples"]
+    if hasattr(comfy.sample, 'fix_empty_latent_channels'):
+        latent_image = comfy.sample.fix_empty_latent_channels(model, latent_image)
 
     if noise is None:
         if disable_noise:

@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw
 import math
+import cv2
 
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
@@ -288,3 +289,28 @@ class TaggedCache:
     def clear(self):
         # clear all cache
         self._data = {}
+
+
+def dilate_mask(mask: torch.Tensor, dilation_factor: float) -> torch.Tensor:
+    """Dilate a mask using a square kernel with a given dilation factor."""
+    kernel_size = int(dilation_factor * 2) + 1
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+    mask_dilated = cv2.dilate(mask.numpy(), kernel, iterations=1)
+    return torch.from_numpy(mask_dilated)
+
+
+def flatten_non_zero_override(masks: torch.Tensor):
+    """
+    flatten multiple layer mask tensor to 1 layer mask tensor.
+    Override the lower layer with the tensor from the upper layer, but only override non-zero values.
+
+    :param masks: 3d mask
+    :return: flatten mask
+    """
+    final_mask = masks[0]
+
+    for i in range(1, masks.size(0)):
+        non_zero_mask = masks[i] != 0
+        final_mask[non_zero_mask] = masks[i][non_zero_mask]
+
+    return final_mask

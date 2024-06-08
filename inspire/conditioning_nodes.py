@@ -88,7 +88,7 @@ class ConditioningStretch:
         }
 
     RETURN_TYPES = ("CONDITIONING",)
-    CATEGORY = "Davemane42"
+    CATEGORY = "InspirePack/conditioning"
 
     FUNCTION = 'upscale'
 
@@ -128,7 +128,7 @@ class ConditioningUpscale:
         }
 
     RETURN_TYPES = ("CONDITIONING",)
-    CATEGORY = "Davemane42"
+    CATEGORY = "InspirePack/conditioning"
 
     FUNCTION = 'upscale'
 
