@@ -56,6 +56,12 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
     if hasattr(comfy.sample, 'fix_empty_latent_channels'):
         latent_image = comfy.sample.fix_empty_latent_channels(model, latent_image)
 
+    latent = latent.copy()
+
+    if noise is not None and latent_image.shape[1] != noise.shape[1]:
+        print("[Inspire Pack] inspire_ksampler: The type of latent input for noise generation does not match the model's latent type. When using the SD3 model, you must use the SD3 Empty Latent.")
+        raise Exception("The type of latent input for noise generation does not match the model's latent type. When using the SD3 model, you must use the SD3 Empty Latent.")
+
     if noise is None:
         if disable_noise:
             torch.manual_seed(seed)

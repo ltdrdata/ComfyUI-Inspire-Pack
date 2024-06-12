@@ -551,7 +551,10 @@ class SeedExplorer:
                 "initial_batch_seed_mode": (["incremental", "comfy"],),
             },
             "optional":
-                {"variation_method": (["linear", "slerp"],), }
+                {
+                    "variation_method": (["linear", "slerp"],),
+                    "model": ("model",),
+                }
         }
 
     RETURN_TYPES = ("NOISE",)
@@ -581,8 +584,12 @@ class SeedExplorer:
 
     @staticmethod
     def doit(latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode,
-             initial_batch_seed_mode, variation_method='linear'):
+             initial_batch_seed_mode, variation_method='linear', model=None):
         latent_image = latent["samples"]
+
+        if hasattr(comfy.sample, 'fix_empty_latent_channels') and model is not None:
+            latent_image = comfy.sample.fix_empty_latent_channels(model, latent_image)
+
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
