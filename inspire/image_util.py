@@ -7,6 +7,7 @@ import folder_paths
 import base64
 from io import BytesIO
 from .libs.utils import *
+import json
 
 
 class LoadImagesFromDirBatch:
@@ -20,10 +21,12 @@ class LoadImagesFromDirBatch:
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                # XXX TODO add a switch for the size normalization
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK", "INT")
+    RETURN_TYPES = ("IMAGE", "MASK", "INT", "STRING")
+    RETURN_NAMES = ("images", "masks", "count", "image_paths_json", )
     FUNCTION = "load_images"
 
     CATEGORY = "image"
@@ -54,6 +57,7 @@ class LoadImagesFromDirBatch:
 
         images = []
         masks = []
+        image_paths = []
 
         limit_images = False
         if image_load_cap > 0:
@@ -80,10 +84,11 @@ class LoadImagesFromDirBatch:
                 mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             images.append(image)
             masks.append(mask)
+            image_paths.append(image_path)
             image_count += 1
 
         if len(images) == 1:
-            return (images[0], masks[0], 1)
+            return (images[0], masks[0], 1, json.dumps(image_paths), ) # The image_paths must be parseable, even at the cost of readability by a human
 
         elif len(images) > 1:
             image1 = images[0]
@@ -109,7 +114,7 @@ class LoadImagesFromDirBatch:
                 else:
                     mask1 = torch.cat((mask1, mask2), dim=0)
 
-            return (image1, mask1, len(images))
+            return (image1, mask1, len(images), json.dumps(image_paths), )
 
 
 class LoadImagesFromDirList:
