@@ -26,7 +26,7 @@ class LoadImagesFromDirBatch:
         }
 
     RETURN_TYPES = ("IMAGE", "MASK", "INT", "STRING")
-    RETURN_NAMES = ("images", "masks", "count", "image_paths_json", )
+    RETURN_NAMES = ("images", "masks", "count", "image_paths", )
     FUNCTION = "load_images"
 
     CATEGORY = "image"
@@ -88,7 +88,7 @@ class LoadImagesFromDirBatch:
             image_count += 1
 
         if len(images) == 1:
-            return (images[0], masks[0], 1, json.dumps(image_paths), ) # The image_paths must be parseable, even at the cost of readability by a human
+            return (images[0], masks[0], 1, image_paths[0], )
 
         elif len(images) > 1:
             image1 = images[0]
