@@ -7,7 +7,7 @@
 
 import importlib
 
-version_code = [0, 75, 3]
+version_code = [0, 76]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
 print(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 
@@ -23,7 +23,8 @@ node_list = [
     "backend_support",
     "list_nodes",
     "conditioning_nodes",
-    "model_nodes"
+    "model_nodes",
+    "util_nodes"
 ]
 
 NODE_CLASS_MAPPINGS = {}
