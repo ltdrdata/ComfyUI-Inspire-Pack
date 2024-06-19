@@ -77,6 +77,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * In the `seed_prompt`, the first seed is considered the initial seed, and the reflection rate is omitted, always defaulting to 1.0.
     * Each prompt is separated by a comma, and from the second seed onwards, it should follow the format `seed:strength`.
     * Pressing the "Add to prompt" button will append `additional_seed:additional_strength` to the prompt.
+  * `Composite Noise (Inspire)`: This node overwrites a specific area on top of the destination noise with the source noise.
   * `Random Generator for List (Inspire)`: When connecting the list output to the signal input, this node generates random values for all items in the list.
   * `Make Basic Pipe (Inspire)`: This is a node that creates a BASIC_PIPE using Wildcard Encode. The `Add select to` determines whether the selected item from the `Select to...` combo will be input as positive wildcard text or negative wildcard text.
   * `Remove ControlNet (Inspire)`, `Remove ControlNet [RegionalPrompts] (Inspire)`: Remove ControlNet from CONDITIONING or REGIONAL_PROMPTS.

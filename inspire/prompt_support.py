@@ -627,6 +627,72 @@ class SeedExplorer:
         return (noise,)
 
 
+class CompositeNoise:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "destination": ("NOISE",),
+                "source": ("NOISE",),
+                "mode": (["center", "left-top", "right-top", "left-bottom", "right-bottom", "xy"], ),
+                "x": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                "y": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+            },
+        }
+
+    RETURN_TYPES = ("NOISE",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    def doit(self, destination, source, mode, x, y):
+        new_tensor = destination.clone()
+
+        if mode == 'center':
+            y1 = (new_tensor.size(2) - source.size(2)) // 2
+            x1 = (new_tensor.size(3) - source.size(3)) // 2
+        elif mode == 'left-top':
+            y1 = 0
+            x1 = 0
+        elif mode == 'right-top':
+            y1 = 0
+            x1 = new_tensor.size(2) - source.size(2)
+        elif mode == 'left-bottom':
+            y1 = new_tensor.size(3) - source.size(3)
+            x1 = 0
+        elif mode == 'right-bottom':
+            y1 = new_tensor.size(3) - source.size(3)
+            x1 = new_tensor.size(2) - source.size(2)
+        else:  # mode == 'xy':
+            x1 = max(0, x)
+            y1 = max(0, y)
+
+        # raw coordinates
+        y2 = y1 + source.size(2)
+        x2 = x1 + source.size(3)
+
+        # bounding for destination
+        top = max(0, y1)
+        left = max(0, x1)
+        bottom = min(new_tensor.size(2), y2)
+        right = min(new_tensor.size(3), x2)
+
+        # bounding for source
+        left_gap = left - x1
+        top_gap = top - y1
+
+        width = right - left
+        height = bottom - top
+
+        height = min(height, y1 + source.size(2) - top)
+        width = min(width, x1 + source.size(3) - left)
+
+        # composite
+        new_tensor[:, :, top:top + height, left:left + width] = source[:, :, top_gap:top_gap + height, left_gap:left_gap + width]
+
+        return (new_tensor,)
+
+
 list_counter_map = {}
 
 
@@ -778,7 +844,9 @@ NODE_CLASS_MAPPINGS = {
     "MakeBasicPipe //Inspire": MakeBasicPipe,
     "RemoveControlNet //Inspire": RemoveControlNet,
     "RemoveControlNetFromRegionalPrompts //Inspire": RemoveControlNetFromRegionalPrompts,
+    "CompositeNoise //Inspire": CompositeNoise
 }
+
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
     "LoadPromptsFromFile //Inspire": "Load Prompts From File (Inspire)",
@@ -797,5 +865,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)",
     "MakeBasicPipe //Inspire": "Make Basic Pipe (Inspire)",
     "RemoveControlNet //Inspire": "Remove ControlNet (Inspire)",
-    "RemoveControlNetFromRegionalPrompts //Inspire": "Remove ControlNet [RegionalPrompts] (Inspire)"
+    "RemoveControlNetFromRegionalPrompts //Inspire": "Remove ControlNet [RegionalPrompts] (Inspire)",
+    "CompositeNoise //Inspire": "Composite Noise (Inspire)"
 }
