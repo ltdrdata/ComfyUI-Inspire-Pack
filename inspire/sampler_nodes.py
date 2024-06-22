@@ -200,8 +200,6 @@ class Guider_scheduled(CFGGuider):
             self.cfg_sigmas_i[i] = self.cfg_sigmas[k]
             i += 1
 
-        print(f"self.cfg_sigmas: {self.cfg_sigmas}")
-
     def predict_noise(self, x, timestep, model_options={}, seed=None):
         k = float(timestep[0])
 
