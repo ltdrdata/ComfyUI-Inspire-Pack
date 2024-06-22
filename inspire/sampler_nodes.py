@@ -171,6 +171,7 @@ class Guider_scheduled(CFGGuider):
         self.default_cfg = self.cfg
         self.sigmas = sigmas
         self.cfg_sigmas = None
+        self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
@@ -182,23 +183,33 @@ class Guider_scheduled(CFGGuider):
 
     def renew_cfg_sigmas(self):
         self.cfg_sigmas = {}
+        self.cfg_sigmas_i = {}
         i = 0
         steps = len(self.sigmas) - 1
         for x in self.sigmas:
             k = float(x)
             delta = self.to_cfg - self.from_cfg
             if self.schedule == 'exp':
-                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps)
+                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             elif self.schedule == 'log':
-                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps)
+                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             else:
-                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps
+                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps, i
 
+            self.cfg_sigmas_i[i] = self.cfg_sigmas[k]
             i += 1
 
     def predict_noise(self, x, timestep, model_options={}, seed=None):
         k = float(timestep[0])
-        self.cfg = self.cfg_sigmas[k]
+
+        v = self.cfg_sigmas.get(k)
+        if v is None:
+            # fallback
+            v = self.cfg_sigmas_i[self.last_i+1]
+
+        self.last_i = v[1]
+        self.cfg = v[0]
+
         return super().predict_noise(x, timestep, model_options, seed)
 
 
@@ -208,11 +219,13 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
         self.default_cfg = self.cfg
         self.sigmas = sigmas
         self.cfg_sigmas = None
+        self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
         self.neg_scale = neg_scale
         self.renew_cfg_sigmas()
+        self.last_i = 0
 
     def set_cfg(self, cfg):
         self.default_cfg = cfg
@@ -220,23 +233,33 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
 
     def renew_cfg_sigmas(self):
         self.cfg_sigmas = {}
+        self.cfg_sigmas_i = {}
         i = 0
         steps = len(self.sigmas) - 1
         for x in self.sigmas:
             k = float(x)
             delta = self.to_cfg - self.from_cfg
             if self.schedule == 'exp':
-                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps)
+                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             elif self.schedule == 'log':
-                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps)
+                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             else:
-                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps
+                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps, i
 
+            self.cfg_sigmas_i[i] = self.cfg_sigmas[k]
             i += 1
 
     def predict_noise(self, x, timestep, model_options={}, seed=None):
         k = float(timestep[0])
-        self.cfg = self.cfg_sigmas[k]
+
+        v = self.cfg_sigmas.get(k)
+        if v is None:
+            # fallback
+            v = self.cfg_sigmas_i[self.last_i+1]
+
+        self.last_i = v[1]
+        self.cfg = v[0]
+
         return super().predict_noise(x, timestep, model_options, seed)
 
 
