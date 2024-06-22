@@ -1,11 +1,11 @@
 import torch
 from . import a1111_compat
 import comfy
-from .libs import common, utils
+from .libs import common
 from comfy import model_management
-from comfy_extras import nodes_custom_sampler
-import nodes
-
+from comfy.samplers import CFGGuider
+import numpy
+import math
 
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
@@ -132,12 +132,109 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
         return latent_image, result
 
 
+def exponential_interpolation(from_cfg, to_cfg, i, steps):
+    if i == steps-1:
+        return to_cfg
+
+    if from_cfg == to_cfg:
+        return from_cfg
+
+    if from_cfg == 0:
+        return to_cfg * (1 - math.exp(-5 * i / steps)) / (1 - math.exp(-5))
+    elif to_cfg == 0:
+        return from_cfg * (math.exp(-5 * i / steps) - math.exp(-5)) / (1 - math.exp(-5))
+    else:
+        log_from = math.log(from_cfg)
+        log_to = math.log(to_cfg)
+        log_value = log_from + (log_to - log_from) * i / steps
+        return math.exp(log_value)
+
+
+def logarithmic_interpolation(from_cfg, to_cfg, i, steps):
+    if i == 0:
+        return from_cfg
+
+    if i == steps-1:
+        return to_cfg
+
+    log_i = math.log(i + 1)
+    log_steps = math.log(steps + 1)
+
+    t = log_i / log_steps
+
+    return from_cfg + (to_cfg - from_cfg) * t
+
+
+class Guider_scheduled(CFGGuider):
+    def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule):
+        super().__init__(model_patcher)
+        self.default_cfg = self.cfg
+        self.sigmas = sigmas
+        self.cfg_sigmas = None
+        self.from_cfg = from_cfg
+        self.to_cfg = to_cfg
+        self.schedule = schedule
+        self.renew_cfg_sigmas()
+
+    def set_cfg(self, cfg):
+        self.default_cfg = cfg
+        self.renew_cfg_sigmas()
+
+    def renew_cfg_sigmas(self):
+        self.cfg_sigmas = {}
+        i = 0
+        steps = len(self.sigmas) - 1
+        for x in self.sigmas:
+            k = float(x)
+            delta = self.to_cfg - self.from_cfg
+            if self.schedule == 'exp':
+                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps)
+            elif self.schedule == 'log':
+                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps)
+            else:
+                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps
+
+            i += 1
+
+    def predict_noise(self, x, timestep, model_options={}, seed=None):
+        k = float(timestep[0])
+        self.cfg = self.cfg_sigmas[k]
+        return super().predict_noise(x, timestep, model_options, seed)
+
+
+class ScheduledCFGGuider:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "model": ("MODEL", ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "sigmas": ("SIGMAS", ),
+                    "from_cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "to_cfg": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "schedule": (["linear", "log", "exp"], )
+                    }
+                }
+
+    RETURN_TYPES = ("GUIDER", "SIGMAS")
+
+    FUNCTION = "get_guider"
+    CATEGORY = "sampling/custom_sampling/guiders"
+
+    def get_guider(self, model, positive, negative, sigmas, from_cfg, to_cfg, schedule):
+        guider = Guider_scheduled(model, sigmas, from_cfg, to_cfg, schedule)
+        guider.set_conds(positive, negative)
+        return guider, sigmas
+
+
 NODE_CLASS_MAPPINGS = {
     "KSamplerProgress //Inspire": KSampler_progress,
     "KSamplerAdvancedProgress //Inspire": KSamplerAdvanced_progress,
+    "ScheduledCFGGuider //Inspire": ScheduledCFGGuider
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "KSamplerProgress //Inspire": "KSampler Progress (Inspire)",
     "KSamplerAdvancedProgress //Inspire": "KSampler Advanced Progress (Inspire)",
+    "ScheduledCFGGuider //Inspire": "Scheduled CFGGuider (Inspire)"
 }

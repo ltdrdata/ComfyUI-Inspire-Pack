@@ -46,6 +46,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 
 ### Sampler nodes
   * `KSampler Progress (Inspire)` - In KSampler, the sampling process generates latent batches. By using `Video Combine` node from [ComfyUI-VideoHelperSuite](https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite), you can create a video from the progress.
+  * `Scheduled CFGGuider (Inspire)` - This is a CFGGuider that adjusts the schedule from from_cfg to to_cfg using linear, log, and exp methods.
 
 
 ### Prompt Support - These are nodes for supporting prompt processing.
