@@ -4,7 +4,7 @@ import comfy
 from .libs import common
 from comfy import model_management
 from comfy.samplers import CFGGuider
-import numpy
+from comfy_extras.nodes_perpneg import Guider_PerpNeg
 import math
 
 class KSampler_progress(a1111_compat.KSampler_inspire):
@@ -202,6 +202,44 @@ class Guider_scheduled(CFGGuider):
         return super().predict_noise(x, timestep, model_options, seed)
 
 
+class Guider_PerpNeg_scheduled(Guider_PerpNeg):
+    def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule, neg_scale):
+        super().__init__(model_patcher)
+        self.default_cfg = self.cfg
+        self.sigmas = sigmas
+        self.cfg_sigmas = None
+        self.from_cfg = from_cfg
+        self.to_cfg = to_cfg
+        self.schedule = schedule
+        self.neg_scale = neg_scale
+        self.renew_cfg_sigmas()
+
+    def set_cfg(self, cfg):
+        self.default_cfg = cfg
+        self.renew_cfg_sigmas()
+
+    def renew_cfg_sigmas(self):
+        self.cfg_sigmas = {}
+        i = 0
+        steps = len(self.sigmas) - 1
+        for x in self.sigmas:
+            k = float(x)
+            delta = self.to_cfg - self.from_cfg
+            if self.schedule == 'exp':
+                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps)
+            elif self.schedule == 'log':
+                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps)
+            else:
+                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps
+
+            i += 1
+
+    def predict_noise(self, x, timestep, model_options={}, seed=None):
+        k = float(timestep[0])
+        self.cfg = self.cfg_sigmas[k]
+        return super().predict_noise(x, timestep, model_options, seed)
+
+
 class ScheduledCFGGuider:
     @classmethod
     def INPUT_TYPES(s):
@@ -227,14 +265,43 @@ class ScheduledCFGGuider:
         return guider, sigmas
 
 
+class ScheduledPerpNegCFGGuider:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "model": ("MODEL", ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "empty_conditioning": ("CONDITIONING", ),
+                    "neg_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.01}),
+                    "sigmas": ("SIGMAS", ),
+                    "from_cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "to_cfg": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "schedule": (["linear", "log", "exp"], )
+                    }
+                }
+
+    RETURN_TYPES = ("GUIDER", "SIGMAS")
+
+    FUNCTION = "get_guider"
+    CATEGORY = "sampling/custom_sampling/guiders"
+
+    def get_guider(self, model, positive, negative, empty_conditioning, neg_scale, sigmas, from_cfg, to_cfg, schedule):
+        guider = Guider_PerpNeg_scheduled(model, sigmas, from_cfg, to_cfg, schedule, neg_scale)
+        guider.set_conds(positive, negative, empty_conditioning)
+        return guider, sigmas
+
+
 NODE_CLASS_MAPPINGS = {
     "KSamplerProgress //Inspire": KSampler_progress,
     "KSamplerAdvancedProgress //Inspire": KSamplerAdvanced_progress,
-    "ScheduledCFGGuider //Inspire": ScheduledCFGGuider
+    "ScheduledCFGGuider //Inspire": ScheduledCFGGuider,
+    "ScheduledPerpNegCFGGuider //Inspire": ScheduledPerpNegCFGGuider
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "KSamplerProgress //Inspire": "KSampler Progress (Inspire)",
     "KSamplerAdvancedProgress //Inspire": "KSampler Advanced Progress (Inspire)",
-    "ScheduledCFGGuider //Inspire": "Scheduled CFGGuider (Inspire)"
+    "ScheduledCFGGuider //Inspire": "Scheduled CFGGuider (Inspire)",
+    "ScheduledPerpNegCFGGuider //Inspire": "Scheduled PerpNeg CFGGuider (Inspire)"
 }
