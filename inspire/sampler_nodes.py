@@ -248,9 +248,9 @@ class ScheduledCFGGuider:
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "sigmas": ("SIGMAS", ),
-                    "from_cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "to_cfg": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "schedule": (["linear", "log", "exp"], )
+                    "from_cfg": ("FLOAT", {"default": 6.5, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "to_cfg": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "schedule": (["linear", "log", "exp"], {'default': 'log'})
                     }
                 }
 
@@ -275,9 +275,9 @@ class ScheduledPerpNegCFGGuider:
                     "empty_conditioning": ("CONDITIONING", ),
                     "neg_scale": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.01}),
                     "sigmas": ("SIGMAS", ),
-                    "from_cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "to_cfg": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "schedule": (["linear", "log", "exp"], )
+                    "from_cfg": ("FLOAT", {"default": 6.5, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "to_cfg": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                    "schedule": (["linear", "log", "exp"], {'default': 'log'})
                     }
                 }
 
