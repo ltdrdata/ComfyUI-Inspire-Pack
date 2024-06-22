@@ -175,6 +175,7 @@ class Guider_scheduled(CFGGuider):
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
+        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -199,6 +200,8 @@ class Guider_scheduled(CFGGuider):
             self.cfg_sigmas_i[i] = self.cfg_sigmas[k]
             i += 1
 
+        print(f"self.cfg_sigmas: {self.cfg_sigmas}")
+
     def predict_noise(self, x, timestep, model_options={}, seed=None):
         k = float(timestep[0])
 
@@ -206,6 +209,7 @@ class Guider_scheduled(CFGGuider):
         if v is None:
             # fallback
             v = self.cfg_sigmas_i[self.last_i+1]
+            self.cfg_sigmas[k] = v
 
         self.last_i = v[1]
         self.cfg = v[0]
@@ -224,8 +228,8 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
         self.to_cfg = to_cfg
         self.schedule = schedule
         self.neg_scale = neg_scale
-        self.renew_cfg_sigmas()
         self.last_i = 0
+        self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
         self.default_cfg = cfg
@@ -256,6 +260,7 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
         if v is None:
             # fallback
             v = self.cfg_sigmas_i[self.last_i+1]
+            self.cfg_sigmas[k] = v
 
         self.last_i = v[1]
         self.cfg = v[0]
