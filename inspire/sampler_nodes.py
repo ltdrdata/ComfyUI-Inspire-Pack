@@ -10,21 +10,24 @@ import nodes
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
     def INPUT_TYPES(s):
-        return {"required":
-                    {"model": ("MODEL",),
-                     "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
-                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
-                     "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (common.SCHEDULERS, ),
-                     "positive": ("CONDITIONING", ),
-                     "negative": ("CONDITIONING", ),
-                     "latent_image": ("LATENT", ),
-                     "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
-                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
-                     "omit_start_latent": ("BOOLEAN", {"default": True, "label_on": "True", "label_off": "False"}),
-                     }
+        return {"required": {
+                    "model": ("MODEL",),
+                    "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                    "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
+                    "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (common.SCHEDULERS, ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "latent_image": ("LATENT", ),
+                    "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
+                    "noise_mode": (["GPU(=A1111)", "CPU"],),
+                    "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
+                    "omit_start_latent": ("BOOLEAN", {"default": True, "label_on": "True", "label_off": "False"}),
+                    },
+                "optional": {
+                    "scheduler_func_opt": ("SCHEDULER_FUNC",),
+                    }
                 }
 
     CATEGORY = "InspirePack/analysis"
@@ -33,7 +36,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
     RETURN_NAMES = ("latent", "progress_latent")
 
     @staticmethod
-    def doit(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent):
+    def doit(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent, scheduler_func_opt=None):
         adv_steps = int(steps / denoise)
 
         if omit_start_latent:
@@ -51,7 +54,8 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
             x = x.to(model_management.intermediate_device())
             result.append(x)
 
-        latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, True, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, (adv_steps-steps), adv_steps, noise_mode, False, callback=progress_callback)
+        latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, True, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, (adv_steps-steps),
+                                                                           adv_steps, noise_mode, False, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
 
         if len(result) > 0:
             result = torch.cat(result)
@@ -65,25 +69,28 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
 class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
     @classmethod
     def INPUT_TYPES(s):
-        return {"required":
-                    {"model": ("MODEL",),
-                     "add_noise": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
-                     "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
-                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
-                     "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                     "scheduler": (common.SCHEDULERS, ),
-                     "positive": ("CONDITIONING", ),
-                     "negative": ("CONDITIONING", ),
-                     "latent_image": ("LATENT", ),
-                     "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
-                     "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
-                     "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
-                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
-                     "omit_start_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
-                     },
-                "optional": {"prev_progress_latent_opt": ("LATENT",), }
+        return {"required": {
+                    "model": ("MODEL",),
+                    "add_noise": ("BOOLEAN", {"default": True, "label_on": "enable", "label_off": "disable"}),
+                    "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                    "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
+                    "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
+                    "scheduler": (common.SCHEDULERS, ),
+                    "positive": ("CONDITIONING", ),
+                    "negative": ("CONDITIONING", ),
+                    "latent_image": ("LATENT", ),
+                    "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
+                    "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
+                    "noise_mode": (["GPU(=A1111)", "CPU"],),
+                    "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
+                    "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
+                    "omit_start_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
+                    },
+                "optional": {
+                    "prev_progress_latent_opt": ("LATENT",),
+                    "scheduler_func_opt": ("SCHEDULER_FUNC",),
+                    }
                 }
 
     FUNCTION = "doit"
@@ -94,7 +101,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
     RETURN_NAMES = ("latent", "progress_latent")
 
     def doit(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
-             noise_mode, return_with_leftover_noise, interval, omit_start_latent, prev_progress_latent_opt=None):
+             noise_mode, return_with_leftover_noise, interval, omit_start_latent, prev_progress_latent_opt=None, scheduler_func_opt=None):
         if omit_start_latent:
             result = []
         else:
@@ -111,7 +118,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
             result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
-                                                                           noise_mode, False, callback=progress_callback)
+                                                                           noise_mode, False, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
 
         if len(result) > 0:
             result = torch.cat(result)

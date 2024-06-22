@@ -27,6 +27,7 @@ class RegionalPromptSimple:
                 "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "variation_method": (["linear", "slerp"],),
+                "scheduler_func_opt": ("SCHEDULER_FUNC",),
             }
         }
 
@@ -37,7 +38,7 @@ class RegionalPromptSimple:
 
     @staticmethod
     def doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt,
-             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear'):
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear', scheduler_func_opt=None):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'RegionalPromptSimple' node, 'Impact Pack' extension is required.")
@@ -69,7 +70,7 @@ class RegionalPromptSimple:
 
         basic_pipe = model, clip, vae, new_positive, negative
 
-        sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe, sigma_factor=sigma_factor)[0]
+        sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe, sigma_factor=sigma_factor, scheduler_func_opt=scheduler_func_opt)[0]
         try:
             regional_prompts = rp.doit(mask, sampler, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
         except:
@@ -112,6 +113,7 @@ class RegionalPromptColorMask:
                 "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "variation_method": (["linear", "slerp"],),
+                "scheduler_func_opt": ("SCHEDULER_FUNC",),
             }
         }
 
@@ -122,10 +124,10 @@ class RegionalPromptColorMask:
 
     @staticmethod
     def doit(basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt,
-             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear"):
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear", scheduler_func_opt=None):
         mask = color_to_mask(color_mask, mask_color)
         rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe,
-                                         sigma_factor=sigma_factor, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
+                                         sigma_factor=sigma_factor, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method, scheduler_func_opt=scheduler_func_opt)[0]
         return rp, mask
 
 
