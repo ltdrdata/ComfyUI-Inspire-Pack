@@ -58,7 +58,8 @@ class LoadPromptsFromDir:
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_dir):
+    @staticmethod
+    def doit(prompt_dir):
         global prompts_path
         prompt_dir = os.path.join(prompts_path, prompt_dir)
         files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
@@ -104,7 +105,8 @@ class LoadPromptsFromFile:
         except Exception:
             prompt_files = []
 
-        return {"required": {"prompt_file": (prompt_files,)}}
+        return {"required": {"prompt_file": (prompt_files,)},
+                "optional": {"text_data_opt": ("STRING", {"defaultInput": True})}}
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -113,27 +115,32 @@ class LoadPromptsFromFile:
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_file):
+    @staticmethod
+    def doit(prompt_file, text_data_opt=None):
         prompt_path = os.path.join(prompts_path, prompt_file)
 
         prompts = []
         try:
-            with open(prompt_path, "r", encoding="utf-8") as file:
-                prompt_data = file.read()
-                prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
+            if text_data_opt is None:
+                with open(prompt_path, "r", encoding="utf-8") as file:
+                    prompt_data = file.read()
+            else:
+                prompt_data = text_data_opt
 
-                pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+            prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
-                for prompt in prompt_list:
-                    matches = re.search(pattern, prompt, re.DOTALL)
+            pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
 
-                    if matches:
-                        positive_text = matches.group(1).strip()
-                        negative_text = matches.group(2).strip()
-                        result_tuple = (positive_text, negative_text, prompt_file)
-                        prompts.append(result_tuple)
-                    else:
-                        print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+            for prompt in prompt_list:
+                matches = re.search(pattern, prompt, re.DOTALL)
+
+                if matches:
+                    positive_text = matches.group(1).strip()
+                    negative_text = matches.group(2).strip()
+                    result_tuple = (positive_text, negative_text, prompt_file)
+                    prompts.append(result_tuple)
+                else:
+                    print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
             print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
 
@@ -156,10 +163,11 @@ class LoadSinglePromptFromFile:
             prompt_files = []
 
         return {"required": {
-            "prompt_file": (prompt_files,),
-            "index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-            }
-        }
+                    "prompt_file": (prompt_files,),
+                    "index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    },
+                "optional": {"text_data_opt": ("STRING", {"defaultInput": True})}
+                }
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -168,31 +176,36 @@ class LoadSinglePromptFromFile:
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_file, index):
+    @staticmethod
+    def doit(prompt_file, index, text_data_opt=None):
         prompt_path = os.path.join(prompts_path, prompt_file)
 
         prompts = []
         try:
-            with open(prompt_path, "r", encoding="utf-8") as file:
-                prompt_data = file.read()
-                prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
-                try:
-                    prompt = prompt_list[index]
-                except Exception:
-                    prompt = prompt_list[-1]
+            if text_data_opt is None:
+                with open(prompt_path, "r", encoding="utf-8") as file:
+                    prompt_data = file.read()
+            else:
+                prompt_data = text_data_opt
+                
+            prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
+            try:
+                prompt = prompt_list[index]
+            except Exception:
+                prompt = prompt_list[-1]
 
-                pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
-                matches = re.search(pattern, prompt, re.DOTALL)
+            pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+            matches = re.search(pattern, prompt, re.DOTALL)
 
-                if matches:
-                    positive_text = matches.group(1).strip()
-                    negative_text = matches.group(2).strip()
-                    result_tuple = (positive_text, negative_text, prompt_file)
-                    prompts.append(result_tuple)
-                else:
-                    print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+            if matches:
+                positive_text = matches.group(1).strip()
+                negative_text = matches.group(2).strip()
+                result_tuple = (positive_text, negative_text, prompt_file)
+                prompts.append(result_tuple)
+            else:
+                print(f"[WARN] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
+            print(f"[ERROR] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
 
         return (prompts, )
 
@@ -235,9 +248,8 @@ class ZipPrompt:
         return ((positive, negative, name_opt), )
 
 
-prompt_blacklist = set([
-    'filename_prefix'
-])
+prompt_blacklist = set(['filename_prefix'])
+
 
 class PromptExtractor:
     @classmethod
