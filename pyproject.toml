@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-inspire-pack"
 description = "This extension provides various nodes to support Lora Block Weight and the Impact Pack. Provides many easily applicable regional features and applications for Variation Seed."
-version = "0.81"
+version = "0.82"
 license = "LICENSE"
 dependencies = ["matplotlib", "cachetools"]
 

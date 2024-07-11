@@ -269,6 +269,22 @@ class IPAdapterConditioning:
         return model
 
 
+IPADAPTER_WEIGHT_TYPES_CACHE = None
+
+
+def IPADAPTER_WEIGHT_TYPES():
+    global IPADAPTER_WEIGHT_TYPES_CACHE
+
+    if IPADAPTER_WEIGHT_TYPES_CACHE is None:
+        try:
+            IPADAPTER_WEIGHT_TYPES_CACHE = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']().INPUT_TYPES()['required']['weight_type'][0]
+        except Exception:
+            print(f"[Inspire Pack] IPAdapterPlus is not installed.")
+            IPADAPTER_WEIGHT_TYPES_CACHE = ["IPAdapterPlus is not installed"]
+
+    return IPADAPTER_WEIGHT_TYPES_CACHE
+
+
 class RegionalIPAdapterMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -279,7 +295,7 @@ class RegionalIPAdapterMask:
                 "image": ("IMAGE",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -314,7 +330,7 @@ class RegionalIPAdapterColorMask:
                 "image": ("IMAGE",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "weight_type": (["original", "linear", "channel penalty"], ),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -348,7 +364,7 @@ class RegionalIPAdapterEncodedMask:
 
                 "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -379,7 +395,7 @@ class RegionalIPAdapterEncodedColorMask:
 
                 "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
