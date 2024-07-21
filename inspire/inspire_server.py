@@ -331,15 +331,17 @@ def populate_wildcards(json_data):
                     mbp_updated_widget_values[k] = inputs['positive_populated_text'], inputs['negative_populated_text']
 
         if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
-            for node in json_data['extra_data']['extra_pnginfo']['workflow']['nodes']:
-                key = str(node['id'])
-                if key in updated_widget_values:
-                    node['widgets_values'][3] = updated_widget_values[key]
-                    node['widgets_values'][4] = False
-                if key in mbp_updated_widget_values:
-                    node['widgets_values'][7] = mbp_updated_widget_values[key][0]
-                    node['widgets_values'][8] = mbp_updated_widget_values[key][1]
-                    node['widgets_values'][5] = False
+            extra_pnginfo = json_data['extra_data']['extra_pnginfo']
+            if 'workflow' in extra_pnginfo and 'nodes' in extra_pnginfo['workflow']:
+                for node in extra_pnginfo['workflow']['nodes']:
+                    key = str(node['id'])
+                    if key in updated_widget_values:
+                        node['widgets_values'][3] = updated_widget_values[key]
+                        node['widgets_values'][4] = False
+                    if key in mbp_updated_widget_values:
+                        node['widgets_values'][7] = mbp_updated_widget_values[key][0]
+                        node['widgets_values'][8] = mbp_updated_widget_values[key][1]
+                        node['widgets_values'][5] = False
 
 
 def force_reset_useless_params(json_data):
