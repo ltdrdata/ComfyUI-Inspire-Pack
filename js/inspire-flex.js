@@ -158,21 +158,57 @@ export function register_concat_conditionings_with_multiplier_node(nodeType, nod
 				}
 
 				async function ensure_multipliers() {
-					let ncon = get_input_count('conditioning', true);
-					let nmul = get_input_count('multiplier', false) + get_widget_count('multiplier');
+				    if(self.ensuring_multipliers) {
+				        return;
+				    }
+                    try {
+                        self.ensuring_multipliers = true;
 
-					if(ncon == 0 && nmul == 0)
-						ncon = 1;
+                        let ncon = get_input_count('conditioning', true);
+                        let nmul = get_input_count('multiplier', false) + get_widget_count('multiplier');
 
-					for(let i = nmul+1; i<=ncon; i++) {
-						let config = { min: 0, max: 10, step: 0.1, round: 0.01, precision: 2 };
-						let widget = await self.addWidget("number", `multiplier${i}`, 1.0, function (v) {
-							if (config.round) {
-								self.value = Math.round(v/config.round)*config.round;
-							} else {
-								self.value = v;
-							}
-						}, config);
+                        if(ncon == 0 && nmul == 0)
+                            ncon = 1;
+
+                        for(let i = nmul+1; i<=ncon; i++) {
+                            let config = { min: 0, max: 10, step: 0.1, round: 0.01, precision: 2 };
+
+                            // NOTE: addWidget trigger calling ensure_multipliers
+                            let widget = await self.addWidget("number", `multiplier${i}`, 1.0, function (v) {
+                                if (config.round) {
+                                    self.value = Math.round(v/config.round)*config.round;
+                                } else {
+                                    self.value = v;
+                                }
+                            }, config);
+                        }
+					}
+					finally{
+					    self.ensuring_multipliers = null;
+					}
+				}
+
+                async function recover_multipliers() {
+				    if(self.recover_multipliers) {
+				        return;
+				    }
+                    try {
+                        self.recover_multipliers = true;
+                        for(let i = 1; i<self.widgets_values.length; i++) {
+                            let config = { min: 0, max: 10, step: 0.1, round: 0.01, precision: 2 };
+
+                            // NOTE: addWidget trigger calling recover_multipliers
+                            let widget = await self.addWidget("number", `multiplier${i+1}`, 1.0, function (v) {
+                                if (config.round) {
+                                    self.value = Math.round(v/config.round)*config.round;
+                                } else {
+                                    self.value = v;
+                                }
+                            }, config);
+                        }
+					}
+					finally{
+					    self.recover_multipliers = null;
 					}
 				}
 
@@ -183,12 +219,18 @@ export function register_concat_conditionings_with_multiplier_node(nodeType, nod
 					}
 				}
 
-				if(!Error().stack.includes('pasteFromClipboard')) {
+                const stackTrace = new Error().stack;
+				if(!stackTrace.includes('loadGraphData') && !stackTrace.includes('pasteFromClipboard')) {
 					await remove_garbage();
 					await ensure_inputs();
 				}
 
-				await ensure_multipliers();
+                if(!stackTrace.includes('loadGraphData')) {
+                    await ensure_multipliers();
+                }
+                else {
+                    await recover_multipliers();
+                }
 
 				await this.setSize( this.computeSize() );
 			}
