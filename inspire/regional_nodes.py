@@ -168,6 +168,9 @@ class RegionalConditioningColorMask:
                 "set_cond_area": (["default", "mask bounds"],),
                 "prompt": ("STRING", {"multiline": True, "placeholder": "prompt"}),
             },
+            "optional": {
+                "dilation": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
+            }
         }
 
     RETURN_TYPES = ("CONDITIONING", "MASK")
@@ -176,8 +179,11 @@ class RegionalConditioningColorMask:
     CATEGORY = "InspirePack/Regional"
 
     @staticmethod
-    def doit(clip, color_mask, mask_color, strength, set_cond_area, prompt):
+    def doit(clip, color_mask, mask_color, strength, set_cond_area, prompt, dilation=0):
         mask = color_to_mask(color_mask, mask_color)
+
+        if dilation != 0:
+            mask = utils.dilate_mask(mask, dilation)
 
         conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
         conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]

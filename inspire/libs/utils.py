@@ -291,12 +291,29 @@ class TaggedCache:
         self._data = {}
 
 
+def make_2d_mask(mask):
+    if len(mask.shape) == 4:
+        return mask.squeeze(0).squeeze(0)
+
+    elif len(mask.shape) == 3:
+        return mask.squeeze(0)
+
+    return mask
+
+
 def dilate_mask(mask: torch.Tensor, dilation_factor: float) -> torch.Tensor:
     """Dilate a mask using a square kernel with a given dilation factor."""
     kernel_size = int(dilation_factor * 2) + 1
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-    mask_dilated = cv2.dilate(mask.numpy(), kernel, iterations=1)
-    return torch.from_numpy(mask_dilated)
+    kernel = np.ones((abs(kernel_size), abs(kernel_size)), np.uint8)
+
+    mask = make_2d_mask(mask)
+
+    if dilation_factor > 0:
+        mask_dilated = cv2.dilate(mask.numpy(), kernel, iterations=1)
+    else:
+        mask_dilated = cv2.erode(mask.numpy(), kernel, iterations=1)
+
+    return torch.from_numpy(mask_dilated).unsqueeze(0)
 
 
 def flatten_non_zero_override(masks: torch.Tensor):
