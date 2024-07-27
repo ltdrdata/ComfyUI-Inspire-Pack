@@ -463,8 +463,9 @@ class WildcardEncodeInspire:
                                           "To use 'Wildcard Encode (Inspire)' node, 'Impact Pack' extension is required.")
             raise Exception(f"[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
 
-        model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], clip_encoder=clip_encoder)
-        return (model, clip, conditioning, populated)
+        processed = []
+        model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], seed=kwargs['seed'], clip_encoder=clip_encoder, processed=processed)
+        return (model, clip, conditioning, processed[0])
 
 
 class MakeBasicPipe:
