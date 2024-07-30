@@ -121,7 +121,7 @@ class LoadPromptsFromFile:
 
         prompts = []
         try:
-            if text_data_opt is None:
+            if not text_data_opt:
                 with open(prompt_path, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
             else:
@@ -182,7 +182,7 @@ class LoadSinglePromptFromFile:
 
         prompts = []
         try:
-            if text_data_opt is None:
+            if not text_data_opt:
                 with open(prompt_path, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
             else:
