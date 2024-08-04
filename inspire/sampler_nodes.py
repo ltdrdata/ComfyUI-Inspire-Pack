@@ -24,6 +24,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
                     "noise_mode": (["GPU(=A1111)", "CPU"],),
                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
                     "omit_start_latent": ("BOOLEAN", {"default": True, "label_on": "True", "label_off": "False"}),
+                    "omit_final_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
                     },
                 "optional": {
                     "scheduler_func_opt": ("SCHEDULER_FUNC",),
@@ -36,7 +37,8 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
     RETURN_NAMES = ("latent", "progress_latent")
 
     @staticmethod
-    def doit(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode, interval, omit_start_latent, scheduler_func_opt=None):
+    def doit(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise, noise_mode,
+             interval, omit_start_latent, omit_final_latent, scheduler_func_opt=None):
         adv_steps = int(steps / denoise)
 
         if omit_start_latent:
@@ -44,18 +46,19 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
         else:
             result = [latent_image['samples']]
 
-        result = []
-
         def progress_callback(step, x0, x, total_steps):
             if (total_steps-1) != step and step % interval != 0:
                 return
 
             x = model.model.process_latent_out(x)
-            x = x.to(model_management.intermediate_device())
+            x = x.cpu()
             result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, True, seed, adv_steps, cfg, sampler_name, scheduler, positive, negative, latent_image, (adv_steps-steps),
                                                                            adv_steps, noise_mode, False, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
+
+        if not omit_final_latent:
+            result.append(latent_image['samples'].cpu())
 
         if len(result) > 0:
             result = torch.cat(result)
@@ -86,6 +89,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
                     "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
                     "omit_start_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
+                    "omit_final_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
                     },
                 "optional": {
                     "prev_progress_latent_opt": ("LATENT",),
@@ -100,25 +104,28 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
     RETURN_TYPES = ("LATENT", "LATENT")
     RETURN_NAMES = ("latent", "progress_latent")
 
-    def doit(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
-             noise_mode, return_with_leftover_noise, interval, omit_start_latent, prev_progress_latent_opt=None, scheduler_func_opt=None):
+    def doit(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
+             start_at_step, end_at_step, noise_mode, return_with_leftover_noise, interval, omit_start_latent, omit_final_latent,
+             prev_progress_latent_opt=None, scheduler_func_opt=None):
+
         if omit_start_latent:
             result = []
         else:
             result = [latent_image['samples']]
-
-        result = []
 
         def progress_callback(step, x0, x, total_steps):
             if (total_steps-1) != step and step % interval != 0:
                 return
 
             x = model.model.process_latent_out(x)
-            x = x.to(model_management.intermediate_device())
+            x = x.cpu()
             result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
                                                                            noise_mode, False, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
+
+        if not omit_final_latent:
+            result.append(latent_image['samples'].cpu())
 
         if len(result) > 0:
             result = torch.cat(result)
