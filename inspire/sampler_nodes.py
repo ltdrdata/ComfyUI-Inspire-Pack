@@ -172,6 +172,15 @@ def logarithmic_interpolation(from_cfg, to_cfg, i, steps):
     return from_cfg + (to_cfg - from_cfg) * t
 
 
+def cosine_interpolation(from_cfg, to_cfg, i, steps):
+    if (i == 0) or (i == steps-1):
+        return from_cfg
+
+    t = (1.0 + math.cos(math.pi*2*(i/steps))) / 2
+
+    return from_cfg + (to_cfg - from_cfg) * t
+
+
 class Guider_scheduled(CFGGuider):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule):
         super().__init__(model_patcher)
@@ -201,6 +210,8 @@ class Guider_scheduled(CFGGuider):
                 self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             elif self.schedule == 'log':
                 self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps), i
+            elif self.schedule == 'cos':
+                self.cfg_sigmas[k] = cosine_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             else:
                 self.cfg_sigmas[k] = self.from_cfg + delta * i / steps, i
 
@@ -252,6 +263,8 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
                 self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             elif self.schedule == 'log':
                 self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps), i
+            elif self.schedule == 'cos':
+                self.cfg_sigmas[k] = cosine_interpolation(self.from_cfg, self.to_cfg, i, steps), i
             else:
                 self.cfg_sigmas[k] = self.from_cfg + delta * i / steps, i
 
@@ -283,7 +296,7 @@ class ScheduledCFGGuider:
                     "sigmas": ("SIGMAS", ),
                     "from_cfg": ("FLOAT", {"default": 6.5, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
                     "to_cfg": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "schedule": (["linear", "log", "exp"], {'default': 'log'})
+                    "schedule": (["linear", "log", "exp", "cos"], {'default': 'log'})
                     }
                 }
 
@@ -310,7 +323,7 @@ class ScheduledPerpNegCFGGuider:
                     "sigmas": ("SIGMAS", ),
                     "from_cfg": ("FLOAT", {"default": 6.5, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
                     "to_cfg": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
-                    "schedule": (["linear", "log", "exp"], {'default': 'log'})
+                    "schedule": (["linear", "log", "exp", "cos"], {'default': 'log'})
                     }
                 }
 
