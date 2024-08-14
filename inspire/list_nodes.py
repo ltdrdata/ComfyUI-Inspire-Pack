@@ -18,8 +18,13 @@ class FloatRange:
     CATEGORY = "InspirePack/Util"
 
     def doit(self, start, stop, step, limit, ensure_end):
-        if start >= stop or step == 0:
+        if start == stop or step == 0:
             return ([start], )
+
+        reverse = False
+        if start > stop:
+            reverse = True
+            start, stop = stop, start
 
         res = []
         x = start
@@ -35,6 +40,9 @@ class FloatRange:
                 res.pop()
 
             res.append(stop)
+
+        if reverse:
+            res.reverse()
 
         return (res, )
 
