@@ -63,6 +63,9 @@ class IPAdapterModelHelper:
                 "insightface_provider": (["CPU", "CUDA", "ROCM"], ),
                 "cache_mode": (["insightface only", "clip_vision only", "all", "none"], {"default": "insightface only"}),
             },
+            "optional": {
+                "insightface_model_name": (['buffalo_l', 'antelopev2'],),
+            },
             "hidden": {"unique_id": "UNIQUE_ID"}
         }
 
@@ -72,7 +75,7 @@ class IPAdapterModelHelper:
 
     CATEGORY = "InspirePack/models"
 
-    def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode="none", unique_id=None):
+    def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
         if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
@@ -157,7 +160,7 @@ class IPAdapterModelHelper:
             if cache_mode in ["insightface only", "all"]:
                 icache_key = 'insightface-' + insightface_provider
                 if icache_key not in backend_support.cache:
-                    backend_support.update_cache(icache_key, "insightface", (False, insight_face_loader(insightface_provider)[0]))
+                    backend_support.update_cache(icache_key, "insightface", (False, insight_face_loader(provider=insightface_provider, model_name=insightface_model_name)[0]))
                 _, (_, insightface) = backend_support.cache[icache_key]
             else:
                 insightface = insight_face_loader(insightface_provider)[0]
