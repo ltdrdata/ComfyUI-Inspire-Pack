@@ -165,8 +165,15 @@ class LoraLoaderBlockWeight:
         input_blocks = []
         middle_blocks = []
         output_blocks = []
+        double_blocks = []
+        single_blocks = []
         others = []
-        for k, v in loaded.items():
+        for key, v in loaded.items():
+            if isinstance(key, tuple):
+                k = key[0]
+            else:
+                k = key
+
             k_unet = k[len("diffusion_model."):]
 
             if k_unet.startswith("input_blocks."):
@@ -178,18 +185,26 @@ class LoraLoaderBlockWeight:
             elif k_unet.startswith("output_blocks."):
                 k_unet_num = k_unet[len("output_blocks."):len("output_blocks.")+2]
                 output_blocks.append((k, v, parse_unet_num(k_unet_num), k_unet))
+            elif k_unet.startswith("double_blocks."):
+                k_unet_num = k_unet[len("double_blocks."):len("double_blocks.")+2]
+                double_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
+            elif k_unet.startswith("single_blocks."):
+                k_unet_num = k_unet[len("single_blocks."):len("single_blocks.")+2]
+                single_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
             else:
                 others.append((k, v, k_unet))
 
         input_blocks = sorted(input_blocks, key=lambda x: x[2])
         middle_blocks = sorted(middle_blocks, key=lambda x: x[2])
         output_blocks = sorted(output_blocks, key=lambda x: x[2])
+        double_blocks = sorted(double_blocks, key=lambda x: x[2])
+        single_blocks = sorted(single_blocks, key=lambda x: x[2])
 
         # prepare patch
         np.random.seed(seed % (2**31))
         populated_vector_list = []
         ratios = []
-        for k, v, k_unet_num, k_unet in (input_blocks + middle_blocks + output_blocks):
+        for k, v, k_unet_num, k_unet in (input_blocks + middle_blocks + output_blocks + double_blocks + single_blocks):
             if last_k_unet_num != k_unet_num and len(vector) > vector_i:
                 ratios = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[vector_i].strip())
                 ratio = ratios.pop(0)
@@ -535,8 +550,21 @@ class LoraBlockInfo:
         text_blocks = []
         text_blocks_map = {}
 
+        double_block_count = set()
+        double_blocks = []
+        double_blocks_map = {}
+
+        single_block_count = set()
+        single_blocks = []
+        single_blocks_map = {}
+
         others = []
-        for k, v in loaded.items():
+        for key, v in loaded.items():
+            if isinstance(key, tuple):
+                k = key[0]
+            else:
+                k = key
+
             k_unet = k[len("diffusion_model."):]
 
             if k_unet.startswith("input_blocks."):
@@ -572,6 +600,28 @@ class LoraBlockInfo:
                 else:
                     output_blocks_map[k_unet_int] = [k_unet]
 
+            elif k_unet.startswith("double_blocks."):
+                k_unet_num = k_unet[len("double_blocks."):len("double_blocks.") + 2]
+                k_unet_int = parse_unet_num(k_unet_num)
+
+                double_block_count.add(k_unet_int)
+                double_blocks.append(k_unet)
+                if k_unet_int in double_blocks_map:
+                    double_blocks_map[k_unet_int].append(k_unet)
+                else:
+                    double_blocks_map[k_unet_int] = [k_unet]
+
+            elif k_unet.startswith("single_blocks."):
+                k_unet_num = k_unet[len("single_blocks."):len("single_blocks.") + 2]
+                k_unet_int = parse_unet_num(k_unet_num)
+
+                single_block_count.add(k_unet_int)
+                single_blocks.append(k_unet)
+                if k_unet_int in single_blocks_map:
+                    single_blocks_map[k_unet_int].append(k_unet)
+                else:
+                    single_blocks_map[k_unet_int] = [k_unet]
+
             elif k_unet.startswith("er.text_model.encoder.layers."):
                 k_unet_num = k_unet[len("er.text_model.encoder.layers."):len("er.text_model.encoder.layers.")+2]
                 k_unet_int = parse_unet_num(k_unet_num)
@@ -593,20 +643,35 @@ class LoraBlockInfo:
         output_blocks = sorted(output_blocks)
         others = sorted(others)
 
-        text += f"\n-------[Input blocks] ({len(input_block_count)}, Subs={len(input_blocks)})-------\n"
-        input_keys = sorted(input_blocks_map.keys())
-        for x in input_keys:
-            text += f" IN{x}: {len(input_blocks_map[x])}\n"
+        if len(input_block_count) > 0:
+            text += f"\n-------[Input blocks] ({len(input_block_count)}, Subs={len(input_blocks)})-------\n"
+            input_keys = sorted(input_blocks_map.keys())
+            for x in input_keys:
+                text += f" IN{x}: {len(input_blocks_map[x])}\n"
 
-        text += f"\n-------[Middle blocks] ({len(middle_block_count)}, Subs={len(middle_blocks)})-------\n"
-        middle_keys = sorted(middle_blocks_map.keys())
-        for x in middle_keys:
-            text += f" MID{x}: {len(middle_blocks_map[x])}\n"
+        if len(middle_block_count) > 0:
+            text += f"\n-------[Middle blocks] ({len(middle_block_count)}, Subs={len(middle_blocks)})-------\n"
+            middle_keys = sorted(middle_blocks_map.keys())
+            for x in middle_keys:
+                text += f" MID{x}: {len(middle_blocks_map[x])}\n"
 
-        text += f"\n-------[Output blocks] ({len(output_block_count)}, Subs={len(output_blocks)})-------\n"
-        output_keys = sorted(output_blocks_map.keys())
-        for x in output_keys:
-            text += f" OUT{x}: {len(output_blocks_map[x])}\n"
+        if len(output_block_count) > 0:
+            text += f"\n-------[Output blocks] ({len(output_block_count)}, Subs={len(output_blocks)})-------\n"
+            output_keys = sorted(output_blocks_map.keys())
+            for x in output_keys:
+                text += f" OUT{x}: {len(output_blocks_map[x])}\n"
+
+        if len(double_block_count) > 0:
+            text += f"\n-------[Double blocks(MMDiT)] ({len(double_block_count)}, Subs={len(double_blocks)})-------\n"
+            double_keys = sorted(double_blocks_map.keys())
+            for x in double_keys:
+                text += f" DOUBLE{x}: {len(double_blocks_map[x])}\n"
+
+        if len(single_block_count) > 0:
+            text += f"\n-------[Single blocks(DiT)] ({len(single_block_count)}, Subs={len(single_blocks)})-------\n"
+            single_keys = sorted(single_blocks_map.keys())
+            for x in single_keys:
+                text += f" SINGLE{x}: {len(single_blocks_map[x])}\n"
 
         text += f"\n-------[Base blocks] ({len(text_block_count) + len(others)}, Subs={len(text_blocks) + len(others)})-------\n"
         text_keys = sorted(text_blocks_map.keys())
