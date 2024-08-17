@@ -228,7 +228,7 @@ class LoraLoaderBlockWeight:
 
             last_k_unet_num = k_unet_num
 
-            if populated_ratio > 0:
+            if populated_ratio != 0:
                 new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
 
             # if inverse:
