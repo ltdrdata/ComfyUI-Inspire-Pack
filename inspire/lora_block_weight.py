@@ -228,7 +228,9 @@ class LoraLoaderBlockWeight:
 
             last_k_unet_num = k_unet_num
 
-            new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
+            if populated_ratio > 0:
+                new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
+
             # if inverse:
             #     print(f"\t{k_unet} -> inv({ratio}) ")
             # else:
@@ -500,7 +502,7 @@ class XYInput_LoraBlockWeight:
                         XY_Capsule_LoraBlockWeight(0, 2, '', 'diff', storage, common_params),
                         XY_Capsule_LoraBlockWeight(0, 3, '', 'heatmap', storage, common_params)]
 
-        return ((xy_type, x_values), (xy_type, y_values), )
+        return (xy_type, x_values), (xy_type, y_values),
 
 
 class LoraBlockInfo:
@@ -641,6 +643,8 @@ class LoraBlockInfo:
         input_blocks = sorted(input_blocks)
         middle_blocks = sorted(middle_blocks)
         output_blocks = sorted(output_blocks)
+        double_blocks = sorted(double_blocks)
+        single_blocks = sorted(single_blocks)
         others = sorted(others)
 
         if len(input_block_count) > 0:
