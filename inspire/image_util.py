@@ -126,8 +126,9 @@ class LoadImagesFromDirList:
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK")
-    OUTPUT_IS_LIST = (True, True)
+    RETURN_TYPES = ("IMAGE", "MASK", "STRING")
+    RETURN_NAMES = ("IMAGE","MASK", "FILE PATH")
+    OUTPUT_IS_LIST = (True, True, True)
 
     FUNCTION = "load_images"
 
@@ -159,6 +160,7 @@ class LoadImagesFromDirList:
 
         images = []
         masks = []
+        file_paths = []
 
         limit_images = False
         if image_load_cap > 0:
@@ -184,9 +186,10 @@ class LoadImagesFromDirList:
 
             images.append(image)
             masks.append(mask)
+            file_paths.append(str(image_path))
             image_count += 1
 
-        return images, masks
+        return (images, masks, file_paths)
 
 
 class LoadImageInspire:
