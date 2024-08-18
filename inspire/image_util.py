@@ -127,7 +127,7 @@ class LoadImagesFromDirList:
         }
 
     RETURN_TYPES = ("IMAGE", "MASK", "STRING")
-    RETURN_NAMES = ("IMAGE","MASK", "FILE PATH")
+    RETURN_NAMES = ("IMAGE", "MASK", "FILE PATH")
     OUTPUT_IS_LIST = (True, True, True)
 
     FUNCTION = "load_images"
