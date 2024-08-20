@@ -56,6 +56,8 @@ def slerp(val, low, high):
 
 
 def mix_noise(from_noise, to_noise, strength, variation_method):
+    to_noise = to_noise.to(from_noise.device)
+
     if variation_method == 'slerp':
         mixed_noise = slerp(strength, from_noise, to_noise)
     else:
