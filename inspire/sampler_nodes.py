@@ -122,7 +122,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
             result.append(x)
 
         latent_image, noise = a1111_compat.KSamplerAdvanced_inspire.sample(model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, start_at_step, end_at_step,
-                                                                           noise_mode, False, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
+                                                                           noise_mode, return_with_leftover_noise, callback=progress_callback, scheduler_func_opt=scheduler_func_opt)
 
         if not omit_final_latent:
             result.append(latent_image['samples'].cpu())
