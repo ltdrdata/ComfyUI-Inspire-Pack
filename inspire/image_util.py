@@ -94,10 +94,10 @@ class LoadImagesFromDirBatch:
                     image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
                 image1 = torch.cat((image1, image2), dim=0)
 
-            for mask2 in masks[1:]:
+            for mask2 in masks:
                 if has_non_empty_mask:
                     if image1.shape[1:3] != mask2.shape:
-                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[2], image1.shape[1]), mode='bilinear', align_corners=False)
+                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[1], image1.shape[2]), mode='bilinear', align_corners=False)
                         mask2 = mask2.squeeze(0)
                     else:
                         mask2 = mask2.unsqueeze(0)
