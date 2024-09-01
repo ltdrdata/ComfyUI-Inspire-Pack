@@ -5,6 +5,7 @@ import torch
 from PIL import Image, ImageDraw
 import math
 import cv2
+import folder_paths
 
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
@@ -336,3 +337,14 @@ def flatten_non_zero_override(masks: torch.Tensor):
         final_mask[non_zero_mask] = masks[i][non_zero_mask]
 
     return final_mask
+
+
+def add_folder_path_and_extensions(folder_name, full_folder_paths, extensions):
+    for full_folder_path in full_folder_paths:
+        folder_paths.add_model_folder_path(folder_name, full_folder_path)
+    if folder_name in folder_paths.folder_names_and_paths:
+        current_paths, current_extensions = folder_paths.folder_names_and_paths[folder_name]
+        updated_extensions = current_extensions | extensions
+        folder_paths.folder_names_and_paths[folder_name] = (current_paths, updated_extensions)
+    else:
+        folder_paths.folder_names_and_paths[folder_name] = (full_folder_paths, extensions)

@@ -1,5 +1,3 @@
-import regex
-
 import folder_paths
 import comfy.utils
 import comfy.lora
@@ -8,9 +6,18 @@ import torch
 import numpy as np
 import nodes
 import re
+import json
+from comfy.cli_args import args
+from safetensors.torch import safe_open
+import ast
+
 
 from server import PromptServer
 from .libs import utils
+
+
+model_path = folder_paths.models_dir
+utils.add_folder_path_and_extensions("lbw_models", [os.path.join(model_path, "lbw_models")], {'.safetensors'})
 
 
 def is_numeric_string(input_str):
@@ -41,6 +48,69 @@ def parse_unet_num(s):
         return int(s[0])
     else:
         return int(s)
+
+
+class MakeLBW:
+    def __init__(self):
+        self.loaded_lora = None
+
+    @classmethod
+    def INPUT_TYPES(s):
+        preset = ["Preset"]  # 20
+        preset += load_lbw_preset("lbw-preset.txt")
+        preset += load_lbw_preset("lbw-preset.custom.txt")
+        preset = [name for name in preset if not name.startswith('@')]
+
+        lora_names = folder_paths.get_filename_list("loras")
+        lora_dirs = [os.path.dirname(name) for name in lora_names]
+        lora_dirs = ["All"] + list(set(lora_dirs))
+
+        return {"required": {"model": ("MODEL",),
+                             "clip": ("CLIP", ),
+                             "category_filter": (lora_dirs,),
+                             "lora_name": (lora_names, ),
+                             "inverse": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False", "tooltip": "Apply the following weights for each block:\nTrue: 1 - weight\nFalse: weight"}),
+                             "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "tooltip": ""}),
+                             "A": ("FLOAT", {"default": 4.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                             "B": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                             "preset": (preset,),
+                             "block_vector": ("STRING", {"multiline": True, "placeholder": "block weight vectors", "default": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1", "pysssss.autocomplete": False}),
+                             "bypass": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
+                             }
+                }
+
+    RETURN_TYPES = ("LBW_MODEL", "STRING")
+    RETURN_NAMES = ("lbw_model", "populated_vector")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/LoraBlockWeight"
+
+    DESCRIPTION = "Instead of directly applying the LoRA Block Weight to the MODEL, it is generated in a separate LBW_MODEL form."
+
+    def __init__(self):
+        self.loaded_lora = None
+
+    def doit(self, model, clip, lora_name, inverse, seed, A, B, preset, block_vector, bypass=False, category_filter=None):
+        lora_path = folder_paths.get_full_path("loras", lora_name)
+        lora = None
+        if self.loaded_lora is not None:
+            if self.loaded_lora[0] == lora_path:
+                lora = self.loaded_lora[1]
+            else:
+                temp = self.loaded_lora
+                self.loaded_lora = None
+                del temp
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        block_weights, muted_weights, populated_vector = LoraLoaderBlockWeight.load_lbw(model, clip, lora, inverse, seed, A, B, block_vector)
+        lbw_model = {
+                        'blocks': block_weights,
+                        'muted': muted_weights
+                    }
+        return lbw_model, populated_vector
 
 
 class LoraLoaderBlockWeight:
@@ -276,7 +346,7 @@ class LoraLoaderBlockWeight:
             return ",".join(res)
 
     @staticmethod
-    def load_lora_for_models(model, clip, lora, strength_model, strength_clip, inverse, seed, A, B, block_vector):
+    def load_lbw(model, clip, lora, inverse, seed, A, B, block_vector):
         key_map = comfy.lora.model_lora_keys_unet(model.model)
         key_map = comfy.lora.model_lora_keys_clip(clip.cond_stage_model, key_map)
         loaded = comfy.lora.load_lora(lora, key_map)
@@ -290,7 +360,6 @@ class LoraLoaderBlockWeight:
             block_vector = block_vector[0]
 
         vector = block_vector.split(",")
-        vector_i = 1
 
         if not LoraLoaderBlockWeight.validate(vector):
             preset_dict = load_preset_dict()
@@ -298,9 +367,6 @@ class LoraLoaderBlockWeight:
                 vector = preset_dict[vector[0].strip()].split(",")
             else:
                 raise ValueError(f"[LoraLoaderBlockWeight] invalid block_vector '{block_vector}'")
-
-        last_k_unet_num = None
-        new_modelpatcher = model.clone()
 
         # sort: input, middle, output, others
         input_blocks = []
@@ -346,6 +412,12 @@ class LoraLoaderBlockWeight:
         populated_vector_list = []
         ratios = []
         ratio = 1.0
+        vector_i = 1
+
+        last_k_unet_num = None
+
+        block_weights = {}
+        muted_weights = []
 
         for k, v, k_unet_num, k_unet in (input_blocks + middle_blocks + output_blocks + double_blocks + single_blocks):
             if last_k_unet_num != k_unet_num and len(vector) > vector_i:
@@ -374,12 +446,9 @@ class LoraLoaderBlockWeight:
             last_k_unet_num = k_unet_num
 
             if populated_ratio != 0:
-                new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
-
-            # if inverse:
-            #     print(f"\t{k_unet} -> inv({ratio}) ")
-            # else:
-            #     print(f"\t{k_unet} -> ({ratio}) ")
+                block_weights[k] = v, populated_ratio
+            else:
+                muted_weights.append(k)
 
         # prepare base patch
         ratios = LoraLoaderBlockWeight.convert_vector_value(A, B, vector[0].strip())
@@ -392,19 +461,34 @@ class LoraLoaderBlockWeight:
 
         populated_vector_list.insert(0, LoraLoaderBlockWeight.norm_value(populated_ratio))
 
-        new_clip = clip.clone()
         for k, v, k_unet in others:
-            if 'text' in k_unet:
-                new_clip.add_patches({k: v}, strength_clip * populated_ratio)
+            if populated_ratio != 0:
+                block_weights[k] = v, populated_ratio
             else:
-                new_modelpatcher.add_patches({k: v}, strength_model * populated_ratio)
-
-            # if inverse:
-            #     print(f"\t{k_unet} -> inv({ratio}) ")
-            # else:
-            #     print(f"\t{k_unet} -> ({ratio}) ")
+                muted_weights.append(k)
 
         populated_vector = ','.join(map(str, populated_vector_list))
+        return block_weights, muted_weights, populated_vector
+
+    @staticmethod
+    def load_lora_for_models(model, clip, lora, strength_model, strength_clip, inverse, seed, A, B, block_vector):
+        block_weights, muted_weights, populated_vector = LoraLoaderBlockWeight.load_lbw(model, clip, lora, inverse, seed, A, B, block_vector)
+
+        new_modelpatcher = model.clone()
+        new_clip = clip.clone()
+
+        muted_weights = set(muted_weights)
+
+        for k, v in block_weights.items():
+            weights, ratio = v
+
+            if k in muted_weights:
+                pass
+            elif 'text' in k:
+                new_clip.add_patches({k: weights}, strength_clip * ratio)
+            else:
+                new_modelpatcher.add_patches({k: weights}, strength_model * ratio)
+
         return new_modelpatcher, new_clip, populated_vector
 
     def doit(self, model, clip, lora_name, strength_model, strength_clip, inverse, seed, A, B, preset, block_vector, bypass=False, category_filter=None):
@@ -427,6 +511,47 @@ class LoraLoaderBlockWeight:
 
         model_lora, clip_lora, populated_vector = LoraLoaderBlockWeight.load_lora_for_models(model, clip, lora, strength_model, strength_clip, inverse, seed, A, B, block_vector)
         return model_lora, clip_lora, populated_vector
+
+
+class ApplyLBW:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "model": ("MODEL", ),
+                    "clip": ("CLIP", ),
+                    "strength_model": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                    "strength_clip": ("FLOAT", {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01}),
+                    "lbw_model": ("LBW_MODEL",),
+                }}
+
+    RETURN_TYPES = ("MODEL", "CLIP")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/LoraBlockWeight"
+
+    DESCRIPTION = "Apply LBW_MODEL to MODEL and CLIP"
+
+    @staticmethod
+    def doit(model, clip, strength_model, strength_clip, lbw_model):
+        block_weights = lbw_model['blocks']
+        muted_weights = lbw_model['muted']
+
+        new_modelpatcher = model.clone()
+        new_clip = clip.clone()
+
+        muted_weights = set(muted_weights)
+
+        for k, v in block_weights.items():
+            weights, ratio = v
+
+            if k in muted_weights:
+                pass
+            elif 'text' in k:
+                new_clip.add_patches({k: weights}, strength_clip * ratio)
+            else:
+                new_modelpatcher.add_patches({k: weights}, strength_model * ratio)
+
+        return new_modelpatcher, new_clip
 
 
 class XY_Capsule_LoraBlockWeight:
@@ -493,6 +618,7 @@ class XY_Capsule_LoraBlockWeight:
             else:
                 image = torch.abs(weighted_image - reference_image)
                 self.storage[(self.another_capsule.x, self.y)] = image
+
         elif self.y == 3:
             import matplotlib.cm as cm
             # heatmap
@@ -501,7 +627,7 @@ class XY_Capsule_LoraBlockWeight:
             if image == "fail":
                 image = utils.empty_pil_tensor(8,8)
                 latent = utils.empty_latent()
-                return (image, latent)
+                return image, latent
             else:
                 image = image.clone()
 
@@ -533,7 +659,7 @@ class XY_Capsule_LoraBlockWeight:
                 image = heatmap_alpha * heatmap + (1 - heatmap_alpha) * image
 
         latent = nodes.VAEEncode().encode(vae, image)[0]
-        return (image, latent)
+        return image, latent
 
     def getLabel(self):
         return self.label
@@ -845,13 +971,162 @@ class LoraBlockInfo:
         return {}
 
 
+class LoadLBW:
+    @classmethod
+    def INPUT_TYPES(s):
+        files = folder_paths.get_filename_list('lbw_models')
+        return {"required": {
+            "lbw_model": [sorted(files), ]},
+        }
+
+    RETURN_TYPES = ("LBW_MODEL",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/LoraBlockWeight"
+
+    DESCRIPTION = "Load LBW_MODEL from .lbw.safetensors file"
+
+    @staticmethod
+    def decode_dict(encoded_dict, tensor_dict):
+        original_dict = {}
+
+        def decode_value(value):
+            if isinstance(value, str) and value.startswith('t') and value[1:].isdigit():
+                return tensor_dict[value]
+            return value
+
+        for k, tuple_value in encoded_dict.items():
+            decoded_tuple = tuple(decode_value(v) for v in tuple_value[0][1])
+            key = ast.literal_eval(k) if isinstance(k, str) and (k.startswith('(') or k.startswith('[')) else k
+            original_dict[key] = ((tuple_value[0][0], decoded_tuple), tuple_value[1])
+
+        return original_dict
+
+    @staticmethod
+    def load(file):
+        tensor_dict = comfy.utils.load_torch_file(file)
+
+        with safe_open(file, framework="pt") as f:
+            metadata = f.metadata()
+
+        encoded_dict = json.loads(metadata.get('blocks', '{}'))
+        muted_blocks = ast.literal_eval(metadata.get('muted_blocks', '[]'))
+
+        decoded_dict = LoadLBW.decode_dict(encoded_dict, tensor_dict)
+
+        lbw_model = {
+            'blocks': decoded_dict,
+            'muted': muted_blocks
+        }
+
+        return lbw_model, metadata
+
+    def doit(self, lbw_model):
+        lbw_path = folder_paths.get_full_path("lbw_models", lbw_model)
+        lbw_model, _ = LoadLBW.load(lbw_path)
+        return (lbw_model,)
+
+
+class SaveLBW:
+    def __init__(self):
+        self.output_dir = folder_paths.get_folder_paths('lbw_models')[-1]
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "lbw_model": ("LBW_MODEL", ),
+                              "filename_prefix": ("STRING", {"default": "ComfyUI"}) },
+                "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+                }
+    RETURN_TYPES = ()
+    FUNCTION = "doit"
+
+    OUTPUT_NODE = True
+
+    CATEGORY = "InspirePack/LoraBlockWeight"
+
+    DESCRIPTION = "Save LBW_MODEL as a .lbw.safetensors file"
+
+    @staticmethod
+    def encode_dict(original_dict):
+        tensor_dict = {}
+        encoded_dict = {}
+        counter = 0
+
+        def generate_unique_id():
+            nonlocal counter
+            counter += 1
+            return f"t{counter}"
+
+        def encode_value(value):
+            if isinstance(value, torch.Tensor):
+                unique_id = generate_unique_id()
+                tensor_dict[unique_id] = value
+                return unique_id
+            return value
+
+        for k, tuple_value in original_dict.items():
+            encoded_tuple = tuple(encode_value(v) for v in tuple_value[0][1])
+            encoded_dict[str(k)] = (tuple_value[0][0], encoded_tuple), tuple_value[1]
+
+        return encoded_dict, tensor_dict
+
+    @staticmethod
+    def save(lbw_model, file, metadata):
+        metadata['format'] = 'Inspire LBW 1.0'
+        weighted_blocks = lbw_model['blocks']
+        metadata['muted_blocks'] = str(lbw_model['muted'])
+        encoded_dict, tensor_dict = SaveLBW.encode_dict(weighted_blocks)
+        metadata['blocks'] = json.dumps(encoded_dict)
+
+        comfy.utils.save_torch_file(tensor_dict, file, metadata=metadata)
+
+    def doit(self, lbw_model, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
+        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir)
+
+        # support save metadata for lbw sharing
+        prompt_info = ""
+        if prompt is not None:
+            prompt_info = json.dumps(prompt)
+
+        metadata = {}
+        if not args.disable_metadata:
+            metadata = {"prompt": prompt_info}
+            if extra_pnginfo is not None:
+                for x in extra_pnginfo:
+                    metadata[x] = json.dumps(extra_pnginfo[x])
+
+        file = f"{filename}_{counter:05}_.lbw.safetensors"
+
+        results = list()
+        results.append({
+            "filename": file,
+            "subfolder": subfolder,
+            "type": "output"
+        })
+
+        file = os.path.join(full_output_folder, file)
+
+        SaveLBW.save(lbw_model, file, metadata)
+
+        return {}
+
+
 NODE_CLASS_MAPPINGS = {
     "XY Input: Lora Block Weight //Inspire": XYInput_LoraBlockWeight,
     "LoraLoaderBlockWeight //Inspire": LoraLoaderBlockWeight,
     "LoraBlockInfo //Inspire": LoraBlockInfo,
+    "MakeLBW //Inspire": MakeLBW,
+    "ApplyLBW //Inspire": ApplyLBW,
+    "SaveLBW //Inspire": SaveLBW,
+    "LoadLBW //Inspire": LoadLBW,
 }
+
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "XY Input: Lora Block Weight //Inspire": "XY Input: Lora Block Weight",
-    "LoraLoaderBlockWeight //Inspire": "Lora Loader (Block Weight)",
-    "LoraBlockInfo //Inspire": "Lora Block Info",
+    "XY Input: Lora Block Weight //Inspire": "XY Input: LoRA Block Weight",
+    "LoraLoaderBlockWeight //Inspire": "LoRA Loader (Block Weight)",
+    "LoraBlockInfo //Inspire": "LoRA Block Info",
+    "MakeLBW //Inspire": "Make LoRA Block Weight",
+    "ApplyLBW //Inspire": "Apply LoRA Block Weight",
+    "SaveLBW //Inspire": "Save LoRA Block Weight",
+    "LoadLBW //Inspire": "Load LoRA Block Weight",
 }

@@ -13,12 +13,16 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
 ## Nodes
 ### Lora Block Weight - This is a node that provides functionality related to Lora block weight.
   * This provides similar functionality to [sd-webui-lora-block-weight](https://github.com/hako-mikan/sd-webui-lora-block-weight)
-  * `Lora Loader (Block Weight)`: When loading Lora, the block weight vector is applied.
+  * `LoRA Loader (Block Weight)`: When loading Lora, the block weight vector is applied.
       * In the block vector, you can use numbers, R, A, a, B, and b.
       * R is determined sequentially based on a random seed, while A and B represent the values of the A and B parameters, respectively. a and b are half of the values of A and B, respectively.
-  * `XY Input: Lora Block Weight`: This is a node in the [Efficiency Nodes](https://github.com/LucianoCirino/efficiency-nodes-comfyui)' XY Plot that allows you to use Lora block weight.
+  * `XY Input: LoRA Block Weight`: This is a node in the [Efficiency Nodes](https://github.com/LucianoCirino/efficiency-nodes-comfyui)' XY Plot that allows you to use Lora block weight.
       * You must ensure that X and Y connections are made, and dependencies should be connected to the XY Plot.
       * Note: To use this feature, update `Efficient Nodes` to a version released after September 3rd.
+  * Make LoRA Block Weight: Instead of directly applying the LoRA Block Weight to the MODEL, it is generated in a separate LBW_MODEL form
+  * Apply LoRA Block Weight: Apply LBW_MODEL to MODEL and CLIP
+  * Save LoRA Block Weight: Save LBW_MODEL as a .lbw.safetensors file
+  * Load LoRA Block Weight: Load LBW_MODEL from .lbw.safetensors file
 
 ### SEGS Supports nodes - This is a node that supports ApplyControlNet (SEGS) from the Impact Pack.
   * `OpenPose Preprocessor Provider (SEGS)`: OpenPose preprocessor is applied for the purpose of using OpenPose ControlNet in SEGS.

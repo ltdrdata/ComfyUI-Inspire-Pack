@@ -4,7 +4,7 @@ app.registerExtension({
 	name: "Comfy.Inspire.LBW",
 
 	nodeCreated(node, app) {
-		if(node.comfyClass == "LoraLoaderBlockWeight //Inspire") {
+		if(node.comfyClass == "LoraLoaderBlockWeight //Inspire" || node.comfyClass == "MakeLBW //Inspire") {
 		    // category filter
 			const lora_names_widget = node.widgets[node.widgets.findIndex(obj => obj.name === 'lora_name')];
 			var full_lora_list = lora_names_widget.options.values;
@@ -26,6 +26,12 @@ app.registerExtension({
 		    // vector selector
 		    let preset_i = 9;
 		    let vector_i = 10;
+
+		    if(node.comfyClass == "MakeLBW //Inspire") {
+		        preset_i = 7;
+		        vector_i = 8;
+		    }
+
 			node._value = "Preset";
 
 			Object.defineProperty(node.widgets[preset_i], "value", {
