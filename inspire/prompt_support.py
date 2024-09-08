@@ -12,6 +12,7 @@ import folder_paths
 import comfy
 import traceback
 import random
+import hashlib
 
 from server import PromptServer
 from .libs import utils, common
@@ -49,7 +50,13 @@ class LoadPromptsFromDir:
         except Exception:
             prompt_dirs = []
 
-        return {"required": {"prompt_dir": (prompt_dirs,)}}
+        return {"required": {
+                    "prompt_dir": (prompt_dirs,)
+                    },
+                "optional": {
+                    "reload": ("BOOLEAN", { "default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                    }
+                }
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -59,7 +66,30 @@ class LoadPromptsFromDir:
     CATEGORY = "InspirePack/Prompt"
 
     @staticmethod
-    def doit(prompt_dir):
+    def IS_CHANGED(prompt_dir, reload=False):
+        if not reload:
+            return prompt_dir
+        else:
+            global prompts_path
+            prompt_dir = os.path.join(prompts_path, prompt_dir)
+            files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
+
+            md5 = hashlib.md5()
+            files.sort()
+
+            for file in files:
+                md5.update(file.encode('utf-8'))
+                with open(os.path.join(prompt_dir, file), 'rb') as f:
+                    while True:
+                        chunk = f.read(4096)
+                        if not chunk:
+                            break
+                        md5.update(chunk)
+
+            return md5.hexdigest()
+
+    @staticmethod
+    def doit(prompt_dir, reload=False):
         global prompts_path
         prompt_dir = os.path.join(prompts_path, prompt_dir)
         files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
@@ -105,8 +135,14 @@ class LoadPromptsFromFile:
         except Exception:
             prompt_files = []
 
-        return {"required": {"prompt_file": (prompt_files,)},
-                "optional": {"text_data_opt": ("STRING", {"defaultInput": True})}}
+        return {"required": {
+                        "prompt_file": (prompt_files,)
+                        },
+                "optional": {
+                        "text_data_opt": ("STRING", {"defaultInput": True}),
+                        "reload": ("BOOLEAN", {"default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                        }
+                }
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -116,7 +152,28 @@ class LoadPromptsFromFile:
     CATEGORY = "InspirePack/Prompt"
 
     @staticmethod
-    def doit(prompt_file, text_data_opt=None):
+    def IS_CHANGED(prompt_file, text_data_opt=None, reload=False):
+        md5 = hashlib.md5()
+
+        if text_data_opt is not None:
+            md5.update(text_data_opt)
+            return md5.hexdigest()
+        elif not reload:
+            return prompt_file
+        else:
+            prompt_path = os.path.join(prompts_path, prompt_file)
+
+            with open(prompt_path, 'rb') as f:
+                while True:
+                    chunk = f.read(4096)
+                    if not chunk:
+                        break
+                    md5.update(chunk)
+
+            return md5.hexdigest()
+
+    @staticmethod
+    def doit(prompt_file, text_data_opt=None, reload=False):
         prompt_path = os.path.join(prompts_path, prompt_file)
 
         prompts = []
