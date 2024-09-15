@@ -44,7 +44,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
         if omit_start_latent:
             result = []
         else:
-            result = [latent_image['samples']]
+            result = [comfy.sample.fix_empty_latent_channels(model, latent_image['samples']).cpu()]
 
         def progress_callback(step, x0, x, total_steps):
             if (total_steps-1) != step and step % interval != 0:
