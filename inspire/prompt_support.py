@@ -38,7 +38,7 @@ try:
     with open(pb_yaml_path, 'r', encoding="utf-8") as f:
         prompt_builder_preset = yaml.load(f, Loader=yaml.FullLoader)
 except Exception as e:
-    print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'")
+    print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'\nNOTE: Only files with UTF-8 encoding are supported.")
 
 
 class LoadPromptsFromDir:
@@ -115,7 +115,7 @@ class LoadPromptsFromDir:
                         else:
                             print(f"[WARN] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
             except Exception as e:
-                print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}")
+                print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         return (prompts, )
 
@@ -199,7 +199,7 @@ class LoadPromptsFromFile:
                 else:
                     print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
+            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         return (prompts, )
 
@@ -262,7 +262,7 @@ class LoadSinglePromptFromFile:
             else:
                 print(f"[WARN] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
+            print(f"[ERROR] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         return (prompts, )
 
