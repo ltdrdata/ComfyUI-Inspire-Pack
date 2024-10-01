@@ -123,7 +123,16 @@ class InpaintPreprocessor_wrapper:
         if mask is None:
             mask = torch.ones((image.shape[1], image.shape[2]), dtype=torch.float32, device="cpu").unsqueeze(0)
 
-        return obj.preprocess(image, mask, self.black_pixel_for_xinsir_cn)[0]
+        try:
+            res = obj.preprocess(image, mask, black_pixel_for_xinsir_cn=self.black_pixel_for_xinsir_cn)[0]
+        except Exception as e:
+            if self.black_pixel_for_xinsir_cn:
+                raise e
+            else:
+                res = obj.preprocess(image, mask)[0]
+                print(f"[Inspire Pack] Installed 'ComfyUI's ControlNet Auxiliary Preprocessors.' is outdated.")
+
+        return res
 
 
 class TilePreprocessor_wrapper:
@@ -550,15 +559,18 @@ class Color_Preprocessor_Provider_for_SEGS:
 class InpaintPreprocessor_Provider_for_SEGS:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "black_pixel_for_xinsir_cn": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
-        }}
+        return {
+            "required": {},
+            "optional": {
+                "black_pixel_for_xinsir_cn": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
+            }
+        }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self, black_pixel_for_xinsir_cn):
+    def doit(self, black_pixel_for_xinsir_cn=False):
         obj = InpaintPreprocessor_wrapper(black_pixel_for_xinsir_cn)
         return (obj, )
 
