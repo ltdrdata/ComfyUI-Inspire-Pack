@@ -4,6 +4,7 @@ import comfy
 import nodes
 import torch
 import re
+import webcolors
 
 from . import prompt_support
 from .libs import utils, common
@@ -81,8 +82,9 @@ class RegionalPromptSimple:
 
 def color_to_mask(color_mask, mask_color):
     try:
-        if mask_color.startswith("#"):
-            selected = int(mask_color[1:], 16)
+        if mask_color.startswith("#") or mask_color.isalpha():
+            hex = mask_color[1:] if mask_color.startswith("#") else webcolors.name_to_hex(mask_color)[1:]
+            selected = int(hex, 16)
         else:
             selected = int(mask_color, 10)
     except Exception:
