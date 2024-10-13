@@ -2,4 +2,4 @@ matplotlib
 cachetools
 numpy<2
 webcolors
-
+opencv-python
