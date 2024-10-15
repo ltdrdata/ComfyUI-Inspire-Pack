@@ -19,6 +19,7 @@ model_preset = {
     "SDXL ViT-H":           ("ip-adapter_sdxl_vit-h",           "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
     "SDXL Plus ViT-H":      ("ip-adapter-plus_sdxl_vit-h",      "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
     "SDXL Plus Face ViT-H": ("ip-adapter-plus-face_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "Kolors Plus":          ("Kolors-IP-Adapter-Plus",          "clip-vit-large-patch14-336", None, False),
 
     # faceid
     "SD1.5 FaceID":                ("ip-adapter-faceid_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sd15_lora", True),
@@ -29,6 +30,7 @@ model_preset = {
     "SDXL FaceID":                 ("ip-adapter-faceid_sdxl",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
     "SDXL FaceID Portrait":        ("ip-adapter-faceid-portrait_sdxl",        "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
     "SDXL FaceID Portrait unnorm": ("ip-adapter-faceid-portrait_sdxl_unnorm", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
+    "Kolors FaceID Plus":          ("Kolors-IP-Adapter-FaceID-Plus",          "clip-vit-large-patch14-336", None, True),
 
     # composition
     "SD1.5 Plus Composition":      ("ip-adapter_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
@@ -56,7 +58,6 @@ class IPAdapterModelHelper:
         return {
             "required": {
                 "model": ("MODEL",),
-                "clip": ("CLIP",),
                 "preset": (list(model_preset.keys()),),
                 "lora_strength_model": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
                 "lora_strength_clip": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
@@ -64,6 +65,7 @@ class IPAdapterModelHelper:
                 "cache_mode": (["insightface only", "clip_vision only", "all", "none"], {"default": "insightface only"}),
             },
             "optional": {
+                "clip": ("CLIP",),
                 "insightface_model_name": (['buffalo_l', 'antelopev2'],),
             },
             "hidden": {"unique_id": "UNIQUE_ID"}
@@ -75,14 +77,17 @@ class IPAdapterModelHelper:
 
     CATEGORY = "InspirePack/models"
 
-    def doit(self, model, clip, preset, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
+    def doit(self, model, preset, lora_strength_model, lora_strength_clip, insightface_provider, clip=None, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
         if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
             raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
         is_sdxl_preset = 'SDXL' in preset
-        is_sdxl_model = isinstance(clip.tokenizer, sdxl_clip.SDXLTokenizer)
+        if clip is not None:
+            is_sdxl_model = isinstance(clip.tokenizer, sdxl_clip.SDXLTokenizer)
+        else:
+            is_sdxl_model = False
 
         if is_sdxl_preset != is_sdxl_model:
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "IPADAPTER (fail)"})
