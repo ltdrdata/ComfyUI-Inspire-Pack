@@ -16,8 +16,6 @@ class ConcatConditioningsWithMultiplier:
                     return True
 
                 def __getitem__(self, key):
-                    # Return a default value appropriate for your use case
-                    # Adjust the return value as needed
                     return "FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}
 
             return {

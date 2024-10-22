@@ -18,14 +18,16 @@ from server import PromptServer
 from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
 
+
+model_path = folder_paths.models_dir
+utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
+
+
 prompt_builder_preset = {}
 
 
 resource_path = os.path.join(os.path.dirname(__file__), "..", "resources")
 resource_path = os.path.abspath(resource_path)
-
-prompts_path = os.path.join(os.path.dirname(__file__), "..", "prompts")
-prompts_path = os.path.abspath(prompts_path)
 
 
 try:
@@ -44,9 +46,12 @@ except Exception as e:
 class LoadPromptsFromDir:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
         try:
-            prompt_dirs = [d for d in os.listdir(prompts_path) if os.path.isdir(os.path.join(prompts_path, d))]
+            prompt_dirs = []
+            for x in folder_paths.get_folder_paths('inspire_prompts'):
+                for d in os.listdir(x):
+                    if os.path.isdir(os.path.join(x, d)):
+                        prompt_dirs.append(d)
         except Exception:
             prompt_dirs = []
 
@@ -70,16 +75,24 @@ class LoadPromptsFromDir:
         if not reload:
             return prompt_dir
         else:
-            global prompts_path
-            prompt_dir = os.path.join(prompts_path, prompt_dir)
-            files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
+            candidates = []
+            for d in folder_paths.get_folder_paths('inspire_prompts'):
+                candidates.append(os.path.join(d, prompt_dir))
+
+            prompt_files = []
+            for x in candidates:
+                for root, dirs, files in os.walk(x):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            prompt_files.append(os.path.join(root, file))
+
+            prompt_files.sort()
 
             md5 = hashlib.md5()
-            files.sort()
 
-            for file in files:
-                md5.update(file.encode('utf-8'))
-                with open(os.path.join(prompt_dir, file), 'rb') as f:
+            for file_name in prompt_files:
+                md5.update(file_name.encode('utf-8'))
+                with open(folder_paths.get_full_path('inspire_prompts', file_name), 'rb') as f:
                     while True:
                         chunk = f.read(4096)
                         if not chunk:
@@ -90,16 +103,24 @@ class LoadPromptsFromDir:
 
     @staticmethod
     def doit(prompt_dir, reload=False):
-        global prompts_path
-        prompt_dir = os.path.join(prompts_path, prompt_dir)
-        files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
-        files.sort()
+        candidates = []
+        for d in folder_paths.get_folder_paths('inspire_prompts'):
+            candidates.append(os.path.join(d, prompt_dir))
+
+        prompt_files = []
+        for x in candidates:
+            for root, dirs, files in os.walk(x):
+                for file in files:
+                    if file.endswith(".txt"):
+                        prompt_files.append(os.path.join(root, file))
+
+        prompt_files.sort()
 
         prompts = []
-        for file_name in files:
+        for file_name in prompt_files:
             print(f"file_name: {file_name}")
             try:
-                with open(os.path.join(prompt_dir, file_name), "r", encoding="utf-8") as file:
+                with open(file_name, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
                     prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
@@ -123,15 +144,16 @@ class LoadPromptsFromDir:
 class LoadPromptsFromFile:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
+        prompt_files = []
         try:
-            prompt_files = []
-            for root, dirs, files in os.walk(prompts_path):
-                for file in files:
-                    if file.endswith(".txt"):
-                        file_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(file_path, prompts_path)
-                        prompt_files.append(rel_path)
+            prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+            for prompts_path in prompts_paths:
+                for root, dirs, files in os.walk(prompts_path):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            file_path = os.path.join(root, file)
+                            rel_path = os.path.relpath(file_path, prompts_path)
+                            prompt_files.append(rel_path)
         except Exception:
             prompt_files = []
 
@@ -161,9 +183,18 @@ class LoadPromptsFromFile:
         elif not reload:
             return prompt_file
         else:
-            prompt_path = os.path.join(prompts_path, prompt_file)
+            matched_path = None
+            for x in folder_paths.get_folder_paths('inspire_prompts'):
+                matched_path = os.path.join(x, prompt_file)
+                if not os.path.exists(matched_path):
+                    matched_path = None
+                else:
+                    break
 
-            with open(prompt_path, 'rb') as f:
+            if matched_path is None:
+                return float('NaN')
+
+            with open(matched_path, 'rb') as f:
                 while True:
                     chunk = f.read(4096)
                     if not chunk:
@@ -174,12 +205,21 @@ class LoadPromptsFromFile:
 
     @staticmethod
     def doit(prompt_file, text_data_opt=None, reload=False):
-        prompt_path = os.path.join(prompts_path, prompt_file)
+        matched_path = None
+        for d in folder_paths.get_folder_paths('inspire_prompts'):
+            matched_path = os.path.join(d, prompt_file)
+            if not os.path.exists(matched_path):
+                matched_path = None
+            else:
+                break
+
+        if matched_path:
+            print(f"[WARN] LoadPromptsFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
             if not text_data_opt:
-                with open(prompt_path, "r", encoding="utf-8") as file:
+                with open(matched_path, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
             else:
                 prompt_data = text_data_opt
@@ -188,8 +228,8 @@ class LoadPromptsFromFile:
 
             pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
 
-            for prompt in prompt_list:
-                matches = re.search(pattern, prompt, re.DOTALL)
+            for p in prompt_list:
+                matches = re.search(pattern, p, re.DOTALL)
 
                 if matches:
                     positive_text = matches.group(1).strip()
@@ -207,15 +247,16 @@ class LoadPromptsFromFile:
 class LoadSinglePromptFromFile:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
+        prompt_files = []
         try:
-            prompt_files = []
-            for root, dirs, files in os.walk(prompts_path):
-                for file in files:
-                    if file.endswith(".txt"):
-                        file_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(file_path, prompts_path)
-                        prompt_files.append(rel_path)
+            prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+            for prompts_path in prompts_paths:
+                for root, dirs, files in os.walk(prompts_path):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            file_path = os.path.join(root, file)
+                            rel_path = os.path.relpath(file_path, prompts_path)
+                            prompt_files.append(rel_path)
         except Exception:
             prompt_files = []
 
@@ -235,7 +276,17 @@ class LoadSinglePromptFromFile:
 
     @staticmethod
     def doit(prompt_file, index, text_data_opt=None):
-        prompt_path = os.path.join(prompts_path, prompt_file)
+        prompt_path = None
+        prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+        for d in prompts_paths:
+            prompt_path = os.path.join(d, prompt_file)
+            if os.path.exists(prompt_path):
+                break
+            else:
+                prompt_path = None
+
+        if prompt_path:
+            print(f"[WARN] LoadSinglePromptFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
