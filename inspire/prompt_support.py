@@ -674,7 +674,7 @@ class SeedExplorer:
             "optional":
                 {
                     "variation_method": (["linear", "slerp"],),
-                    "model": ("model",),
+                    "model": ("MODEL",),
                 }
         }
 
