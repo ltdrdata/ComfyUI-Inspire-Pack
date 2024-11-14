@@ -332,7 +332,7 @@ def populate_wildcards(json_data):
 
         if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
             extra_pnginfo = json_data['extra_data']['extra_pnginfo']
-            if 'workflow' in extra_pnginfo and 'nodes' in extra_pnginfo['workflow']:
+            if 'workflow' in extra_pnginfo and extra_pnginfo['workflow'] is not None and 'nodes' in extra_pnginfo['workflow']:
                 for node in extra_pnginfo['workflow']['nodes']:
                     key = str(node['id'])
                     if key in updated_widget_values:
