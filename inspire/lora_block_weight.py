@@ -484,7 +484,7 @@ class LoraLoaderBlockWeight:
 
             if k in muted_weights:
                 pass
-            elif 'text' in k:
+            elif 'text' in k or 'encoder' in k:
                 new_clip.add_patches({k: weights}, strength_clip * ratio)
             else:
                 new_modelpatcher.add_patches({k: weights}, strength_model * ratio)
@@ -546,7 +546,7 @@ class ApplyLBW:
 
             if k in muted_weights:
                 pass
-            elif 'text' in k:
+            elif 'text' in k or 'encoder' in k:
                 new_clip.add_patches({k: weights}, strength_clip * ratio)
             else:
                 new_modelpatcher.add_patches({k: weights}, strength_model * ratio)
@@ -822,9 +822,13 @@ class LoraBlockInfo:
         output_blocks = []
         output_blocks_map = {}
 
-        text_block_count = set()
-        text_blocks = []
-        text_blocks_map = {}
+        text_block_count1 = set()
+        text_blocks1 = []
+        text_blocks_map1 = {}
+
+        text_block_count2 = set()
+        text_blocks2 = []
+        text_blocks_map2 = {}
 
         double_block_count = set()
         double_blocks = []
@@ -902,12 +906,23 @@ class LoraBlockInfo:
                 k_unet_num = k_unet[len("er.text_model.encoder.layers."):len("er.text_model.encoder.layers.")+2]
                 k_unet_int = parse_unet_num(k_unet_num)
 
-                text_block_count.add(k_unet_int)
-                text_blocks.append(k_unet)
-                if k_unet_int in text_blocks_map:
-                    text_blocks_map[k_unet_int].append(k_unet)
+                text_block_count1.add(k_unet_int)
+                text_blocks1.append(k_unet)
+                if k_unet_int in text_blocks_map1:
+                    text_blocks_map1[k_unet_int].append(k_unet)
                 else:
-                    text_blocks_map[k_unet_int] = [k_unet]
+                    text_blocks_map1[k_unet_int] = [k_unet]
+
+            elif k_unet.startswith("r.encoder.block."):
+                k_unet_num = k_unet[len("r.encoder.block."):len("r.encoder.block.")+2]
+                k_unet_int = parse_unet_num(k_unet_num)
+
+                text_block_count2.add(k_unet_int)
+                text_blocks2.append(k_unet)
+                if k_unet_int in text_blocks_map2:
+                    text_blocks_map2[k_unet_int].append(k_unet)
+                else:
+                    text_blocks_map2[k_unet_int] = [k_unet]
 
             else:
                 others.append(k_unet)
@@ -951,10 +966,14 @@ class LoraBlockInfo:
             for x in single_keys:
                 text += f" SINGLE{x}: {len(single_blocks_map[x])}\n"
 
-        text += f"\n-------[Base blocks] ({len(text_block_count) + len(others)}, Subs={len(text_blocks) + len(others)})-------\n"
-        text_keys = sorted(text_blocks_map.keys())
-        for x in text_keys:
-            text += f" TXT_ENC{x}: {len(text_blocks_map[x])}\n"
+        text += f"\n-------[Base blocks] ({len(text_block_count1) + len(text_block_count2) + len(others)}, Subs={len(text_blocks1) + len(text_blocks2) + len(others)})-------\n"
+        text_keys1 = sorted(text_blocks_map1.keys())
+        for x in text_keys1:
+            text += f" TXT_ENC{x}: {len(text_blocks_map1[x])}\n"
+
+        text_keys2 = sorted(text_blocks_map2.keys())
+        for x in text_keys2:
+            text += f" TXT_ENC{x} [B]: {len(text_blocks_map2[x])}\n"
 
         for x in others:
             text += f" {x}\n"
