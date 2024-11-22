@@ -2,12 +2,12 @@
 @author: Dr.Lt.Data
 @title: Inspire Pack
 @nickname: Inspire Pack
-@description: This extension provides various nodes to support Lora Block Weight and the Impact Pack.
+@description: This extension provides various nodes to support Lora Block Weight, Regional Nodes, Backend Cache, Prompt Utils, List Utils and the Impact Pack.
 """
 
 import importlib
 
-version_code = [1, 6, 1]
+version_code = [1, 7]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
 print(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 

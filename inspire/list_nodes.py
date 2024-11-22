@@ -1,3 +1,6 @@
+from comfy_execution.graph_utils import GraphBuilder, is_link
+from .libs.utils import any_typ
+
 class FloatRange:
     @classmethod
     def INPUT_TYPES(s):
@@ -15,7 +18,7 @@ class FloatRange:
 
     FUNCTION = "doit"
 
-    CATEGORY = "InspirePack/Util"
+    CATEGORY = "InspirePack/List"
 
     def doit(self, start, stop, step, limit, ensure_end):
         if start == stop or step == 0:
@@ -47,10 +50,170 @@ class FloatRange:
         return (res, )
 
 
+class WorklistToItemList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "item": (any_typ, ),
+                     }
+                }
+
+    INPUT_IS_LIST = True
+
+    RETURN_TYPES = ("ITEM_LIST",)
+    RETURN_NAMES = ("item_list",)
+
+    FUNCTION = "doit"
+
+    DESCRIPTION = "The list in ComfyUI allows for repeated execution of a sub-workflow.\nThis groups these repetitions (a.k.a. list) into a single ITEM_LIST output.\nITEM_LIST can then be used in ForeachList."
+
+    CATEGORY = "InspirePack/List"
+
+    def doit(self, item):
+        return (item, )
+
+
+# Loop nodes are implemented based on BadCafeCode's reference loop implementation
+# https://github.com/BadCafeCode/execution-inversion-demo-comfyui/blob/main/flow_control.py
+
+class ForeachListBegin:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "item_list": ("ITEM_LIST", {"tooltip": "ITEM_LIST containing items to be processed iteratively."}),
+                     },
+                "optional": {
+                        "initial_input": (any_typ, {"tooltip": "If initial_input is omitted, the first item in item_list is used as the initial value, and the processing starts from the second item in item_list."}),
+                    }
+                }
+
+    RETURN_TYPES = ("FOREACH_LIST_CONTROL", "ITEM_LIST", any_typ, any_typ)
+    RETURN_NAMES = ("flow_control", "remained_list", "item", "intermediate_output")
+    OUTPUT_TOOLTIPS = (
+        "Pass ForeachListEnd as is to indicate the end of the iteration.",
+        "Output the ITEM_LIST containing the remaining items during the iteration, passing ForeachListEnd as is to indicate the end of the iteration.",
+        "Output the current item during the iteration.",
+        "Output the intermediate results during the iteration.")
+
+    FUNCTION = "doit"
+
+    DESCRIPTION = "A starting node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nGenerate a new intermediate_output using item and intermediate_output as inputs, then connect it to ForeachListEnd.\nNOTE:If initial_input is omitted, the first item in item_list is used as the initial value, and the processing starts from the second item in item_list."
+
+    CATEGORY = "InspirePack/List"
+
+    def doit(self, item_list, initial_input=None):
+        if initial_input is None:
+            initial_input = item_list[0]
+            item_list = item_list[1:]
+            
+        if len(item_list) > 0:
+            return ("stub", item_list[1:], item_list[0], initial_input)
+
+        return ("stub", [], None, initial_input)
+
+
+class ForeachListEnd:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                        "flow_control": ("FOREACH_LIST_CONTROL", {"rawLink": True, "tooltip": "Directly connect the output of ForeachListBegin, the starting node of the iteration."}),
+                        "remained_list": ("ITEM_LIST", {"tooltip":"Directly connect the output of ForeachListBegin, the starting node of the iteration."}),
+                        "intermediate_output": (any_typ, {"tooltip":"Connect the intermediate outputs processed within the iteration here."}),
+                     },
+                "hidden": {
+                    "dynprompt": "DYNPROMPT",
+                    "unique_id": "UNIQUE_ID",
+                    }
+                }
+
+    RETURN_TYPES = (any_typ,)
+    RETURN_NAMES = ("result",)
+    OUTPUT_TOOLTIPS = ("This is the final output value.",)
+
+    FUNCTION = "doit"
+
+    DESCRIPTION = "A end node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nNOTE:Directly connect the outputs of ForeachListBegin to 'flow_control' and 'remained_list'."
+
+    CATEGORY = "InspirePack/List"
+
+    def explore_dependencies(self, node_id, dynprompt, upstream):
+        node_info = dynprompt.get_node(node_id)
+        if "inputs" not in node_info:
+            return
+        for k, v in node_info["inputs"].items():
+            if is_link(v):
+                parent_id = v[0]
+                if parent_id not in upstream:
+                    upstream[parent_id] = []
+                    self.explore_dependencies(parent_id, dynprompt, upstream)
+                upstream[parent_id].append(node_id)
+
+    def collect_contained(self, node_id, upstream, contained):
+        if node_id not in upstream:
+            return
+        for child_id in upstream[node_id]:
+            if child_id not in contained:
+                contained[child_id] = True
+                self.collect_contained(child_id, upstream, contained)
+
+    def doit(self, flow_control, remained_list, intermediate_output, dynprompt, unique_id):
+        if len(remained_list) == 0:
+            return (intermediate_output,)
+
+        # We want to loop
+        this_node = dynprompt.get_node(unique_id)
+        upstream = {}
+
+        # Get the list of all nodes between the open and close nodes
+        self.explore_dependencies(unique_id, dynprompt, upstream)
+
+        contained = {}
+        open_node = flow_control[0]
+        self.collect_contained(open_node, upstream, contained)
+        contained[unique_id] = True
+        contained[open_node] = True
+
+        # We'll use the default prefix, but to avoid having node names grow exponentially in size,
+        # we'll use "Recurse" for the name of the recursively-generated copy of this node.
+        graph = GraphBuilder()
+        for node_id in contained:
+            original_node = dynprompt.get_node(node_id)
+            node = graph.node(original_node["class_type"], "Recurse" if node_id == unique_id else node_id)
+            node.set_override_display_id(node_id)
+
+        for node_id in contained:
+            original_node = dynprompt.get_node(node_id)
+            node = graph.lookup_node("Recurse" if node_id == unique_id else node_id)
+            for k, v in original_node["inputs"].items():
+                if is_link(v) and v[0] in contained:
+                    parent = graph.lookup_node(v[0])
+                    node.set_input(k, parent.out(v[1]))
+                else:
+                    node.set_input(k, v)
+
+        new_open = graph.lookup_node(open_node)
+        new_open.set_input("item_list", remained_list)
+        new_open.set_input("initial_input", intermediate_output)
+
+        my_clone = graph.lookup_node("Recurse" )
+        result = (my_clone.out(0),)
+
+        return {
+            "result": result,
+            "expand": graph.finalize(),
+        }
+
+
 NODE_CLASS_MAPPINGS = {
     "FloatRange //Inspire": FloatRange,
+    "WorklistToItemList //Inspire": WorklistToItemList,
+    "ForeachListBegin //Inspire": ForeachListBegin,
+    "ForeachListEnd //Inspire": ForeachListEnd,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "FloatRange //Inspire": "Float Range (Inspire)"
+    "FloatRange //Inspire": "Float Range (Inspire)",
+    "WorklistToItemList //Inspire": "Worklist To Item List (Inspire)",
+    "ForeachListBegin //Inspire": "▶Foreach List (Inspire)",
+    "ForeachListEnd //Inspire": "Foreach List◀ (Inspire)",
 }
