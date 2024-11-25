@@ -208,12 +208,14 @@ class LoadPromptsFromFile:
         matched_path = None
         for d in folder_paths.get_folder_paths('inspire_prompts'):
             matched_path = os.path.join(d, prompt_file)
-            if not os.path.exists(matched_path):
-                matched_path = None
-            else:
+            if os.path.exists(matched_path):
                 break
+            else:
+                matched_path = None
 
         if matched_path:
+            print(f"[INFO] LoadPromptsFromFile: file found '{prompt_file}'")
+        else:
             print(f"[WARN] LoadPromptsFromFile: file not found '{prompt_file}'")
 
         prompts = []
@@ -286,6 +288,8 @@ class LoadSinglePromptFromFile:
                 prompt_path = None
 
         if prompt_path:
+            print(f"[INFO] LoadSinglePromptFromFile: file found '{prompt_file}'")
+        else:
             print(f"[WARN] LoadSinglePromptFromFile: file not found '{prompt_file}'")
 
         prompts = []
