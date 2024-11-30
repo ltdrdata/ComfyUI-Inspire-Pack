@@ -6,6 +6,7 @@ from enum import Enum
 from . import prompt_support
 from aiohttp import web
 from . import backend_support
+from .libs import common
 
 
 max_seed = 2**32 - 1
@@ -354,6 +355,21 @@ def force_reset_useless_params(json_data):
     return json_data
 
 
+def clear_unused_node_changed_cache(json_data):
+    prompt = json_data['prompt']
+
+    unused = []
+    for x in common.changed_cache.keys():
+        if x not in prompt:
+            unused.append(x)
+
+    for x in unused:
+        del common.changed_cache[x]
+        del common.changed_count_cache[x]
+
+    return json_data
+
+
 def onprompt(json_data):
     prompt_support.list_counter_map = {}
 
@@ -367,6 +383,7 @@ def onprompt(json_data):
     populate_wildcards(json_data)
 
     force_reset_useless_params(json_data)
+    clear_unused_node_changed_cache(json_data)
 
     return json_data
 

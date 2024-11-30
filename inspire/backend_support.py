@@ -1,5 +1,6 @@
 import json
 import os
+from .libs import common
 
 import folder_paths
 import nodes
@@ -478,6 +479,74 @@ class StableCascade_CheckpointLoader:
         return b_model, b_vae, c_model, c_vae, clip_vision, clip, key_b, key_c
 
 
+class IsCached:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "key": ("STRING", {"multiline": False}),
+            },
+            "hidden": {
+                "unique_id": "UNIQUE_ID"
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    @staticmethod
+    def IS_CHANGED(key, unique_id):
+        return common.is_changed(unique_id, key in cache)
+
+    def doit(self, key, unique_id):
+        return (key in cache,)
+
+
+# WIP: not properly working, yet
+class CacheBridge:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "value": (any_typ,),
+                "mode": ("BOOLEAN", {"default": True, "label_off": "cached", "label_on": "passthrough"}),
+            },
+            "hidden": {
+                "unique_id": "UNIQUE_ID"
+            }
+        }
+
+    RETURN_TYPES = (any_typ, )
+    RETURN_NAMES = ("value",)
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    @staticmethod
+    def IS_CHANGED(value, mode, unique_id):
+        if not mode and unique_id in common.changed_cache:
+            return common.not_changed_value(unique_id)
+        else:
+            return common.changed_value(unique_id)
+
+    def doit(self, value, mode, unique_id):
+        if not mode:
+            # cache mode
+            if unique_id not in common.changed_cache:
+                common.changed_cache[unique_id] = value
+                common.changed_count_cache[unique_id] = 0
+
+            return (common.changed_cache[unique_id],)
+        else:
+            common.changed_cache[unique_id] = value
+            common.changed_count_cache[unique_id] = 0
+
+            return (common.changed_cache[unique_id],)
+
+
 NODE_CLASS_MAPPINGS = {
     "CacheBackendData //Inspire": CacheBackendData,
     "CacheBackendDataNumberKey //Inspire": CacheBackendDataNumberKey,
@@ -489,7 +558,9 @@ NODE_CLASS_MAPPINGS = {
     "RemoveBackendDataNumberKey //Inspire": RemoveBackendDataNumberKey,
     "ShowCachedInfo //Inspire": ShowCachedInfo,
     "CheckpointLoaderSimpleShared //Inspire": CheckpointLoaderSimpleShared,
-    "StableCascade_CheckpointLoader //Inspire": StableCascade_CheckpointLoader
+    "StableCascade_CheckpointLoader //Inspire": StableCascade_CheckpointLoader,
+    "IsCached //Inspire": IsCached,
+    # "CacheBridge //Inspire": CacheBridge,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -503,5 +574,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RemoveBackendDataNumberKey //Inspire": "Remove Backend Data [NumberKey] (Inspire)",
     "ShowCachedInfo //Inspire": "Show Cached Info (Inspire)",
     "CheckpointLoaderSimpleShared //Inspire": "Shared Checkpoint Loader (Inspire)",
-    "StableCascade_CheckpointLoader //Inspire": "Stable Cascade Checkpoint Loader (Inspire)"
+    "StableCascade_CheckpointLoader //Inspire": "Stable Cascade Checkpoint Loader (Inspire)",
+    "IsCached //Inspire": "Is Cached (Inspire)",
+    # "CacheBridge //Inspire": "Cache Bridge (Inspire)"
 }
