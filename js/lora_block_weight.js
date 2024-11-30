@@ -34,19 +34,17 @@ app.registerExtension({
 
 			node._value = "Preset";
 
+            node.widgets[preset_i].callback = (v, canvas, node, pos, e) => {
+                node.widgets[vector_i].value = node._value.split(':')[1];
+                if(node.widgets_values) {
+                    node.widgets_values[vector_i] = node.widgets[preset_i].value;
+                }
+            }
+
 			Object.defineProperty(node.widgets[preset_i], "value", {
 				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
-                            if(value != "Preset") {
-                                node.widgets[vector_i].value = value.split(':')[1];
-	                            if(node.widgets_values) {
-	                                node.widgets_values[vector_i] = node.widgets[preset_i].value;
-                                }
-                            }
-                        }
-
-						node._value = value;
+				        if(value != "Preset")
+						    node._value = value;
 					},
 				get: () => {
                         return node._value;
@@ -77,86 +75,86 @@ app.registerExtension({
 		    let preset_i = 9;
 		    let vector_i = 10;
 			node._value = "Preset";
-			Object.defineProperty(node.widgets[preset_i], "value", {
-				set: (value) => {
-				        const stackTrace = new Error().stack;
-                        if(stackTrace.includes('inner_value_change')) {
-                            if(value != "Preset") {
-                                if(!value.startsWith('@') && node.widgets[vector_i].value != "")
-                                    node.widgets[vector_i].value += "\n";
-                                if(value.startsWith('@')) {
-                                    let spec = value.split(':')[1];
-                                    var n;
-                                    var sub_n = null;
-                                    var block = null;
 
-                                    if(isNaN(spec)) {
-                                        let sub_spec = spec.split(',');
+            node.widgets[preset_i].callback = (v, canvas, node, pos, e) => {
+                let value = node._value;
+                if(!value.startsWith('@') && node.widgets[vector_i].value != "")
+                    node.widgets[vector_i].value += "\n";
+                if(value.startsWith('@')) {
+                    let spec = value.split(':')[1];
+                    var n;
+                    var sub_n = null;
+                    var block = null;
 
-                                        if(sub_spec.length != 3) {
-	                                        node.widgets_values[vector_i] = '!! SPEC ERROR !!';
-	                                        node._value = '';
-	                                        return;
-                                        }
+                    if(isNaN(spec)) {
+                        let sub_spec = spec.split(',');
 
-                                        n = parseInt(sub_spec[0].trim());
-                                        sub_n = parseInt(sub_spec[1].trim());
-                                        block = parseInt(sub_spec[2].trim());
-                                    }
-                                    else {
-                                        n = parseInt(spec.trim());
-                                    }
-
-                                    node.widgets[vector_i].value = "";
-                                    if(sub_n == null) {
-                                        for(let i=1; i<=n; i++) {
-                                            var temp = "";
-                                            for(let j=1; j<=n; j++) {
-                                                if(temp!='')
-                                                    temp += ',';
-                                                if(j==i)
-                                                    temp += 'A';
-                                                else
-                                                    temp += '0';
-                                            }
-
-                                            node.widgets[vector_i].value += `B${i}:${temp}\n`;
-                                        }
-                                    }
-                                    else {
-                                        for(let i=1; i<=sub_n; i++) {
-                                            var temp = "";
-                                            for(let j=1; j<=n; j++) {
-                                                if(temp!='')
-                                                    temp += ',';
-
-                                                if(block!=j)
-                                                    temp += '0';
-                                                else {
-                                                    temp += ' ';
-                                                    for(let k=1; k<=sub_n; k++) {
-                                                        if(k==i)
-                                                            temp += 'A ';
-                                                        else
-                                                            temp += '0 ';
-                                                    }
-                                                }
-                                            }
-
-                                            node.widgets[vector_i].value += `B${block}.SUB${i}:${temp}\n`;
-                                        }
-                                    }
-                                }
-                                else {
-                                    node.widgets[vector_i].value += `${value}/${value.split(':')[0]}`;
-                                }
-	                            if(node.widgets_values) {
-	                                node.widgets_values[vector_i] = node.widgets[preset_i].value;
-                                }
-                            }
+                        if(sub_spec.length != 3) {
+                            node.widgets_values[vector_i] = '!! SPEC ERROR !!';
+                            node._value = '';
+                            return;
                         }
 
-						node._value = value;
+                        n = parseInt(sub_spec[0].trim());
+                        sub_n = parseInt(sub_spec[1].trim());
+                        block = parseInt(sub_spec[2].trim());
+                    }
+                    else {
+                        n = parseInt(spec.trim());
+                    }
+
+                    node.widgets[vector_i].value = "";
+                    if(sub_n == null) {
+                        for(let i=1; i<=n; i++) {
+                            var temp = "";
+                            for(let j=1; j<=n; j++) {
+                                if(temp!='')
+                                    temp += ',';
+                                if(j==i)
+                                    temp += 'A';
+                                else
+                                    temp += '0';
+                            }
+
+                            node.widgets[vector_i].value += `B${i}:${temp}\n`;
+                        }
+                    }
+                    else {
+                        for(let i=1; i<=sub_n; i++) {
+                            var temp = "";
+                            for(let j=1; j<=n; j++) {
+                                if(temp!='')
+                                    temp += ',';
+
+                                if(block!=j)
+                                    temp += '0';
+                                else {
+                                    temp += ' ';
+                                    for(let k=1; k<=sub_n; k++) {
+                                        if(k==i)
+                                            temp += 'A ';
+                                        else
+                                            temp += '0 ';
+                                    }
+                                }
+                            }
+
+                            node.widgets[vector_i].value += `B${block}.SUB${i}:${temp}\n`;
+                        }
+                    }
+                }
+                else {
+                    node.widgets[vector_i].value += `${value}/${value.split(':')[0]}`;
+                }
+                if(node.widgets_values) {
+                    node.widgets_values[vector_i] = node.widgets[preset_i].value;
+                }
+            }
+
+			Object.defineProperty(node.widgets[preset_i], "value", {
+				set: (value) => {
+				        if(value != 'Preset')
+						    node._value = value;
 					},
 				get: () => {
                         return node._value;

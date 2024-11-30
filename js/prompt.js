@@ -42,35 +42,38 @@ app.registerExtension({
 			// lora selector, wildcard selector
 			let combo_id = 5;
 
-			Object.defineProperty(node.widgets[combo_id], "value", {
-				set: (value) => {
-						const stackTrace = new Error().stack;
-						if(stackTrace.includes('inner_value_change')) {
-							if(value != "Select the LoRA to add to the text") {
-								let lora_name = value;
-								if (lora_name.endsWith('.safetensors')) {
-									lora_name = lora_name.slice(0, -12);
-								}
+			// lora
+            node.widgets[combo_id].callback = (value, canvas, node, pos, e) => {
+                let lora_name = node._value;
+                if(lora_name.endsWith('.safetensors')) {
+                    lora_name = lora_name.slice(0, -12);
+                }
 
-								wildcard_text_widget.value += `<lora:${lora_name}>`;
-							}
-						}
-					},
-				get: () => { return "Select the LoRA to add to the text"; }
-			});
+                wildcard_text_widget.value += `<lora:${lora_name}>`;
+            }
+
+            Object.defineProperty(node.widgets[combo_id], "value", {
+                set: (value) => {
+                        if (value !== "Select the LoRA to add to the text")
+                            node._value = value;
+                    },
+
+                get: () => { return "Select the LoRA to add to the text"; }
+            });
+
+            // wildcard
+            node.widgets[combo_id+1].callback = (value, canvas, node, pos, e) => {
+                    if(wildcard_text_widget.value != '')
+                        wildcard_text_widget.value += ', '
+
+                    wildcard_text_widget.value += node._wildcard_value;
+            }
 
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-						const stackTrace = new Error().stack;
-						if(stackTrace.includes('inner_value_change')) {
-							if(value != "Select the Wildcard to add to the text") {
-								if(wildcard_text_widget.value != '')
-									wildcard_text_widget.value += ', '
-
-								wildcard_text_widget.value += value;
-							}
-						}
-					},
+                    if (value !== "Select the Wildcard to add to the text")
+                        node._wildcard_value = value;
+                },
 				get: () => { return "Select the Wildcard to add to the text"; }
 			});
 
@@ -115,47 +118,46 @@ app.registerExtension({
 			// lora selector, wildcard selector
 			let combo_id = 5;
 
+            node.widgets[combo_id].callback = (value, canvas, node, pos, e) => {
+                let lora_name = node._lora_value;
+                if (lora_name.endsWith('.safetensors')) {
+                    lora_name = lora_name.slice(0, -12);
+                }
+
+                if(direction_widget.value) {
+                    pos_wildcard_text_widget.value += `<lora:${lora_name}>`;
+                }
+                else {
+                    neg_wildcard_text_widget.value += `<lora:${lora_name}>`;
+                }
+            }
 			Object.defineProperty(node.widgets[combo_id], "value", {
 				set: (value) => {
-						const stackTrace = new Error().stack;
-						if(stackTrace.includes('inner_value_change')) {
-							if(value != "Select the LoRA to add to the text") {
-								let lora_name = value;
-								if (lora_name.endsWith('.safetensors')) {
-									lora_name = lora_name.slice(0, -12);
-								}
-
-								if(direction_widget.value) {
-									pos_wildcard_text_widget.value += `<lora:${lora_name}>`;
-								}
-								else {
-									neg_wildcard_text_widget.value += `<lora:${lora_name}>`;
-								}
-							}
-						}
+                        if (value !== "Select the LoRA to add to the text")
+                            node._lora_value = value;
 					},
 				get: () => { return "Select the LoRA to add to the text"; }
 			});
 
+            node.widgets[combo_id+1].callback = (value, canvas, node, pos, e) => {
+                let w = null;
+                if(direction_widget.value) {
+                    w = pos_wildcard_text_widget;
+                }
+                else {
+                    w = neg_wildcard_text_widget;
+                }
+
+                if(w.value != '')
+                    w.value += ', '
+
+                w.value += node._wildcard_value;
+            }
+
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-						const stackTrace = new Error().stack;
-						if(stackTrace.includes('inner_value_change')) {
-							if(value != "Select the Wildcard to add to the text") {
-								let w = null;
-								if(direction_widget.value) {
-									w = pos_wildcard_text_widget;
-								}
-								else {
-									w = neg_wildcard_text_widget;
-								}
-
-								if(w.value != '')
-									w.value += ', '
-
-								w.value += value;
-							}
-						}
+                        if (value !== "Select the Wildcard to add to the text")
+                            node._wildcard_value = value;
 					},
 				get: () => { return "Select the Wildcard to add to the text"; }
 			});
@@ -205,24 +207,22 @@ app.registerExtension({
 				}
 			});
 
+            preset_widget.callback = (value, canvas, node, pos, e) => {
+                if(node.widgets[2].value) {
+                    node.widgets[2].value += ', ';
+                }
+
+                const y = node._preset_value.split(':');
+                if(y.length == 2)
+                    node.widgets[2].value += y[1].trim();
+                else
+                    node.widgets[2].value += node._preset_value.trim();
+            }
+
 			Object.defineProperty(preset_widget, "value", {
-				set: (x) => {
-					const stackTrace = new Error().stack;
-					if(stackTrace.includes('inner_value_change')) {
-						if(node.widgets[2].value) {
-							node.widgets[2].value += ', ';
-						}
-
-						const y = x.split(':');
-						if(y.length == 2)
-							node.widgets[2].value += y[1].trim();
-						else
-							node.widgets[2].value += x.trim();
-
-						if(node.widgets_values) {
-							node.widgets_values[2] = node.widgets[2].values;
-						}
-					};
+				set: (value) => {
+                    if (value !== "#PRESET")
+                        node._preset_value = value;
 				},
 				get: () => { return '#PRESET'; }
 			});
