@@ -63,7 +63,8 @@ class LoadPromptsFromDir:
                     }
                 }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT",)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count")
     OUTPUT_IS_LIST = (True,)
 
     FUNCTION = "doit"
@@ -125,20 +126,21 @@ class LoadPromptsFromDir:
                     prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
                     for prompt in prompt_list:
-                        pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+                        pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
                         matches = re.search(pattern, prompt, re.DOTALL)
 
                         if matches:
-                            positive_text = matches.group(1).strip()
-                            negative_text = matches.group(2).strip()
-                            result_tuple = (positive_text, negative_text, file_name)
+                            positive_text = matches.group('positive').strip()
+                            negative_text = matches.group('negative').strip()
+                            name_text = matches.group('name').strip() if matches.group('name') else file_name
+                            result_tuple = (positive_text, negative_text, name_text)
                             prompts.append(result_tuple)
                         else:
                             print(f"[WARN] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
             except Exception as e:
                 print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, )
+        return (prompts, len(prompts),)
 
 
 class LoadPromptsFromFile:
@@ -166,7 +168,8 @@ class LoadPromptsFromFile:
                         }
                 }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT",)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count")
     OUTPUT_IS_LIST = (True,)
 
     FUNCTION = "doit"
@@ -228,22 +231,23 @@ class LoadPromptsFromFile:
 
             prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
-            pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+            pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
 
             for p in prompt_list:
                 matches = re.search(pattern, p, re.DOTALL)
 
                 if matches:
-                    positive_text = matches.group(1).strip()
-                    negative_text = matches.group(2).strip()
-                    result_tuple = (positive_text, negative_text, prompt_file)
+                    positive_text = matches.group('positive').strip()
+                    negative_text = matches.group('negative').strip()
+                    name_text = matches.group('name').strip() if matches.group('name') else prompt_file
+                    result_tuple = (positive_text, negative_text, name_text)
                     prompts.append(result_tuple)
                 else:
                     print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
             print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, )
+        return (prompts, len(prompts),)
 
 
 class LoadSinglePromptFromFile:
@@ -306,13 +310,14 @@ class LoadSinglePromptFromFile:
             except Exception:
                 prompt = prompt_list[-1]
 
-            pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+            pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
             matches = re.search(pattern, prompt, re.DOTALL)
 
             if matches:
-                positive_text = matches.group(1).strip()
-                negative_text = matches.group(2).strip()
-                result_tuple = (positive_text, negative_text, prompt_file)
+                positive_text = matches.group('positive').strip()
+                negative_text = matches.group('negative').strip()
+                name_text = matches.group('name').strip() if matches.group('name') else prompt_file
+                result_tuple = (positive_text, negative_text, name_text)
                 prompts.append(result_tuple)
             else:
                 print(f"[WARN] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
