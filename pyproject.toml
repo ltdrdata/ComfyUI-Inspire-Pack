@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-inspire-pack"
 description = "This extension provides various nodes to support Lora Block Weight, Regional Nodes, Backend Cache, Prompt Utils, List Utils, Noise(Seed) Utils, ... and the Impact Pack."
-version = "1.9"
+version = "1.9.1"
 license = { file = "LICENSE" }
 dependencies = ["matplotlib", "cachetools"]
 

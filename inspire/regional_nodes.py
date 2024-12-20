@@ -460,7 +460,7 @@ class RegionalSeedExplorerMask:
             "required": {
                 "mask": ("MASK",),
 
-                "noise": ("NOISE",),
+                "noise": ("NOISE_IMAGE",),
                 "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -471,7 +471,7 @@ class RegionalSeedExplorerMask:
                 {"variation_method": (["linear", "slerp"],), }
         }
 
-    RETURN_TYPES = ("NOISE",)
+    RETURN_TYPES = ("NOISE_IMAGE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Regional"
@@ -517,7 +517,7 @@ class RegionalSeedExplorerColorMask:
                 "color_mask": ("IMAGE",),
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
 
-                "noise": ("NOISE",),
+                "noise": ("NOISE_IMAGE",),
                 "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -528,7 +528,7 @@ class RegionalSeedExplorerColorMask:
                 {"variation_method": (["linear", "slerp"],), }
         }
 
-    RETURN_TYPES = ("NOISE", "MASK")
+    RETURN_TYPES = ("NOISE_IMAGE", "MASK")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Regional"

@@ -162,7 +162,7 @@ class KSamplerAdvanced_inspire:
                 "optional":
                     {
                         "variation_method": (["linear", "slerp"],),
-                        "noise_opt": ("NOISE",),
+                        "noise_opt": ("NOISE_IMAGE",),
                         "scheduler_func_opt": ("SCHEDULER_FUNC",),
                     }
                 }
@@ -253,7 +253,7 @@ class KSamplerAdvanced_inspire_pipe:
                      },
                 "optional":
                     {
-                        "noise_opt": ("NOISE",),
+                        "noise_opt": ("NOISE_IMAGE",),
                         "scheduler_func_opt": ("SCHEDULER_FUNC",),
                     }
                 }

@@ -687,7 +687,7 @@ class SeedExplorer:
                 }
         }
 
-    RETURN_TYPES = ("NOISE",)
+    RETURN_TYPES = ("NOISE_IMAGE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
@@ -762,15 +762,15 @@ class CompositeNoise:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "destination": ("NOISE",),
-                "source": ("NOISE",),
+                "destination": ("NOISE_IMAGE",),
+                "source": ("NOISE_IMAGE",),
                 "mode": (["center", "left-top", "right-top", "left-bottom", "right-bottom", "xy"], ),
                 "x": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
                 "y": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
             },
         }
 
-    RETURN_TYPES = ("NOISE",)
+    RETURN_TYPES = ("NOISE_IMAGE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
