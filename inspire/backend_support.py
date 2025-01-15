@@ -8,6 +8,8 @@ from server import PromptServer
 
 from .libs.utils import TaggedCache, any_typ
 
+import logging
+
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 settings_file = os.path.join(root_dir, 'cache_settings.json')
 try:
@@ -401,6 +403,174 @@ class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
         return (None, cache_weak_hash(key))
 
 
+class LoadDiffusionModelShared(nodes.UNETLoader):
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "model_name": (folder_paths.get_filename_list("diffusion_models"), {"tooltip": "Diffusion Model Name"}),
+                              "weight_dtype": (["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"],),
+                              "key_opt": ("STRING", {"multiline": False, "placeholder": "If empty, use 'model_name' as the key."}),
+                              "mode": (['Auto', 'Override Cache', 'Read Only'],),
+                              }
+                }
+    RETURN_TYPES = ("MODEL", "STRING")
+    RETURN_NAMES = ("model", "cache key")
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    def doit(self, model_name, weight_dtype, key_opt, mode='Auto'):
+        if mode == 'Read Only':
+            if key_opt.strip() == '':
+                raise Exception("[LoadDiffusionModelShared] key_opt cannot be omit if mode is 'Read Only'")
+            key = key_opt.strip()
+        elif key_opt.strip() == '':
+            key = f"{model_name}_{weight_dtype}"
+        else:
+            key = key_opt.strip()
+
+        if key not in cache or mode == 'Override Cache':
+            model = self.load_unet(model_name, weight_dtype)[0]
+            update_cache(key, "diffusion", (False, model))
+            print(f"[Inspire Pack] LoadDiffusionModelShared: diffusion model '{model_name}' is cached to '{key}'.")
+        else:
+            _, (_, model) = cache[key]
+            print(f"[Inspire Pack] LoadDiffusionModelShared: Cached diffusion model '{key}' is loaded. (Loading skip)")
+
+        return model, key
+
+    @staticmethod
+    def IS_CHANGED(model_name, weight_dtype, key_opt, mode='Auto'):
+        if mode == 'Read Only':
+            if key_opt.strip() == '':
+                raise Exception("[LoadDiffusionModelShared] key_opt cannot be omit if mode is 'Read Only'")
+            key = key_opt.strip()
+        elif key_opt.strip() == '':
+            key = f"{model_name}_{weight_dtype}"
+        else:
+            key = key_opt.strip()
+
+        if mode == 'Read Only':
+            return None, cache_weak_hash(key)
+        elif mode == 'Override Cache':
+            return model_name, key
+
+        return None, cache_weak_hash(key)
+
+
+class LoadTextEncoderShared:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "model_name1": (folder_paths.get_filename_list("text_encoders"), ),
+                              "model_name2": (["None"] + folder_paths.get_filename_list("text_encoders"), ),
+                              "model_name3": (["None"] + folder_paths.get_filename_list("text_encoders"), ),
+                              "type": (["stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi", "ltxv", "pixart", "cosmos", "sdxl", "flux", "hunyuan_video"], ),
+                              "key_opt": ("STRING", {"multiline": False, "placeholder": "If empty, use 'model_name' as the key."}),
+                              "mode": (['Auto', 'Override Cache', 'Read Only'],),
+                              },
+                "optional": { "device": (["default", "cpu"], {"advanced": True}), }
+                }
+    RETURN_TYPES = ("CLIP", "STRING")
+    RETURN_NAMES = ("clip", "cache key")
+
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Backend"
+
+    DESCRIPTION = \
+        ("[Recipes single]\n"
+         "stable_diffusion: clip-l\n"
+         "stable_cascade: clip-g\n"
+         "sd3: t5 / clip-g / clip-l\n"
+         "stable_audio: t5\n"
+         "mochi: t5\n"
+         "cosmos: old t5 xxl\n\n"
+         "[Recipes dual]\n"
+         "sdxl: clip-l, clip-g\n"
+         "sd3: clip-l, clip-g / clip-l, t5 / clip-g, t5\n"
+         "flux: clip-l, t5\n\n"
+         "[Recipes triple]\n"
+         "sd3: clip-l, clip-g, t5")
+
+    def doit(self, model_name1, model_name2, model_name3, type, key_opt, mode='Auto', device="default"):
+        if mode == 'Read Only':
+            if key_opt.strip() == '':
+                raise Exception("[LoadTextEncoderShared] key_opt cannot be omit if mode is 'Read Only'")
+            key = key_opt.strip()
+        elif key_opt.strip() == '':
+            key = model_name1
+            if model_name2 is not None:
+                key += f"_{model_name2}"
+            if model_name3 is not None:
+                key += f"_{model_name3}"
+            key += f"_{type}_{device}"
+        else:
+            key = key_opt.strip()
+
+        if key not in cache or mode == 'Override Cache':
+            if model_name2 != "None" and model_name3 != "None": # triple text encoder
+                if len({model_name1, model_name2, model_name3}) < 3:
+                    logging.error("[LoadTextEncoderShared] The same model has been selected multiple times.")
+                    raise ValueError("The same model has been selected multiple times.")
+
+                if type not in ["sd3"]:
+                    logging.error("[LoadTextEncoderShared] Currently, the triple text encoder is only supported in `sd3`.")
+                    raise ValueError("Currently, the triple text encoder is only supported in `sd3`.")
+
+                res = nodes.NODE_CLASS_MAPPINGS["TripleCLIPLoader"]().load_clip(model_name1, model_name2, model_name3)[0]
+
+            elif model_name2 != "None" or model_name3 != "None": # dual text encoder
+                second_model = model_name2 if model_name2 != "None" else model_name3
+
+                if model_name1 == second_model:
+                    logging.error("[LoadTextEncoderShared] You have selected the same model for both.")
+                    raise ValueError("[LoadTextEncoderShared] You have selected the same model for both.")
+
+                if type not in ["sdxl", "sd3", "flux", "hunyuan_video"]:
+                    logging.error("[LoadTextEncoderShared] Currently, the triple text encoder is only supported in `sdxl, sd3, flux, hunyuan_video`.")
+                    raise ValueError("Currently, the triple text encoder is only supported in `sdxl, sd3, flux, hunyuan_video`.")
+
+                res = nodes.NODE_CLASS_MAPPINGS["DualCLIPLoader"]().load_clip(model_name1, second_model, type=type, device=device)[0]
+
+            else: # single text encoder
+                if type not in ["stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi", "ltxv", "pixart", "cosmos"]:
+                    logging.error("[LoadTextEncoderShared] Currently, the single text encoder is only supported in `stable_diffusion, stable_cascade, sd3, stable_audio, mochi, ltxv, pixart, cosmos`.")
+                    raise ValueError("Currently, the single text encoder is only supported in `stable_diffusion, stable_cascade, sd3, stable_audio, mochi, ltxv, pixart, cosmos`.")
+
+                res = nodes.NODE_CLASS_MAPPINGS["CLIPLoader"]().load_clip(model_name1, type=type, device=device)[0]
+
+            update_cache(key, "diffusion", (False, res))
+            print(f"[Inspire Pack] LoadTextEncoderShared: text encoder model set is cached to '{key}'.")
+        else:
+            _, (_, res) = cache[key]
+            print(f"[Inspire Pack] LoadTextEncoderShared: Cached text encoder model set '{key}' is loaded. (Loading skip)")
+
+        return res, key
+
+    @staticmethod
+    def IS_CHANGED(model_name1, model_name2, model_name3, type, key_opt, mode='Auto', device="default"):
+        if mode == 'Read Only':
+            if key_opt.strip() == '':
+                raise Exception("[LoadTextEncoderShared] key_opt cannot be omit if mode is 'Read Only'")
+            key = key_opt.strip()
+        elif key_opt.strip() == '':
+            key = model_name1
+            if model_name2 is not None:
+                key += f"_{model_name2}"
+            if model_name3 is not None:
+                key += f"_{model_name3}"
+            key += f"_{type}_{device}"
+        else:
+            key = key_opt.strip()
+
+        if mode == 'Read Only':
+            return None, cache_weak_hash(key)
+        elif mode == 'Override Cache':
+            return f"{model_name1}_{model_name2}_{model_name3}_{type}_{device}", key
+
+        return None, cache_weak_hash(key)
+
+
 class StableCascade_CheckpointLoader:
     @classmethod
     def INPUT_TYPES(s):
@@ -558,6 +728,8 @@ NODE_CLASS_MAPPINGS = {
     "RemoveBackendDataNumberKey //Inspire": RemoveBackendDataNumberKey,
     "ShowCachedInfo //Inspire": ShowCachedInfo,
     "CheckpointLoaderSimpleShared //Inspire": CheckpointLoaderSimpleShared,
+    "LoadDiffusionModelShared //Inspire": LoadDiffusionModelShared,
+    "LoadTextEncoderShared //Inspire": LoadTextEncoderShared,
     "StableCascade_CheckpointLoader //Inspire": StableCascade_CheckpointLoader,
     "IsCached //Inspire": IsCached,
     # "CacheBridge //Inspire": CacheBridge,
@@ -574,6 +746,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RemoveBackendDataNumberKey //Inspire": "Remove Backend Data [NumberKey] (Inspire)",
     "ShowCachedInfo //Inspire": "Show Cached Info (Inspire)",
     "CheckpointLoaderSimpleShared //Inspire": "Shared Checkpoint Loader (Inspire)",
+    "LoadDiffusionModelShared //Inspire": "Shared Diffusion Model Loader (Inspire)",
+    "LoadTextEncoderShared //Inspire": "Shared Text Encoder Loader (Inspire)",
     "StableCascade_CheckpointLoader //Inspire": "Stable Cascade Checkpoint Loader (Inspire)",
     "IsCached //Inspire": "Is Cached (Inspire)",
     # "CacheBridge //Inspire": "Cache Bridge (Inspire)"

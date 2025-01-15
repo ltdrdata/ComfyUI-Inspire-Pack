@@ -147,6 +147,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Shared Checkpoint Loader (Inspire)`: When loading a checkpoint through this loader, it is automatically cached in the backend cache. Additionally, if it is already cached, it retrieves it from the cache instead of loading it anew.
     * When `key_opt` is empty, the `ckpt_name` is set as the cache key. The cache key output can be used for deletion purposes with Remove Back End.
     * This node resolves the issue of reloading checkpoints during workflow switching.
+  * `Shared Diffusion Model Loader (Inspire)`: Similar to the `Shared Checkpoint Loader (Inspire)` but used for loading Diffusion models instead of Checkpoints.
+  * `Shared Text Encoder Loader (Inspire)`: Similar to the `Shared Checkpoint Loader (Inspire)` but used for loading Text Encoder models instead of Checkpoints.
+    * This node also functions as a unified node for `CLIPLoader`, `DualCLIPLoader`, and `TripleCLIPLoader`. 
   * `Stable Cascade Checkpoint Loader (Inspire)`: This node provides a feature that allows you to load the `stage_b` and `stage_c` checkpoints of Stable Cascade at once, and it also provides a backend caching feature, optionally.
   * `Is Cached (Inspire)`: Returns whether the cache exists.
 
