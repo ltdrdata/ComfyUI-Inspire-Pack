@@ -95,14 +95,20 @@ app.registerExtension({
 			// mode combo
 			Object.defineProperty(mode_widget, "value", {
 				set: (value) => {
-						node._mode_value = value == true || value == "Populate";
-						populated_text_widget.inputEl.disabled = value == true || value == "Populate";
+						if(value == true)
+							node._mode_value = "populate";
+						else if(value == false)
+							node._mode_value = "fixed";
+						else
+							node._mode_value = value; // combo value
+
+						populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
 					},
 				get: () => {
 						if(node._mode_value != undefined)
 							return node._mode_value;
 						else
-							return true;
+							return 'populate';
 					 }
 			});
 		}
@@ -180,15 +186,21 @@ app.registerExtension({
 			// mode combo
 			Object.defineProperty(mode_widget, "value", {
 				set: (value) => {
-						pos_populated_text_widget.inputEl.disabled = node._mode_value;
-						neg_populated_text_widget.inputEl.disabled = node._mode_value;
-						node._mode_value = value;
+						if(value == true)
+							node._mode_value = "populate";
+						else if(value == false)
+							node._mode_value = "fixed";
+						else
+							node._mode_value = value; // combo value
+
+						pos_populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
+						neg_populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
 					},
 				get: () => {
 						if(node._mode_value != undefined)
 							return node._mode_value;
 						else
-							return true;
+							return 'populate';
 					 }
 			});
 		}
