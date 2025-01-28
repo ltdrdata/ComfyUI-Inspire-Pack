@@ -60,21 +60,23 @@ class LoadPromptsFromDir:
                     },
                 "optional": {
                     "reload": ("BOOLEAN", { "default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                    "load_cap": ("INT", {"default": 0, "min": 0, "step": 1, "advanced": True, "tooltip": "The amount of prompts to load at once:\n0: Load all\n1 or higher: Load a specified number"}),
+                    "start_index": ("INT", {"default": 0, "min": -1, "step": 1, "advanced": True, "tooltip": "Starting index for loading prompts:\n-1: The last prompt\n0 or higher: Load from the specified index"}),
                     }
                 }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT", "INT")
-    RETURN_NAMES = ("zipped_prompt", "count")
-    OUTPUT_IS_LIST = (True,)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count", "remaining_count")
+    OUTPUT_IS_LIST = (True, False, False)
 
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
 
     @staticmethod
-    def IS_CHANGED(prompt_dir, reload=False):
+    def IS_CHANGED(prompt_dir, reload=False, load_cap=0, start_index=-1):
         if not reload:
-            return prompt_dir
+            return prompt_dir, load_cap, start_index
         else:
             candidates = []
             for d in folder_paths.get_folder_paths('inspire_prompts'):
@@ -100,10 +102,10 @@ class LoadPromptsFromDir:
                             break
                         md5.update(chunk)
 
-            return md5.hexdigest()
+            return md5.hexdigest(), load_cap, start_index
 
     @staticmethod
-    def doit(prompt_dir, reload=False):
+    def doit(prompt_dir, reload=False, load_cap=0, start_index=-1):
         candidates = []
         for d in folder_paths.get_folder_paths('inspire_prompts'):
             candidates.append(os.path.join(d, prompt_dir))
@@ -140,7 +142,15 @@ class LoadPromptsFromDir:
             except Exception as e:
                 print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, len(prompts),)
+        # slicing [start_index ~ start_index + load_cap]
+        total_prompts = len(prompts)
+        prompts = prompts[start_index:]
+        remaining_count = False
+        if load_cap > 0:
+            remaining_count = max(0, len(prompts) - load_cap)
+            prompts = prompts[:load_cap]
+
+        return prompts, total_prompts, remaining_count
 
 
 class LoadPromptsFromFile:
@@ -165,26 +175,28 @@ class LoadPromptsFromFile:
                 "optional": {
                         "text_data_opt": ("STRING", {"defaultInput": True}),
                         "reload": ("BOOLEAN", {"default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                        "load_cap": ("INT", {"default": 0, "min": 0, "step": 1, "advanced": True, "tooltip": "The amount of prompts to load at once:\n0: Load all\n1 or higher: Load a specified number"}),
+                        "start_index": ("INT", {"default": 0, "min": -1, "step": 1, "advanced": True, "tooltip": "Starting index for loading prompts:\n-1: The last prompt\n0 or higher: Load from the specified index"}),
                         }
                 }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT", "INT")
-    RETURN_NAMES = ("zipped_prompt", "count")
-    OUTPUT_IS_LIST = (True,)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count", "remaining_count")
+    OUTPUT_IS_LIST = (True, False, False)
 
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
 
     @staticmethod
-    def IS_CHANGED(prompt_file, text_data_opt=None, reload=False):
+    def IS_CHANGED(prompt_file, text_data_opt=None, reload=False, load_cap=0, start_index=-1):
         md5 = hashlib.md5()
 
         if text_data_opt is not None:
             md5.update(text_data_opt)
-            return md5.hexdigest()
+            return md5.hexdigest(), load_cap, start_index
         elif not reload:
-            return prompt_file
+            return prompt_file, load_cap, start_index
         else:
             matched_path = None
             for x in folder_paths.get_folder_paths('inspire_prompts'):
@@ -204,10 +216,10 @@ class LoadPromptsFromFile:
                         break
                     md5.update(chunk)
 
-            return md5.hexdigest()
+            return md5.hexdigest(), load_cap, start_index
 
     @staticmethod
-    def doit(prompt_file, text_data_opt=None, reload=False):
+    def doit(prompt_file, text_data_opt=None, reload=False, load_cap=0, start_index=-1):
         matched_path = None
         for d in folder_paths.get_folder_paths('inspire_prompts'):
             matched_path = os.path.join(d, prompt_file)
@@ -247,7 +259,15 @@ class LoadPromptsFromFile:
         except Exception as e:
             print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, len(prompts),)
+        # slicing [start_index ~ start_index + load_cap]
+        total_prompts = len(prompts)
+        prompts = prompts[start_index:]
+        remaining_count = 0
+        if load_cap > 0:
+            remaining_count = max(0, len(prompts) - load_cap)
+            prompts = prompts[:load_cap]
+
+        return prompts, total_prompts, remaining_count
 
 
 class LoadSinglePromptFromFile:

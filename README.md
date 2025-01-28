@@ -63,9 +63,15 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * Specify the directories located under `ComfyUI-Inspire-Pack/prompts/`
     * One prompts file can have multiple prompts separated by `---`. 
     * e.g. `prompts/example`
-  * `Load Prompts From File (Inspire)`: It sequentially reads prompts from the specified file. The output it returns is ZIPPED_PROMPT.
+    * **NOTE**: This node provides advanced option via `Show advanced`
+      * load_cap, start_index
+
+    * `Load Prompts From File (Inspire)`: It sequentially reads prompts from the specified file. The output it returns is ZIPPED_PROMPT.
     * Specify the file located under `ComfyUI-Inspire-Pack/prompts/`
     * e.g. `prompts/example/prompt2.txt`
+    * **NOTE**: This node provides advanced option via `Show advanced`
+      * load_cap, start_index
+
   * `Load Single Prompt From File (Inspire)`: Loads a single prompt from a file containing multiple prompts by using an index.
   * The prompts file directory can be specified as `inspire_prompts` in `extra_model_paths.yaml`
   * `Unzip Prompt (Inspire)`: Separate ZIPPED_PROMPT into `positive`, `negative`, and name components. 
