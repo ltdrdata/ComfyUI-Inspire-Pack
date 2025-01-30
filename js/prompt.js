@@ -102,7 +102,7 @@ app.registerExtension({
 						else
 							node._mode_value = value; // combo value
 
-						populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
+						populated_text_widget.inputEl.disabled = node._mode_value == 'populate';
 					},
 				get: () => {
 						if(node._mode_value != undefined)
@@ -193,8 +193,8 @@ app.registerExtension({
 						else
 							node._mode_value = value; // combo value
 
-						pos_populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
-						neg_populated_text_widget.inputEl.disabled = node._mode_value != 'populate';
+						pos_populated_text_widget.inputEl.disabled = node._mode_value == 'populate';
+						neg_populated_text_widget.inputEl.disabled = node._mode_value == 'populate';
 					},
 				get: () => {
 						if(node._mode_value != undefined)
