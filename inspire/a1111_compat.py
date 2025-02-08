@@ -7,6 +7,9 @@ import math
 from .libs import common
 
 
+supported_noise_modes = ["GPU(=A1111)", "CPU", "GPU+internal_seed", "CPU+internal_seed"]
+
+
 class Inspire_RandomNoise:
     def __init__(self, seed, mode, incremental_seed_mode, variation_seed, variation_strength, variation_method="linear", internal_seed=None):
         device = comfy.model_management.get_torch_device()
@@ -62,7 +65,7 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
                      incremental_seed_mode="comfy", variation_seed=None, variation_strength=None, noise=None, callback=None, variation_method="linear",
                      scheduler_func=None, internal_seed=None):
     device = comfy.model_management.get_torch_device()
-    noise_device = "cpu" if noise_mode == "CPU" else device
+    noise_device = "cpu" if 'cpu' in noise_mode.lower() else device
     latent_image = latent["samples"]
     if hasattr(comfy.sample, 'fix_empty_latent_channels'):
         latent_image = comfy.sample.fix_empty_latent_channels(model, latent_image)
@@ -93,9 +96,12 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
     if internal_seed is None:
         internal_seed = seed
 
+    if 'internal_seed' in noise_mode:
+        seed = internal_seed
+
     try:
         samples = common.impact_sampling(
-            model=model, add_noise=not disable_noise, seed=internal_seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
+            model=model, add_noise=not disable_noise, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
             latent_image=latent, start_at_step=start_step, end_at_step=last_step, return_with_leftover_noise=not force_full_denoise, noise=noise, callback=callback,
             scheduler_func=scheduler_func)
     except Exception as e:
@@ -103,7 +109,7 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
             print(f"[Inspire Pack] Impact Pack is outdated. (Cannot use GITS scheduler.)")
 
             samples = common.impact_sampling(
-                model=model, add_noise=not disable_noise, seed=internal_seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
+                model=model, add_noise=not disable_noise, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
                 latent_image=latent, start_at_step=start_step, end_at_step=last_step, return_with_leftover_noise=not force_full_denoise, noise=noise, callback=callback)
         else:
             raise e
@@ -125,7 +131,7 @@ class KSampler_inspire:
                      "negative": ("CONDITIONING", ),
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
+                     "noise_mode": (supported_noise_modes,),
                      "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
                      "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                      "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -168,7 +174,7 @@ class KSamplerAdvanced_inspire:
                      "latent_image": ("LATENT", ),
                      "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
+                     "noise_mode": (supported_noise_modes,),
                      "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
                      "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
                      "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -223,7 +229,7 @@ class KSampler_inspire_pipe:
                      "scheduler": (common.SCHEDULERS, ),
                      "latent_image": ("LATENT", ),
                      "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
+                     "noise_mode": (supported_noise_modes,),
                      "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
                      "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                      "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -262,7 +268,7 @@ class KSamplerAdvanced_inspire_pipe:
                      "latent_image": ("LATENT", ),
                      "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                      "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
-                     "noise_mode": (["GPU(=A1111)", "CPU"],),
+                     "noise_mode": (supported_noise_modes,),
                      "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
                      "batch_seed_mode": (["incremental", "comfy", "variation str inc:0.01", "variation str inc:0.05"],),
                      "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),

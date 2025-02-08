@@ -7,6 +7,7 @@ from comfy.samplers import CFGGuider
 from comfy_extras.nodes_perpneg import Guider_PerpNeg
 import math
 
+
 class KSampler_progress(a1111_compat.KSampler_inspire):
     @classmethod
     def INPUT_TYPES(s):
@@ -21,7 +22,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
                     "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
-                    "noise_mode": (["GPU(=A1111)", "CPU"],),
+                    "noise_mode": (a1111_compat.supported_noise_modes,),
                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
                     "omit_start_latent": ("BOOLEAN", {"default": True, "label_on": "True", "label_off": "False"}),
                     "omit_final_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
@@ -85,7 +86,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
                     "latent_image": ("LATENT", ),
                     "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                     "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
-                    "noise_mode": (["GPU(=A1111)", "CPU"],),
+                    "noise_mode": (a1111_compat.supported_noise_modes,),
                     "return_with_leftover_noise": ("BOOLEAN", {"default": False, "label_on": "enable", "label_off": "disable"}),
                     "interval": ("INT", {"default": 1, "min": 1, "max": 10000}),
                     "omit_start_latent": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
