@@ -4,9 +4,9 @@ import torch
 from PIL import ImageOps
 try:
     import pillow_jxl
-    jxl = true
+    jxl = True
 except ImportError:
-    jxl = false
+    jxl = False
 import comfy
 import folder_paths
 import base64
@@ -49,7 +49,7 @@ class LoadImagesFromDirBatch:
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
-        if jxl = true:
+        if jxl:
             valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
@@ -157,7 +157,7 @@ class LoadImagesFromDirList:
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
-        if jxl = true:
+        if jxl:
             valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
