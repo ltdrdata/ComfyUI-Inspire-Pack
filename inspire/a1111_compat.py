@@ -5,6 +5,7 @@ from einops import rearrange
 import random
 import math
 from .libs import common
+import logging
 
 
 supported_noise_modes = ["GPU(=A1111)", "CPU", "GPU+internal_seed", "CPU+internal_seed"]
@@ -73,7 +74,7 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
     latent = latent.copy()
 
     if noise is not None and latent_image.shape[1] != noise.shape[1]:
-        print("[Inspire Pack] inspire_ksampler: The type of latent input for noise generation does not match the model's latent type. When using the SD3 model, you must use the SD3 Empty Latent.")
+        logging.info("[Inspire Pack] inspire_ksampler: The type of latent input for noise generation does not match the model's latent type. When using the SD3 model, you must use the SD3 Empty Latent.")
         raise Exception("The type of latent input for noise generation does not match the model's latent type. When using the SD3 model, you must use the SD3 Empty Latent.")
 
     if noise is None:
@@ -106,7 +107,7 @@ def inspire_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive,
             scheduler_func=scheduler_func)
     except Exception as e:
         if "unexpected keyword argument 'scheduler_func'" in str(e):
-            print(f"[Inspire Pack] Impact Pack is outdated. (Cannot use GITS scheduler.)")
+            logging.info("[Inspire Pack] Impact Pack is outdated. (Cannot use GITS scheduler.)")
 
             samples = common.impact_sampling(
                 model=model, add_noise=not disable_noise, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler_name, scheduler=scheduler, positive=positive, negative=negative,
@@ -412,7 +413,7 @@ class HyperTileInspire:
                 nh = random_divisor(h, latent_tile_size * factor, swap_size, rand_obj)
                 nw = random_divisor(w, latent_tile_size * factor, swap_size, rand_obj)
 
-                print(f"factor: {factor} <--- params.depth: {apply_to.index(model_chans)} / scale_depth: {scale_depth} / latent_tile_size={latent_tile_size}")
+                logging.debug(f"factor: {factor} <--- params.depth: {apply_to.index(model_chans)} / scale_depth: {scale_depth} / latent_tile_size={latent_tile_size}")
                 # print(f"h: {h}, w:{w} --> nh: {nh}, nw: {nw}")
 
                 if nh * nw > 1:
@@ -421,7 +422,7 @@ class HyperTileInspire:
                 # else:
                 #     temp = None
 
-                print(f"q={q} / k={k} / v={v}")
+                logging.debug(f"q={q} / k={k} / v={v}")
                 return q, k, v
 
             return q, k, v

@@ -10,7 +10,7 @@ import json
 from comfy.cli_args import args
 from safetensors.torch import safe_open
 import ast
-
+import logging
 
 from server import PromptServer
 from .libs import utils
@@ -51,9 +51,6 @@ def parse_unet_num(s):
 
 
 class MakeLBW:
-    def __init__(self):
-        self.loaded_lora = None
-
     @classmethod
     def INPUT_TYPES(s):
         preset = ["Preset"]  # 20
@@ -573,10 +570,10 @@ class XY_Capsule_LoraBlockWeight:
 
     def set_result(self, image, latent):
         if self.another_capsule is not None:
-            print(f"XY_Capsule_LoraBlockWeight: ({self.another_capsule.x, self.y}) is processed.")
+            logging.info(f"XY_Capsule_LoraBlockWeight: ({self.another_capsule.x, self.y}) is processed.")
             self.storage[(self.another_capsule.x, self.y)] = image
         else:
-            print(f"XY_Capsule_LoraBlockWeight: ({self.x, self.y}) is processed.")
+            logging.info(f"XY_Capsule_LoraBlockWeight: ({self.x, self.y}) is processed.")
 
     def patch_model(self, model, clip):
         lora_name, strength_model, strength_clip, inverse, block_vectors, seed, A, B, heatmap_palette, heatmap_alpha, heatmap_strength, xyplot_mode = self.params

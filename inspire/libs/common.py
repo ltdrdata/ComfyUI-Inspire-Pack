@@ -1,6 +1,7 @@
 import comfy
 import nodes
 from . import utils
+import logging
 
 SCHEDULERS = comfy.samplers.KSampler.SCHEDULERS + ['AYS SDXL', 'AYS SD1', 'AYS SVD', "GITS[coeff=1.2]"]
 
@@ -9,7 +10,7 @@ def impact_sampling(*args, **kwargs):
     if 'RegionalSampler' not in nodes.NODE_CLASS_MAPPINGS:
         utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                       "'Impact Pack' extension is required.")
-        raise Exception(f"[ERROR] You need to install 'ComfyUI-Impact-Pack'")
+        raise Exception("[ERROR] You need to install 'ComfyUI-Impact-Pack'")
 
     return nodes.NODE_CLASS_MAPPINGS['RegionalSampler'].separated_sample(*args, **kwargs)
 
@@ -36,6 +37,6 @@ def is_changed(uid, value):
 
     changed_cache[uid] = value
 
-    print(f"keys: {changed_cache.keys()}")
+    logging.info(f"keys: {changed_cache.keys()}")
 
     return res

@@ -3,7 +3,7 @@ import os
 import torch
 from PIL import ImageOps
 try:
-    import pillow_jxl
+    import pillow_jxl      # noqa: F401
     jxl = True
 except ImportError:
     jxl = False
@@ -11,7 +11,10 @@ import comfy
 import folder_paths
 import base64
 from io import BytesIO
-from .libs.utils import *
+from .libs.utils import ByPassTypeTuple, empty_pil_tensor, empty_latent
+from PIL import Image
+import numpy as np
+import logging
 
 
 class LoadImagesFromDirBatch:
@@ -257,7 +260,7 @@ class ChangeImageBatchSize:
                 output_tensor = input_tensor[:batch_size, :, :, :]
             return output_tensor
         else:
-            print(f"[WARN] ChangeImage(Latent)BatchSize: Unknown mode `{mode}` - ignored")
+            logging.warning(f"[Inspire Pack] ChangeImage(Latent)BatchSize: Unknown mode `{mode}` - ignored")
             return input_tensor
 
     @staticmethod
@@ -402,7 +405,7 @@ class ColorMapToMasks:
 
     def doit(self, color_map, max_count, min_pixels):
         if len(color_map) > 0:
-            print(f"[Inspire Pack] WARN: ColorMapToMasks - Sure, here's the translation: `color_map` can only be a single image. Only the first image will be processed. If you want to utilize the remaining images, convert the Image Batch to an Image List.")
+            logging.warning("[Inspire Pack] ColorMapToMasks - Sure, here's the translation: `color_map` can only be a single image. Only the first image will be processed. If you want to utilize the remaining images, convert the Image Batch to an Image List.")
 
         top_colors = top_k_colors(color_map[0], max_count, min_pixels)
 

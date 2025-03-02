@@ -105,7 +105,7 @@ class ForeachListBegin:
         if initial_input is None:
             initial_input = item_list[0]
             item_list = item_list[1:]
-            
+
         if len(item_list) > 0:
             return ("stub", item_list[1:], item_list[0], initial_input)
 
@@ -161,7 +161,6 @@ class ForeachListEnd:
             return (intermediate_output,)
 
         # We want to loop
-        this_node = dynprompt.get_node(unique_id)
         upstream = {}
 
         # Get the list of all nodes between the open and close nodes

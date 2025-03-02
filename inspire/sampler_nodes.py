@@ -2,7 +2,6 @@ import torch
 from . import a1111_compat
 import comfy
 from .libs import common
-from comfy import model_management
 from comfy.samplers import CFGGuider
 from comfy_extras.nodes_perpneg import Guider_PerpNeg
 import math

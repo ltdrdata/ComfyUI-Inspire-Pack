@@ -3,6 +3,7 @@ import nodes
 import inspect
 from .libs import utils
 from nodes import MAX_RESOLUTION
+import logging
 
 
 class ConcatConditioningsWithMultiplier:
@@ -51,7 +52,7 @@ class ConcatConditioningsWithMultiplier:
 
             out = []
             if len(conditioning_from) > 1:
-                print(f"Warning: ConcatConditioningsWithMultiplier {k} contains more than 1 cond, only the first one will actually be applied to conditioning1.")
+                logging.warning(f"[Inspire Pack] ConcatConditioningsWithMultiplier {k} contains more than 1 cond, only the first one will actually be applied to conditioning1.")
 
             mkey = 'multiplier' + k[12:]
             multiplier = float(kwargs[mkey])

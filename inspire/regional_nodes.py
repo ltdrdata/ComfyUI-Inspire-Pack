@@ -9,6 +9,7 @@ import webcolors
 from . import prompt_support
 from .libs import utils, common
 
+import logging
 
 class RegionalPromptSimple:
     @classmethod
@@ -43,7 +44,7 @@ class RegionalPromptSimple:
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'RegionalPromptSimple' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use RegionalPromptSimple, you need to install 'ComfyUI-Impact-Pack'")
+            raise Exception("[ERROR] To use RegionalPromptSimple, you need to install 'ComfyUI-Impact-Pack'")
 
         model, clip, vae, positive, negative = basic_pipe
 
@@ -88,7 +89,7 @@ def color_to_mask(color_mask, mask_color):
         else:
             selected = int(mask_color, 10)
     except Exception:
-        raise Exception(f"[ERROR] Invalid mask_color value. mask_color should be a color value for RGB")
+        raise Exception("[ERROR] Invalid mask_color value. mask_color should be a color value for RGB")
 
     temp = (torch.clamp(color_mask, 0, 1.0) * 255.0).round().to(torch.int)
     temp = torch.bitwise_left_shift(temp[:, :, :, 0], 16) + torch.bitwise_left_shift(temp[:, :, :, 1], 8) + temp[:, :, :, 2]
@@ -260,7 +261,7 @@ class IPAdapterConditioning:
         if 'IPAdapterAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'Regional IPAdapter' node, 'ComfyUI IPAdapter Plus' extension is required.")
-            raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
+            raise Exception("[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
         if self.embeds is None:
             obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']
@@ -287,7 +288,7 @@ def IPADAPTER_WEIGHT_TYPES():
         try:
             IPADAPTER_WEIGHT_TYPES_CACHE = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']().INPUT_TYPES()['required']['weight_type'][0]
         except Exception:
-            print(f"[Inspire Pack] IPAdapterPlus is not installed.")
+            logging.error("[Inspire Pack] IPAdapterPlus is not installed.")
             IPADAPTER_WEIGHT_TYPES_CACHE = ["IPAdapterPlus is not installed"]
 
     return IPADAPTER_WEIGHT_TYPES_CACHE
@@ -334,7 +335,6 @@ class RegionalIPAdapterColorMask:
             "required": {
                 "color_mask": ("IMAGE",),
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
-                
                 "image": ("IMAGE",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -501,7 +501,7 @@ class RegionalSeedExplorerMask:
 
             noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
-            print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
+            logging.error("[Inspire Pack] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()
 
         noise = noise.cpu()
@@ -559,7 +559,7 @@ class RegionalSeedExplorerColorMask:
 
             noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
-            print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
+            logging.error("[Inspire Pack] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()
 
         color_mask.cpu()

@@ -5,6 +5,8 @@ import server
 from .libs import utils
 from . import backend_support
 from comfy import sdxl_clip
+import logging
+
 
 model_preset = {
     # base
@@ -48,7 +50,7 @@ def lookup_model(model_dir, name):
     if len(resolved_name) > 0:
         return resolved_name[0], "OK"
     else:
-        print(f"[ERROR] IPAdapterModelHelper: The `{name}` model file does not exist in `{model_dir}` model dir.")
+        logging.error(f"[Inspire Pack] IPAdapterModelHelper: The `{name}` model file does not exist in `{model_dir}` model dir.")
         return None, "FAIL"
 
 
@@ -81,7 +83,7 @@ class IPAdapterModelHelper:
         if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
-            raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
+            raise Exception("[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
         is_sdxl_preset = 'SDXL' in preset
         if clip is not None:
@@ -95,7 +97,7 @@ class IPAdapterModelHelper:
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (fail)"})
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL (fail)"})
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP (fail)"})
-            print(f"[ERROR] IPAdapterModelHelper: You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
+            logging.error("[Inspire Pack] IPAdapterModelHelper: You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
             raise Exception("[ERROR] You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
 
         ipadapter, clipvision, lora, is_insightface = model_preset[preset]
@@ -154,13 +156,13 @@ class IPAdapterModelHelper:
         if 'IPAdapterInsightFaceLoader' in nodes.NODE_CLASS_MAPPINGS:
             insight_face_loader = nodes.NODE_CLASS_MAPPINGS['IPAdapterInsightFaceLoader']().load_insightface
         else:
-            print("'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
+            logging.warning("'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
             insight_face_loader = None
 
         icache_key = ""
         if is_insightface:
             if insight_face_loader is None:
-                raise Exception(f"[ERROR] 'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
+                raise Exception("[ERROR] 'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
 
             if cache_mode in ["insightface only", "all"]:
                 icache_key = 'insightface-' + insightface_provider

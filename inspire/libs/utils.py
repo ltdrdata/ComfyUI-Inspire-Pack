@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw
 import math
 import cv2
 import folder_paths
+import logging
 
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
@@ -198,9 +199,9 @@ def try_install_custom_node(custom_node_url, msg):
         import cm_global
         cm_global.try_call(api='cm.try-install-custom-node',
                            sender="Inspire Pack", custom_node_url=custom_node_url, msg=msg)
-    except Exception as e:
-        print(msg)
-        print(f"[Inspire Pack] ComfyUI-Manager is outdated. The custom node installation feature is not available.")
+    except Exception as e:  # noqa: F841
+        logging.error(msg)
+        logging.error("[Inspire Pack] ComfyUI-Manager is outdated. The custom node installation feature is not available.")
 
 
 def empty_latent():

@@ -16,7 +16,7 @@ try:
     with open(settings_file) as f:
         cache_settings = json.load(f)
 except Exception as e:
-    print(e)
+    logging.error(e)
     cache_settings = {}
 cache = TaggedCache(cache_settings)
 cache_count = {}
@@ -60,11 +60,13 @@ class CacheBackendData:
 
     OUTPUT_NODE = True
 
-    def doit(self, key, tag, data):
+    @staticmethod
+    def doit(key, tag, data):
         global cache
 
         if key == '*':
-            print(f"[Inspire Pack] CacheBackendData: '*' is reserved key. Cannot use that key")
+            logging.warning("[Inspire Pack] CacheBackendData: '*' is reserved key. Cannot use that key")
+            return (None,)
 
         update_cache(key, tag, (False, data))
         return (data,)
@@ -90,7 +92,8 @@ class CacheBackendDataNumberKey:
 
     OUTPUT_NODE = True
 
-    def doit(self, key, tag, data):
+    @staticmethod
+    def doit(key, tag, data):
         global cache
 
         update_cache(key, tag, (False, data))
@@ -120,11 +123,13 @@ class CacheBackendDataList:
 
     OUTPUT_NODE = True
 
-    def doit(self, key, tag, data):
+    @staticmethod
+    def doit(key, tag, data):
         global cache
 
         if key == '*':
-            print(f"[Inspire Pack] CacheBackendDataList: '*' is reserved key. Cannot use that key")
+            logging.warning("[Inspire Pack] CacheBackendDataList: '*' is reserved key. Cannot use that key")
+            return (None,)
 
         update_cache(key[0], tag[0], (True, data))
         return (data,)
@@ -183,7 +188,7 @@ class RetrieveBackendData:
         v = cache.get(key)
 
         if v is None:
-            print(f"[RetrieveBackendData] '{key}' is unregistered key.")
+            logging.warning(f"[RetrieveBackendData] '{key}' is unregistered key.")
             return (None,)
 
         is_list, data = v[1]
@@ -238,7 +243,7 @@ class RemoveBackendData:
         elif key in cache:
             del cache[key]
         else:
-            print(f"[Inspire Pack] RemoveBackendData: invalid data key {key}")
+            logging.warning(f"[Inspire Pack] RemoveBackendData: invalid data key {key}")
 
         return (signal_opt,)
 
@@ -262,7 +267,7 @@ class RemoveBackendDataNumberKey(RemoveBackendData):
         if key in cache:
             del cache[key]
         else:
-            print(f"[Inspire Pack] RemoveBackendDataNumberKey: invalid data key {key}")
+            logging.warning(f"[Inspire Pack] RemoveBackendDataNumberKey: invalid data key {key}")
 
         return (signal_opt,)
 
@@ -322,7 +327,6 @@ class ShowCachedInfo:
             # tag settings is not changed
             return
 
-        # print(f'set to {new_tag_settings}')
         new_cache = TaggedCache(new_tag_settings)
         for k, v in cache.items():
             new_cache[k] = v
@@ -370,10 +374,10 @@ class CheckpointLoaderSimpleShared(nodes.CheckpointLoaderSimple):
             res = self.load_checkpoint(ckpt_name)
             update_cache(key, "ckpt", (False, res))
             cache_kind = 'ckpt'
-            print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{ckpt_name}' is cached to '{key}'.")
+            logging.info(f"[Inspire Pack] CheckpointLoaderSimpleShared: Ckpt '{ckpt_name}' is cached to '{key}'.")
         else:
             cache_kind, (_, res) = cache[key]
-            print(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key}' is loaded. (Loading skip)")
+            logging.info(f"[Inspire Pack] CheckpointLoaderSimpleShared: Cached ckpt '{key}' is loaded. (Loading skip)")
 
         if cache_kind == 'ckpt':
             model, clip, vae = res
@@ -432,10 +436,10 @@ class LoadDiffusionModelShared(nodes.UNETLoader):
         if key not in cache or mode == 'Override Cache':
             model = self.load_unet(model_name, weight_dtype)[0]
             update_cache(key, "diffusion", (False, model))
-            print(f"[Inspire Pack] LoadDiffusionModelShared: diffusion model '{model_name}' is cached to '{key}'.")
+            logging.info(f"[Inspire Pack] LoadDiffusionModelShared: diffusion model '{model_name}' is cached to '{key}'.")
         else:
             _, (_, model) = cache[key]
-            print(f"[Inspire Pack] LoadDiffusionModelShared: Cached diffusion model '{key}' is loaded. (Loading skip)")
+            logging.info(f"[Inspire Pack] LoadDiffusionModelShared: Cached diffusion model '{key}' is loaded. (Loading skip)")
 
         return model, key
 
@@ -540,10 +544,10 @@ class LoadTextEncoderShared:
                 res = nodes.NODE_CLASS_MAPPINGS["CLIPLoader"]().load_clip(model_name1, type=type, device=device)[0]
 
             update_cache(key, "diffusion", (False, res))
-            print(f"[Inspire Pack] LoadTextEncoderShared: text encoder model set is cached to '{key}'.")
+            logging.info(f"[Inspire Pack] LoadTextEncoderShared: text encoder model set is cached to '{key}'.")
         else:
             _, (_, res) = cache[key]
-            print(f"[Inspire Pack] LoadTextEncoderShared: Cached text encoder model set '{key}' is loaded. (Loading skip)")
+            logging.info(f"[Inspire Pack] LoadTextEncoderShared: Cached text encoder model set '{key}' is loaded. (Loading skip)")
 
         return res, key
 
@@ -626,10 +630,10 @@ class StableCascade_CheckpointLoader:
             if key_b not in cache:
                 res_b = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
                 update_cache(key_b, "ckpt", (False, res_b))
-                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_b}' is cached to '{key_b}'.")
+                logging.info(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_b}' is cached to '{key_b}'.")
             else:
                 _, (_, res_b) = cache[key_b]
-                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_b}' is loaded. (Loading skip)")
+                logging.info(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_b}' is loaded. (Loading skip)")
             b_model, clip, b_vae = res_b
         else:
             b_model, clip, b_vae = nodes.CheckpointLoaderSimple().load_checkpoint(ckpt_name=stage_b)
@@ -638,10 +642,10 @@ class StableCascade_CheckpointLoader:
             if key_c not in cache:
                 res_c = nodes.unCLIPCheckpointLoader().load_checkpoint(ckpt_name=stage_c)
                 update_cache(key_c, "unclip_ckpt", (False, res_c))
-                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_c}' is cached to '{key_c}'.")
+                logging.info(f"[Inspire Pack] StableCascade_CheckpointLoader: Ckpt '{stage_c}' is cached to '{key_c}'.")
             else:
                 _, (_, res_c) = cache[key_c]
-                print(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_c}' is loaded. (Loading skip)")
+                logging.info(f"[Inspire Pack] StableCascade_CheckpointLoader: Cached ckpt '{key_c}' is loaded. (Loading skip)")
             c_model, _, c_vae, clip_vision = res_c
         else:
             c_model, _, c_vae, clip_vision = nodes.unCLIPCheckpointLoader().load_checkpoint(ckpt_name=stage_c)

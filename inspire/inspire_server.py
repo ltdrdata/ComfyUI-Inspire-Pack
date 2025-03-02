@@ -7,6 +7,7 @@ from . import prompt_support
 from aiohttp import web
 from . import backend_support
 from .libs import common
+import logging
 
 
 max_seed = 2**32 - 1
@@ -50,7 +51,7 @@ async def set_cache_settings(request):
     try:
         backend_support.ShowCachedInfo.set_cache_settings(data)
         return web.Response(text='OK', status=200)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         return web.Response(text=f"{e}", status=500)
 
 
@@ -263,9 +264,9 @@ def populate_wildcards(json_data):
 
     if 'ImpactWildcardProcessor' in nodes.NODE_CLASS_MAPPINGS:
         if not hasattr(nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'], 'process'):
-            print(f"[Inspire Pack] Your Impact Pack is outdated. Please update to the latest version.")
+            logging.warning("[Inspire Pack] Your Impact Pack is outdated. Please update to the latest version.")
             return
-        
+
         wildcard_process = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process
         updated_widget_values = {}
         mbp_updated_widget_values = {}
@@ -295,7 +296,7 @@ def populate_wildcards(json_data):
                                 if not isinstance(input_seed, int):
                                     continue
                             else:
-                                print(f"[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
+                                logging.warning("[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
                                 continue
                         except:
                             continue
@@ -326,7 +327,7 @@ def populate_wildcards(json_data):
                                 if not isinstance(input_seed, int):
                                     continue
                             else:
-                                print(f"[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
+                                logging.warning("[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
                                 continue
                         except:
                             continue

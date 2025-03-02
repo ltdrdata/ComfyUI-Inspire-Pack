@@ -18,6 +18,7 @@ from server import PromptServer
 from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
 
+import logging
 
 model_path = folder_paths.models_dir
 utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
@@ -39,8 +40,8 @@ try:
 
     with open(pb_yaml_path, 'r', encoding="utf-8") as f:
         prompt_builder_preset = yaml.load(f, Loader=yaml.FullLoader)
-except Exception as e:
-    print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'\nNOTE: Only files with UTF-8 encoding are supported.")
+except Exception as e:  # noqa: F841
+    logging.error("[Inspire Pack] Failed to load 'prompt-builder.yaml'\nNOTE: Only files with UTF-8 encoding are supported.")
 
 
 class LoadPromptsFromDir:
@@ -121,7 +122,7 @@ class LoadPromptsFromDir:
 
         prompts = []
         for file_name in prompt_files:
-            print(f"file_name: {file_name}")
+            logging.info(f"file_name: {file_name}")
             try:
                 with open(file_name, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
@@ -138,9 +139,9 @@ class LoadPromptsFromDir:
                             result_tuple = (positive_text, negative_text, name_text)
                             prompts.append(result_tuple)
                         else:
-                            print(f"[WARN] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
+                            logging.warning(f"[Inspire Pack] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
             except Exception as e:
-                print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
+                logging.error(f"[Inspire Pack] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         # slicing [start_index ~ start_index + load_cap]
         total_prompts = len(prompts)
@@ -229,9 +230,9 @@ class LoadPromptsFromFile:
                 matched_path = None
 
         if matched_path:
-            print(f"[INFO] LoadPromptsFromFile: file found '{prompt_file}'")
+            logging.info(f"[Inspire Pack] LoadPromptsFromFile: file found '{prompt_file}'")
         else:
-            print(f"[WARN] LoadPromptsFromFile: file not found '{prompt_file}'")
+            logging.warning(f"[Inspire Pack] LoadPromptsFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
@@ -255,9 +256,9 @@ class LoadPromptsFromFile:
                     result_tuple = (positive_text, negative_text, name_text)
                     prompts.append(result_tuple)
                 else:
-                    print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+                    logging.warning(f"[Inspire Pack] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
+            logging.error(f"[Inspire Pack] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         # slicing [start_index ~ start_index + load_cap]
         total_prompts = len(prompts)
@@ -312,9 +313,9 @@ class LoadSinglePromptFromFile:
                 prompt_path = None
 
         if prompt_path:
-            print(f"[INFO] LoadSinglePromptFromFile: file found '{prompt_file}'")
+            logging.info(f"[Inspire Pack] LoadSinglePromptFromFile: file found '{prompt_file}'")
         else:
-            print(f"[WARN] LoadSinglePromptFromFile: file not found '{prompt_file}'")
+            logging.warning(f"[Inspire Pack] LoadSinglePromptFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
@@ -323,7 +324,7 @@ class LoadSinglePromptFromFile:
                     prompt_data = file.read()
             else:
                 prompt_data = text_data_opt
-                
+
             prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
             try:
                 prompt = prompt_list[index]
@@ -340,9 +341,9 @@ class LoadSinglePromptFromFile:
                 result_tuple = (positive_text, negative_text, name_text)
                 prompts.append(result_tuple)
             else:
-                print(f"[WARN] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
+                logging.warning(f"[Inspire Pack] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
+            logging.error(f"[Inspire Pack] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         return (prompts, )
 
@@ -563,7 +564,7 @@ class BNK_EncoderWrapper:
         if 'BNK_CLIPTextEncodeAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb',
                                           "To use 'WildcardEncodeInspire' node, 'ComfyUI_ADV_CLIP_emb' extension is required.")
-            raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Advanced CLIP Text Encode'")
+            raise Exception("[ERROR] To use WildcardEncodeInspire, you need to install 'Advanced CLIP Text Encode'")
         return nodes.NODE_CLASS_MAPPINGS['BNK_CLIPTextEncodeAdvanced']().encode(clip, text, self.token_normalization, self.weight_interpretation)
 
 
@@ -604,7 +605,7 @@ class WildcardEncodeInspire:
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'Wildcard Encode (Inspire)' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
+            raise Exception("[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
 
         processed = []
         model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], seed=kwargs['seed'], clip_encoder=clip_encoder, processed=processed)
@@ -637,7 +638,6 @@ class MakeBasicPipe:
                         "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
 
                         "stop_at_clip_layer": ("INT", {"default": -2, "min": -24, "max": -1, "step": 1}),
-            
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
                 "optional": {
@@ -660,7 +660,7 @@ class MakeBasicPipe:
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'Make Basic Pipe (Inspire)' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
+            raise Exception("[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
 
         model, clip, vae, key = CheckpointLoaderSimpleShared().doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
@@ -738,7 +738,7 @@ class SeedExplorer:
 
                     noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength, mask=mask, variation_method=variation_method)
                 except Exception:
-                    print(f"[ERROR] IGNORED: SeedExplorer failed to processing '{x}'")
+                    logging.error(f"[Inspire Pack] IGNORED: SeedExplorer failed to processing '{x}'")
                     traceback.print_exc()
         return noise
 
@@ -779,7 +779,7 @@ class SeedExplorer:
             return (noise,)
 
         except Exception:
-            print(f"[ERROR] IGNORED: SeedExplorer failed")
+            logging.error("[Inspire Pack] IGNORED: SeedExplorer failed")
             traceback.print_exc()
 
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout,

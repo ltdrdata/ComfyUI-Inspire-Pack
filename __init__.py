@@ -6,10 +6,11 @@
 """
 
 import importlib
+import logging
 
-version_code = [1, 14]
+version_code = [1, 14, 1]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
-print(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
+logging.info(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 
 node_list = [
     "lora_block_weight",
