@@ -1,7 +1,11 @@
+import traceback
+
 import comfy
 import nodes
 from . import utils
 import logging
+from server import PromptServer
+
 
 SCHEDULERS = comfy.samplers.KSampler.SCHEDULERS + ['AYS SDXL', 'AYS SD1', 'AYS SVD', "GITS[coeff=1.2]"]
 
@@ -40,3 +44,42 @@ def is_changed(uid, value):
     logging.info(f"keys: {changed_cache.keys()}")
 
     return res
+
+
+def update_node_status(node, text, progress=None):
+    if PromptServer.instance.client_id is None:
+        return
+
+    PromptServer.instance.send_sync("inspire/update_status", {
+        "node": node,
+        "progress": progress,
+        "text": text
+    }, PromptServer.instance.client_id)
+
+
+class ListWrapper:
+    def __init__(self, data, aux=None):
+        if isinstance(data, ListWrapper):
+            self._data = data
+            if aux is None:
+                self.aux = data.aux
+            else:
+                self.aux = aux
+        else:
+            self._data = list(data)
+            self.aux = aux
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return ListWrapper(self._data[index], self.aux)
+        else:
+            return self._data[index]
+
+    def __setitem__(self, index, value):
+        self._data[index] = value
+
+    def __len__(self):
+        return len(self._data)
+
+    def __repr__(self):
+        return f"ListWrapper({self._data}, aux={self.aux})"

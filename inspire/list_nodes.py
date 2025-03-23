@@ -1,5 +1,6 @@
 from comfy_execution.graph_utils import GraphBuilder, is_link
 from .libs.utils import any_typ
+from .libs.common import update_node_status, ListWrapper
 
 class FloatRange:
     @classmethod
@@ -107,9 +108,16 @@ class ForeachListBegin:
             item_list = item_list[1:]
 
         if len(item_list) > 0:
-            return ("stub", item_list[1:], item_list[0], initial_input)
+            next_list = ListWrapper(item_list[1:])
+            next_item = item_list[0]
+        else:
+            next_list = ListWrapper([])
+            next_item = None
 
-        return ("stub", [], None, initial_input)
+        if next_list.aux is None:
+            next_list.aux = len(item_list), None
+
+        return "stub", next_list, next_item, initial_input
 
 
 class ForeachListEnd:
@@ -157,6 +165,11 @@ class ForeachListEnd:
                 self.collect_contained(child_id, upstream, contained)
 
     def doit(self, flow_control, remained_list, intermediate_output, dynprompt, unique_id):
+        if remained_list.aux[1] is None:
+            remained_list.aux = (remained_list.aux[0], unique_id)
+
+        update_node_status(remained_list.aux[1], f"{(remained_list.aux[0]-len(remained_list))}/{remained_list.aux[0]} steps", (remained_list.aux[0]-len(remained_list))/remained_list.aux[0])
+
         if len(remained_list) == 0:
             return (intermediate_output,)
 
@@ -191,6 +204,7 @@ class ForeachListEnd:
                     node.set_input(k, v)
 
         new_open = graph.lookup_node(open_node)
+
         new_open.set_input("item_list", remained_list)
         new_open.set_input("initial_input", intermediate_output)
 
