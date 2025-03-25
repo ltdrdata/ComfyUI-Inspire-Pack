@@ -1,5 +1,3 @@
-import traceback
-
 import comfy
 import nodes
 from . import utils

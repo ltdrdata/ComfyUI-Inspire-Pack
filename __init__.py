@@ -8,7 +8,7 @@
 import importlib
 import logging
 
-version_code = [1, 15]
+version_code = [1, 16]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
 logging.info(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 

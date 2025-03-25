@@ -1,3 +1,5 @@
+import logging
+
 from comfy_execution.graph_utils import GraphBuilder, is_link
 from .libs.utils import any_typ
 from .libs.common import update_node_status, ListWrapper
@@ -165,10 +167,13 @@ class ForeachListEnd:
                 self.collect_contained(child_id, upstream, contained)
 
     def doit(self, flow_control, remained_list, intermediate_output, dynprompt, unique_id):
-        if remained_list.aux[1] is None:
-            remained_list.aux = (remained_list.aux[0], unique_id)
+        if hasattr(remained_list, "aux"):
+            if remained_list.aux[1] is None:
+                remained_list.aux = (remained_list.aux[0], unique_id)
 
-        update_node_status(remained_list.aux[1], f"{(remained_list.aux[0]-len(remained_list))}/{remained_list.aux[0]} steps", (remained_list.aux[0]-len(remained_list))/remained_list.aux[0])
+            update_node_status(remained_list.aux[1], f"{(remained_list.aux[0]-len(remained_list))}/{remained_list.aux[0]} steps", (remained_list.aux[0]-len(remained_list))/remained_list.aux[0])
+        else:
+            logging.warning("[Inspire Pack] ForeachListEnd: `remained_list` did not come from ForeachList.")
 
         if len(remained_list) == 0:
             return (intermediate_output,)
@@ -217,11 +222,39 @@ class ForeachListEnd:
         }
 
 
+class DropItems:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": { "item_list": ("ITEM_LIST", {"tooltip":"Directly connect the output of ForeachListBegin, the starting node of the iteration."}), },
+        }
+
+    RETURN_TYPES = (any_typ,)
+    RETURN_NAMES = ("ITEM_LIST",)
+    OUTPUT_TOOLTIPS = ("This is the final output value.",)
+
+    FUNCTION = "doit"
+
+    DESCRIPTION = ""
+
+    CATEGORY = "InspirePack/List"
+
+    def doit(self, item_list):
+        l = ListWrapper([])
+        if hasattr(item_list, 'aux'):
+            l.aux = item_list.aux
+        else:
+            logging.warning("[Inspire Pack] DropItems: `item_list` did not come from ForeachList.")
+
+        return (l,)
+
+
 NODE_CLASS_MAPPINGS = {
     "FloatRange //Inspire": FloatRange,
     "WorklistToItemList //Inspire": WorklistToItemList,
     "ForeachListBegin //Inspire": ForeachListBegin,
     "ForeachListEnd //Inspire": ForeachListEnd,
+    "DropItems //Inspire": DropItems,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -229,4 +262,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "WorklistToItemList //Inspire": "Worklist To Item List (Inspire)",
     "ForeachListBegin //Inspire": "▶Foreach List (Inspire)",
     "ForeachListEnd //Inspire": "Foreach List◀ (Inspire)",
+    "DropItems //Inspire": "Drop Items (Inspire)",
 }
