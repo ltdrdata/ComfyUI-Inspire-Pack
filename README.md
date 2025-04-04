@@ -172,7 +172,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
   * `Worklist To Item List (Inspire)`: The list in ComfyUI allows for repeated execution of a sub-workflow. This groups these repetitions (a.k.a. list) into a single ITEM_LIST output. ITEM_LIST can then be used in ForeachList.
   * `▶Foreach List (Inspire)`: A starting node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nGenerate a new intermediate_output using item and intermediate_output as inputs, then connect it to ForeachListEnd.\nNOTE:If initial_input is omitted, the first item in item_list is used as the initial value, and the processing starts from the second item in item_list.
-  * `Foreach List◀ (Inspire)`: A end node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nNOTE:Directly connect the outputs of ForeachListBegin to 'flow_control' and 'remained_list'.
+  * `Foreach List◀ (Inspire)`: An end node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nNOTE:Directly connect the outputs of ForeachListBegin to 'flow_control' and 'remained_list'.
 
 ### Util - Utilities
   * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.
