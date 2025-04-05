@@ -173,6 +173,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Worklist To Item List (Inspire)`: The list in ComfyUI allows for repeated execution of a sub-workflow. This groups these repetitions (a.k.a. list) into a single ITEM_LIST output. ITEM_LIST can then be used in ForeachList.
   * `▶Foreach List (Inspire)`: A starting node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nGenerate a new intermediate_output using item and intermediate_output as inputs, then connect it to ForeachListEnd.\nNOTE:If initial_input is omitted, the first item in item_list is used as the initial value, and the processing starts from the second item in item_list.
   * `Foreach List◀ (Inspire)`: An end node for performing iterative tasks by retrieving items one by one from the ITEM_LIST.\nNOTE:Directly connect the outputs of ForeachListBegin to 'flow_control' and 'remained_list'.
+  * `Drop List (Inspire)`: Removes all items from the ITEM_LIST. If the ITEM_LIST generated through this node is passed to ForeachListEnd, the process is immediately terminated.
 
 ### Util - Utilities
   * `ToIPAdapterPipe (Inspire)`, `FromIPAdapterPipe (Inspire)`: These nodes assists in conveniently using the bundled ipadapter_model, clip_vision, and model required for applying IPAdapter.
