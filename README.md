@@ -2,7 +2,8 @@
 This repository offers various extension nodes for ComfyUI. Nodes here have different characteristics compared to those in the ComfyUI Impact Pack. The Impact Pack has become too large now...
 
 ## Notice:
-* v1.9.1 To avoid confusion with the `NOISE` type in core, the type name has been changed to `NOISE_IMAGE`.
+* V1.18: To use the 'OSS' Scheduler, please update to ComfyUI version 0.3.28 or later (April 13th or newer) and Impact Pack version V8.11 or higher.
+* V1.9.1 To avoid confusion with the `NOISE` type in core, the type name has been changed to `NOISE_IMAGE`.
 * V0.73 The Variation Seed feature is added to Regional Prompt nodes, and it is only compatible with versions Impact Pack V5.10 and above.
 * V0.69 incompatible with the outdated **ComfyUI IPAdapter Plus**. (A version dated March 24th or later is required.)
 * V0.64 add sigma_factor to RegionalPrompt... nodes required Impact Pack V4.76 or later.
