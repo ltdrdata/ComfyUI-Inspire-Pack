@@ -1,5 +1,5 @@
 matplotlib
 cachetools
-numpy<2
+numpy
 webcolors
 opencv-python
