@@ -15,7 +15,19 @@ from .libs.utils import ByPassTypeTuple, empty_pil_tensor, empty_latent
 from PIL import Image
 import numpy as np
 import logging
+import json
 
+try:
+    from pypdf import PdfReader
+    pdf_support = True
+except ImportError:
+    pdf_support = False
+
+try:
+    from docx import Document
+    docx_support = True
+except ImportError:
+    docx_support = False
 
 class LoadImagesFromDirBatch:
     @classmethod
@@ -28,6 +40,7 @@ class LoadImagesFromDirBatch:
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_criteria": (["filename", "newest_first", "oldest_first"], {"default": "filename"}),
             }
         }
 
@@ -41,85 +54,252 @@ class LoadImagesFromDirBatch:
         if 'load_always' in kwargs and kwargs['load_always']:
             return float("NaN")
         else:
-            return hash(frozenset(kwargs))
+            return hash(frozenset(kwargs.items()))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_criteria="filename"):
         if not os.path.isdir(directory):
-            raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
-        dir_files = os.listdir(directory)
-        if len(dir_files) == 0:
-            raise FileNotFoundError(f"No files in directory '{directory}'.")
+            # It's generally better to return empty/default values if the node is part of a larger workflow
+            # rather than raising an error that stops the entire queue, unless the error is critical.
+            logging.error(f"Directory '{directory}' cannot be found. Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
+
+        try:
+            dir_files_short = os.listdir(directory)
+        except OSError as e:
+            logging.error(f"Error listing directory '{directory}': {e}. Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
+
+        if not dir_files_short:
+            logging.warning(f"No files in directory '{directory}'. Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
         if jxl:
             valid_extensions.extend('.jxl')
-        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+        
+        processed_files = []
+        for f_short in dir_files_short:
+            if any(f_short.lower().endswith(ext) for ext in valid_extensions):
+                full_path = os.path.join(directory, f_short)
+                if not os.path.isdir(full_path): # Ensure it's a file
+                    processed_files.append(full_path)
+        
+        if not processed_files:
+            logging.warning(f"No valid image files found in directory '{directory}' after filtering. Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
-        dir_files = sorted(dir_files)
-        dir_files = [os.path.join(directory, x) for x in dir_files]
+        # Sort files based on sort_criteria
+        if sort_criteria == "newest_first":
+            processed_files.sort(key=os.path.getmtime, reverse=True)
+        elif sort_criteria == "oldest_first":
+            processed_files.sort(key=os.path.getmtime)
+        else:  # 'filename' or default
+            processed_files.sort() # Sorts by full path, which includes filename
 
-        # start at start_index
-        dir_files = dir_files[start_index:]
+        # Apply start_index
+        if start_index == -1:
+            # Handle -1 to mean the last item if the list is not empty
+            if len(processed_files) > 0:
+                files_to_process = processed_files[start_index:] 
+            else:
+                files_to_process = []
+        elif start_index < len(processed_files):
+            files_to_process = processed_files[start_index:]
+        else: # start_index is out of bounds
+            files_to_process = []
 
         images = []
         masks = []
 
-        limit_images = False
+        # Cap the number of images to load
         if image_load_cap > 0:
-            limit_images = True
-        image_count = 0
+            files_to_process = files_to_process[:image_load_cap]
 
-        has_non_empty_mask = False
+        if not files_to_process:
+            logging.warning(f"No images to load from '{directory}' after slicing/capping (start_index: {start_index}, cap: {image_load_cap}, sort: {sort_criteria}). Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
-        for image_path in dir_files:
-            if os.path.isdir(image_path) and os.path.ex:
+        for image_path in files_to_process:
+            try:
+                i = Image.open(image_path)
+                i = ImageOps.exif_transpose(i)
+                image_rgb = i.convert("RGB")
+                image_np = np.array(image_rgb).astype(np.float32) / 255.0
+                image_tensor = torch.from_numpy(image_np)[None,] # (1, H, W, C)
+
+                if 'A' in i.getbands():
+                    mask_alpha = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                    mask_tensor = 1. - torch.from_numpy(mask_alpha) # (H, W)
+                else:
+                    # Create a zero mask with the same H, W as the current image
+                    mask_tensor = torch.zeros((image_tensor.shape[1], image_tensor.shape[2]), dtype=torch.float32, device="cpu")
+                
+                images.append(image_tensor)
+                masks.append(mask_tensor)
+            except Exception as e:
+                logging.warning(f"Could not load image {image_path}: {e}")
                 continue
-            if limit_images and image_count >= image_load_cap:
-                break
-            i = Image.open(image_path)
-            i = ImageOps.exif_transpose(i)
-            image = i.convert("RGB")
-            image = np.array(image).astype(np.float32) / 255.0
-            image = torch.from_numpy(image)[None,]
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
-                has_non_empty_mask = True
-            else:
-                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-            images.append(image)
-            masks.append(mask)
-            image_count += 1
+
+        if not images: # If all attempts to load images failed or list was empty
+            logging.warning(f"No images were successfully loaded from directory '{directory}' with current settings. Returning empty tensors.")
+            return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
         if len(images) == 1:
-            return (images[0], masks[0], 1)
-
+            # Output mask as (1, H, W) for consistency with batched output
+            return (images[0], masks[0].unsqueeze(0), 1)
         elif len(images) > 1:
-            image1 = images[0]
-            mask1 = None
+            ref_H, ref_W = images[0].shape[1], images[0].shape[2] # H, W from first image
 
-            for image2 in images[1:]:
-                if image1.shape[1:] != image2.shape[1:]:
-                    image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
-                image1 = torch.cat((image1, image2), dim=0)
-
-            for mask2 in masks:
-                if has_non_empty_mask:
-                    if image1.shape[1:3] != mask2.shape:
-                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[1], image1.shape[2]), mode='bilinear', align_corners=False)
-                        mask2 = mask2.squeeze(0)
-                    else:
-                        mask2 = mask2.unsqueeze(0)
+            batched_images_list = [images[0]]
+            for img_tensor in images[1:]: # img_tensor is (1, H_orig, W_orig, C)
+                if img_tensor.shape[1] != ref_H or img_tensor.shape[2] != ref_W:
+                    img_tensor_permuted = img_tensor.permute(0, 3, 1, 2) # (1, C, H_orig, W_orig)
+                    img_resized_permuted = comfy.utils.common_upscale(img_tensor_permuted, ref_W, ref_H, "bilinear", "center")
+                    img_resized = img_resized_permuted.permute(0, 2, 3, 1) # (1, H_ref, W_ref, C)
+                    batched_images_list.append(img_resized)
                 else:
-                    mask2 = mask2.unsqueeze(0)
+                    batched_images_list.append(img_tensor)
+            
+            batched_images_tensor = torch.cat(batched_images_list, dim=0) # (B, H_ref, W_ref, C)
 
-                if mask1 is None:
-                    mask1 = mask2
+            processed_masks = []
+            for m_single in masks: # m_single is a 2D tensor (H_orig, W_orig)
+                if m_single.shape[0] != ref_H or m_single.shape[1] != ref_W:
+                    m_reshaped = m_single.reshape((1, 1, m_single.shape[0], m_single.shape[1])) # for interpolate
+                    m_resized = torch.nn.functional.interpolate(m_reshaped, size=(ref_H, ref_W), mode="bilinear", align_corners=False)
+                    processed_masks.append(m_resized.squeeze(0).squeeze(0)) # Back to (H_ref, W_ref)
                 else:
-                    mask1 = torch.cat((mask1, mask2), dim=0)
+                    processed_masks.append(m_single)
+            
+            batched_masks_tensor = torch.stack(processed_masks, dim=0) # (B, H_ref, W_ref)
+            
+            return (batched_images_tensor, batched_masks_tensor, len(images))
+        
+        # Fallback for any unexpected scenario, though prior checks should prevent reaching here with empty lists
+        return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
-            return (image1, mask1, len(images))
+
+class LoadTextBatchFromDir:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "directory": ("STRING", {"default": ""}),
+            },
+            "optional": {
+                "load_cap": ("INT", {"default": 0, "min": 0, "step": 1}), # Renamed from image_load_cap
+                "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1}),
+                "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_criteria": (["filename", "newest_first", "oldest_first"], {"default": "filename"}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "INT")
+    RETURN_NAMES = ("TEXT_BATCH", "COUNT")
+    OUTPUT_IS_LIST = (True, False)
+    FUNCTION = "load_texts"
+
+    CATEGORY = "text" # Or "InspirePack/Text"
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        if 'load_always' in kwargs and kwargs['load_always']:
+            return float("NaN")
+        else:
+            return hash(frozenset(kwargs.items()))
+
+    def load_texts(self, directory: str, load_cap: int = 0, start_index: int = 0, load_always=False, sort_criteria="filename"):
+        if not os.path.isdir(directory):
+            logging.error(f"Directory '{directory}' cannot be found. Returning empty list.")
+            return ([], 0)
+
+        try:
+            dir_files_short = os.listdir(directory)
+        except OSError as e:
+            logging.error(f"Error listing directory '{directory}': {e}. Returning empty list.")
+            return ([], 0)
+
+        if not dir_files_short:
+            logging.warning(f"No files in directory '{directory}'. Returning empty list.")
+            return ([], 0)
+
+        valid_extensions = ['.txt', '.json']
+        if pdf_support:
+            valid_extensions.append('.pdf')
+        else:
+            logging.info("[LoadTextBatchFromDir] PyPDF2 not installed. PDF support disabled. To enable, run: pip install pypdf")
+        if docx_support:
+            valid_extensions.append('.docx') # Handling .docx for .doc request
+        else:
+            logging.info("[LoadTextBatchFromDir] python-docx not installed. DOCX support disabled. To enable, run: pip install python-docx")
+        
+        processed_files = []
+        for f_short in dir_files_short:
+            if any(f_short.lower().endswith(ext) for ext in valid_extensions):
+                full_path = os.path.join(directory, f_short)
+                if not os.path.isdir(full_path):
+                    processed_files.append(full_path)
+        
+        if not processed_files:
+            logging.warning(f"No valid text files found in directory '{directory}' after filtering. Returning empty list.")
+            return ([], 0)
+
+        if sort_criteria == "newest_first":
+            processed_files.sort(key=os.path.getmtime, reverse=True)
+        elif sort_criteria == "oldest_first":
+            processed_files.sort(key=os.path.getmtime)
+        else:
+            processed_files.sort()
+
+        if start_index == -1:
+            files_to_process = processed_files[start_index:] if len(processed_files) > 0 else []
+        elif start_index < len(processed_files):
+            files_to_process = processed_files[start_index:]
+        else:
+            files_to_process = []
+
+        if load_cap > 0:
+            files_to_process = files_to_process[:load_cap]
+
+        if not files_to_process:
+            logging.warning(f"No text files to load from '{directory}' after slicing/capping. Returning empty list.")
+            return ([], 0)
+
+        texts = []
+        for file_path in files_to_process:
+            content = ""
+            try:
+                if file_path.lower().endswith('.txt'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                elif file_path.lower().endswith('.json'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        content = json.dumps(data, indent=2)
+                elif pdf_support and file_path.lower().endswith('.pdf'):
+                    reader = PdfReader(file_path)
+                    for page in reader.pages:
+                        content += page.extract_text() + "\n"
+                elif docx_support and file_path.lower().endswith('.docx'):
+                    document = Document(file_path)
+                    content = "\n".join([para.text for para in document.paragraphs])
+                texts.append(content)
+            except Exception as e:
+                logging.warning(f"Could not load text from {file_path}: {e}")
+                texts.append(f"Error loading {os.path.basename(file_path)}: {e}") # Add error message as content
+
+        if not texts:
+            logging.warning(f"No texts were successfully loaded from directory '{directory}'. Returning empty list.")
+            return ([], 0)
+            
+        return (texts, len(texts))
+
+
+class LoadImagesFromDirList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return (empty_pil_tensor(), empty_pil_tensor(channels=1).squeeze(-1), 0)
 
 
 class LoadImagesFromDirList:
@@ -133,6 +313,7 @@ class LoadImagesFromDirList:
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_criteria": (["filename", "newest_first", "oldest_first"], {"default": "filename"}),
             }
         }
 
@@ -149,57 +330,89 @@ class LoadImagesFromDirList:
         if 'load_always' in kwargs and kwargs['load_always']:
             return float("NaN")
         else:
-            return hash(frozenset(kwargs))
+            return hash(frozenset(kwargs.items()))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_criteria="filename"):
         if not os.path.isdir(directory):
-            raise FileNotFoundError(f"Directory '{directory}' cannot be found.")
-        dir_files = os.listdir(directory)
-        if len(dir_files) == 0:
-            raise FileNotFoundError(f"No files in directory '{directory}'.")
+            logging.error(f"Directory '{directory}' cannot be found. Returning empty lists.")
+            return ([], [], [])
+
+        try:
+            dir_files_short = os.listdir(directory)
+        except OSError as e:
+            logging.error(f"Error listing directory '{directory}': {e}. Returning empty lists.")
+            return ([], [], [])
+
+        if not dir_files_short:
+            logging.warning(f"No files in directory '{directory}'. Returning empty lists.")
+            return ([], [], [])
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
         if jxl:
             valid_extensions.extend('.jxl')
-        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
-        dir_files = sorted(dir_files)
-        dir_files = [os.path.join(directory, x) for x in dir_files]
+        processed_files = []
+        for f_short in dir_files_short:
+            if any(f_short.lower().endswith(ext) for ext in valid_extensions):
+                full_path = os.path.join(directory, f_short)
+                if not os.path.isdir(full_path): # Ensure it's a file
+                    processed_files.append(full_path)
 
-        # start at start_index
-        dir_files = dir_files[start_index:]
+        if not processed_files:
+            logging.warning(f"No valid image files found in directory '{directory}' after filtering. Returning empty lists.")
+            return ([], [], [])
+
+        # Sort files
+        if sort_criteria == "newest_first":
+            processed_files.sort(key=os.path.getmtime, reverse=True)
+        elif sort_criteria == "oldest_first":
+            processed_files.sort(key=os.path.getmtime)
+        else:  # 'filename'
+            processed_files.sort()
+
+        # Apply start_index (note: LoadImagesFromDirList has min: 0 for start_index)
+        if start_index < len(processed_files):
+            files_to_process = processed_files[start_index:]
+        else: # start_index is out of bounds
+            files_to_process = []
 
         images = []
         masks = []
         file_paths = []
 
-        limit_images = False
+        # Cap the number of images to load
         if image_load_cap > 0:
-            limit_images = True
-        image_count = 0
+            files_to_process = files_to_process[:image_load_cap]
 
-        for image_path in dir_files:
-            if os.path.isdir(image_path) and os.path.ex:
+        if not files_to_process:
+            logging.warning(f"No images to load from '{directory}' after slicing/capping (start_index: {start_index}, cap: {image_load_cap}, sort: {sort_criteria}). Returning empty lists.")
+            return ([], [], [])
+
+        for image_path in files_to_process:
+            try:
+                i = Image.open(image_path)
+                i = ImageOps.exif_transpose(i)
+                image_rgb = i.convert("RGB")
+                image_np = np.array(image_rgb).astype(np.float32) / 255.0
+                image_tensor = torch.from_numpy(image_np)[None,] # (1, H, W, C)
+
+                if 'A' in i.getbands():
+                    mask_alpha = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                    # Mask is (H, W), output list expects individual masks.
+                    # For consistency with batched node, if it were to output single masks, they'd be (H,W)
+                    mask_tensor = 1. - torch.from_numpy(mask_alpha) 
+                else:
+                    mask_tensor = torch.zeros((image_tensor.shape[1], image_tensor.shape[2]), dtype=torch.float32, device="cpu")
+
+                images.append(image_tensor)
+                masks.append(mask_tensor) # Appending (H,W) mask
+                file_paths.append(str(image_path))
+            except Exception as e:
+                logging.warning(f"Could not load image {image_path} for list: {e}")
                 continue
-            if limit_images and image_count >= image_load_cap:
-                break
-            i = Image.open(image_path)
-            i = ImageOps.exif_transpose(i)
-            image = i.convert("RGB")
-            image = np.array(image).astype(np.float32) / 255.0
-            image = torch.from_numpy(image)[None,]
-
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
-            else:
-                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-
-            images.append(image)
-            masks.append(mask)
-            file_paths.append(str(image_path))
-            image_count += 1
+        
+        # If images list is empty after trying to load, it will correctly return ([], [], [])
 
         return (images, masks, file_paths)
 
@@ -451,6 +664,7 @@ NODE_CLASS_MAPPINGS = {
     "ImageBatchSplitter //Inspire": ImageBatchSplitter,
     "LatentBatchSplitter //Inspire": LatentBatchSplitter,
     "ColorMapToMasks //Inspire": ColorMapToMasks,
+    "LoadTextBatchFromDir //Inspire": LoadTextBatchFromDir,
     "SelectNthMask //Inspire": SelectNthMask
 }
 
@@ -463,5 +677,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ImageBatchSplitter //Inspire": "Image Batch Splitter (Inspire)",
     "LatentBatchSplitter //Inspire": "Latent Batch Splitter (Inspire)",
     "ColorMapToMasks //Inspire": "Color Map To Masks (Inspire)",
+    "LoadTextBatchFromDir //Inspire": "Load Text Batch From Dir (Inspire)",
     "SelectNthMask //Inspire": "Select Nth Mask (Inspire)"
 }
