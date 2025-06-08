@@ -130,7 +130,7 @@ class LoadPromptsFromDir:
 
                     for prompt in prompt_list:
                         pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
-                        matches = re.search(pattern, prompt, re.DOTALL)
+                        matches = re.search(pattern, prompt, re.DOTALL | re.IGNORECASE)
 
                         if matches:
                             positive_text = matches.group('positive').strip()
@@ -484,6 +484,37 @@ class GlobalSeed:
     OUTPUT_NODE = True
 
     def doit(self, **kwargs):
+        return {}
+
+
+class SeedLogger:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seeds": ("STRING", {"multiline": True, "dynamicPrompts": False, "control_after_generate": False}),
+                "limit": ("INT", {"default": 5, "min": 0, "max": 0xffffffffffffffff}),
+            },
+            "hidden": {"unique_id": "UNIQUE_ID"}
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    OUTPUT_NODE = True
+
+    def doit(self, seed, seeds: str, limit, unique_id):
+
+        if limit > 0:
+            lines = seeds.split('\n')
+            res = str(seed) + '\n' + '\n'.join(lines[:limit-1])
+        else:
+            res = str(seed) + '\n' + seeds
+
+        PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "seeds", "type": "text", "data": res})
         return {}
 
 
@@ -993,6 +1024,7 @@ NODE_CLASS_MAPPINGS = {
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
     "GlobalSeed //Inspire": GlobalSeed,
+    "SeedLogger //Inspire": SeedLogger,
     "GlobalSampler //Inspire": GlobalSampler,
     "BindImageListPromptList //Inspire": BindImageListPromptList,
     "WildcardEncode //Inspire": WildcardEncodeInspire,
@@ -1004,7 +1036,7 @@ NODE_CLASS_MAPPINGS = {
     "MakeBasicPipe //Inspire": MakeBasicPipe,
     "RemoveControlNet //Inspire": RemoveControlNet,
     "RemoveControlNetFromRegionalPrompts //Inspire": RemoveControlNetFromRegionalPrompts,
-    "CompositeNoise //Inspire": CompositeNoise
+    "CompositeNoise //Inspire": CompositeNoise,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -1015,6 +1047,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
     "GlobalSeed //Inspire": "Global Seed (Inspire)",
+    "SeedLogger //Inspire": "Seed Logger (Inspire)",
     "GlobalSampler //Inspire": "Global Sampler (Inspire)",
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",

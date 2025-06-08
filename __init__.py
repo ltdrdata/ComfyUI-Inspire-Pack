@@ -8,7 +8,7 @@
 import importlib
 import logging
 
-version_code = [1, 18]
+version_code = [1, 19, 1]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
 logging.info(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 
@@ -39,13 +39,3 @@ for module_name in node_list:
 
 WEB_DIRECTORY = "./js"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
-
-try:
-    import cm_global
-    cm_global.register_extension('ComfyUI-Inspire-Pack',
-                                 {'version': version_code,
-                                  'name': 'Inspire Pack',
-                                  'nodes': set(NODE_CLASS_MAPPINGS.keys()),
-                                  'description': 'This extension provides various nodes to support Lora Block Weight and the Impact Pack. Provides many easily applicable regional features and applications for Variation Seed.', })
-except:
-    pass
