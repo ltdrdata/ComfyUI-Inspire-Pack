@@ -189,7 +189,7 @@ class RetrieveBackendData:
 
         if v is None:
             logging.warning(f"[RetrieveBackendData] '{key}' is unregistered key.")
-            return (None,)
+            return ([None],)
 
         is_list, data = v[1]
 
