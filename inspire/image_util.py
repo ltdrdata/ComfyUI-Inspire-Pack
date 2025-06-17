@@ -15,6 +15,48 @@ from .libs.utils import ByPassTypeTuple, empty_pil_tensor, empty_latent
 from PIL import Image
 import numpy as np
 import logging
+import re
+
+
+def extract_first_number(s):
+    match = re.search(r'\d+', s)
+    return int(match.group()) if match else float('inf')
+
+
+sort_methods = [
+    "None",
+    "Alphabetical (ASC)",
+    "Alphabetical (DESC)",
+    "Numerical (ASC)",
+    "Numerical (DESC)",
+    "Datetime (ASC)",
+    "Datetime (DESC)"
+]
+
+
+def sort_by(items, base_path='.', method=None):
+    def fullpath(x): return os.path.join(base_path, x)
+
+    def get_timestamp(path):
+        try:
+            return os.path.getmtime(path)
+        except FileNotFoundError:
+            return float('-inf')
+
+    if method == "Alphabetical (ASC)":
+        return sorted(items)
+    elif method == "Alphabetical (DESC)":
+        return sorted(items, reverse=True)
+    elif method == "Numerical (ASC)":
+        return sorted(items, key=lambda x: extract_first_number(os.path.splitext(x)[0]))
+    elif method == "Numerical (DESC)":
+        return sorted(items, key=lambda x: extract_first_number(os.path.splitext(x)[0]), reverse=True)
+    elif method == "Datetime (ASC)":
+        return sorted(items, key=lambda x: get_timestamp(fullpath(x)))
+    elif method == "Datetime (DESC)":
+        return sorted(items, key=lambda x: get_timestamp(fullpath(x)), reverse=True)
+    else:
+        return items
 
 
 class LoadImagesFromDirBatch:
@@ -28,6 +70,7 @@ class LoadImagesFromDirBatch:
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_method": (sort_methods,),
             }
         }
 
@@ -43,7 +86,7 @@ class LoadImagesFromDirBatch:
         else:
             return hash(frozenset(kwargs))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_method=None):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
         dir_files = os.listdir(directory)
@@ -56,7 +99,7 @@ class LoadImagesFromDirBatch:
             valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
-        dir_files = sorted(dir_files)
+        dir_files = sort_by(dir_files, directory, sort_method)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
         # start at start_index
@@ -133,6 +176,7 @@ class LoadImagesFromDirList:
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
                 "start_index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_method": (sort_methods,),
             }
         }
 
@@ -151,7 +195,7 @@ class LoadImagesFromDirList:
         else:
             return hash(frozenset(kwargs))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_method=None):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory}' cannot be found.")
         dir_files = os.listdir(directory)
@@ -164,7 +208,7 @@ class LoadImagesFromDirList:
             valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
-        dir_files = sorted(dir_files)
+        dir_files = sort_by(dir_files, directory, sort_method)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
         # start at start_index
