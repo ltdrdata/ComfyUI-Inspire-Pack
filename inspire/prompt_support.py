@@ -19,6 +19,17 @@ from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
 
 import logging
+import gc
+try:
+    from .backend_support import cache
+except (ImportError, ModuleNotFoundError):
+    print("CRITICAL Inspire Pack Warning: The global 'cache' object could not be imported. Memory management will not work.")
+    # Create a dummy cache to prevent crashes, though it won't be shared.
+    class DummyCache:
+        def __delitem__(self, key): pass
+    cache = DummyCache()
+MODEL_REF_COUNT = {}
+
 
 model_path = folder_paths.models_dir
 utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
@@ -679,7 +690,6 @@ class MakeBasicPipe:
     RETURN_NAMES = ("basic_pipe", "cache_key")
     FUNCTION = "doit"
 
-    # --- THE NEW DOIT METHOD ---
     def doit(self, unique_id, extra_pnginfo, **kwargs):
         # Get all other values from kwargs
         wildcard_mode = kwargs['wildcard_mode']
@@ -714,12 +724,10 @@ class MakeBasicPipe:
                     node['widgets_values'][neg_widget_index] = final_negative_prompt
                     node['widgets_values'][mode_widget_index] = "fixed"
 
-            # --- 3. FRONTEND: Send live updates to the browser UI ---
             server_instance = PromptServer.instance
             server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "positive_populated_text", "data": final_positive_prompt})
             server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "negative_populated_text", "data": final_negative_prompt})
             
-            # THIS IS THE NEW LOGIC: Tell the UI to revert back to 'populate' for convenience
             server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "wildcard_mode", "value": "populate"})
 
         else: # wildcard_mode == 'fixed'
@@ -728,13 +736,22 @@ class MakeBasicPipe:
             final_positive_prompt = kwargs['positive_populated_text']
             final_negative_prompt = kwargs['negative_populated_text']
 
+        if self.last_loaded_ckpt_key != kwargs['ckpt_name']:
+            if self.last_loaded_ckpt_key is not None:
+                self._decrement_ref_count(self.last_loaded_ckpt_key)
+            
+            self._increment_ref_count(kwargs['ckpt_name'])
 
-        # 4. Use the final prompts for this run's image generation
+        if MakeBasicPipe.shared_loader is None:
+            MakeBasicPipe.shared_loader = CheckpointLoaderSimpleShared()
+        model, clip, vae, key = MakeBasicPipe.shared_loader.doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
+        
+        self.last_loaded_ckpt_key = kwargs['ckpt_name']
+
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             raise Exception("[ERROR] 'Impact Pack' is required.")
 
-        model, clip, vae, key = CheckpointLoaderSimpleShared().doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
         model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=final_positive_prompt, model=model, clip=clip, clip_encoder=clip_encoder)
         model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=final_negative_prompt, model=model, clip=clip, clip_encoder=clip_encoder)
@@ -744,7 +761,31 @@ class MakeBasicPipe:
 
         basic_pipe = model, clip, vae, positive, negative
         return (basic_pipe, key)
+    
+    shared_loader = None
 
+    def __init__(self):
+        self.last_loaded_ckpt_key = None
+
+    def __del__(self):
+        if self.last_loaded_ckpt_key:
+            self._decrement_ref_count(self.last_loaded_ckpt_key)
+
+    def _increment_ref_count(self, key):
+        MODEL_REF_COUNT[key] = MODEL_REF_COUNT.get(key, 0) + 1
+
+    def _decrement_ref_count(self, key):
+        if key in MODEL_REF_COUNT:
+            MODEL_REF_COUNT[key] -= 1
+            # If the reference count drops to zero, it's safe to unload the model.
+            if MODEL_REF_COUNT[key] <= 0:
+                try:
+                    del cache[key]
+                    del MODEL_REF_COUNT[key]
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                except KeyError:
+                    pass # Already gone, which is fine.
 
 class PromptBuilder:
     @classmethod
