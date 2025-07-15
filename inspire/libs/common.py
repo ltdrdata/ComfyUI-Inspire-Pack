@@ -5,7 +5,7 @@ import logging
 from server import PromptServer
 
 
-SCHEDULERS = comfy.samplers.KSampler.SCHEDULERS + ['AYS SDXL', 'AYS SD1', 'AYS SVD', "GITS[coeff=1.2]", 'OSS FLUX', 'OSS Wan']
+SCHEDULERS = comfy.samplers.KSampler.SCHEDULERS + ['AYS SDXL', 'AYS SD1', 'AYS SVD', "GITS[coeff=1.2]", 'OSS FLUX', 'OSS Wan', 'OSS Chroma']
 
 
 def impact_sampling(*args, **kwargs):
