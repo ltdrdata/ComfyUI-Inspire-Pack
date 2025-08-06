@@ -23,6 +23,18 @@ import logging
 model_path = folder_paths.models_dir
 utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
 
+# Register IPAdapter model paths for extra_model_paths.yaml support
+ipadapter_default_path = os.path.join(model_path, "ipadapter")
+utils.add_folder_path_and_extensions("ipadapter", [ipadapter_default_path], folder_paths.supported_pt_extensions)
+
+# Register CLIP vision model paths for extra_model_paths.yaml support
+clip_vision_default_path = os.path.join(model_path, "clip_vision")
+utils.add_folder_path_and_extensions("clip_vision", [clip_vision_default_path], folder_paths.supported_pt_extensions)
+
+# Register LoRA model paths for extra_model_paths.yaml support
+loras_default_path = os.path.join(model_path, "loras")
+utils.add_folder_path_and_extensions("loras", [loras_default_path], folder_paths.supported_pt_extensions)
+
 
 prompt_builder_preset = {}
 
