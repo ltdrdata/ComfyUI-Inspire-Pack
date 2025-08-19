@@ -603,6 +603,78 @@ class MeshGraphormerDepthMapPreprocessorProvider_for_SEGS:
         return (obj, )
 
 
+class NormalMap_Preprocessor_wrapper:
+    def apply(self, image, mask=None):
+        if 'NormalMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+            raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS['NormalMapPreprocessor']()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, resolution=resolution)[0]
+
+
+class DepthAnything_Preprocessor_wrapper:
+    def __init__(self, ckpt_name, version):
+        self.ckpt_name = ckpt_name
+        self.version = version
+
+    def apply(self, image, mask=None):
+        node_name = 'DepthAnythingPreprocessor' if self.version == 'v1' else 'DepthAnythingV2Preprocessor'
+        
+        if node_name not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          f"To use 'DepthAnything_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+            raise Exception(f"[ERROR] To use DepthAnything_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.' The {node_name} node is not available.")
+
+        obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
+        resolution = normalize_size_base_64(image.shape[2], image.shape[1])
+        return obj.execute(image, ckpt_name=self.ckpt_name, resolution=resolution)[0]
+
+
+class NormalMap_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {}}
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self):
+        obj = NormalMap_Preprocessor_wrapper()
+        return (obj, )
+
+
+class DepthAnything_Preprocessor_Provider_for_SEGS:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "version": (["v1", "v2"], {"default": "v2"}),
+                "ckpt_name": ([
+                    # DepthAnything V1 models
+                    "depth_anything_vitl14.pth", 
+                    "depth_anything_vitb14.pth", 
+                    "depth_anything_vits14.pth",
+                    # DepthAnything V2 models
+                    "depth_anything_v2_vitl.pth",
+                    "depth_anything_v2_vitb.pth", 
+                    "depth_anything_v2_vits.pth"
+                ], {"default": "depth_anything_v2_vitl.pth"})
+            }
+        }
+    RETURN_TYPES = ("SEGS_PREPROCESSOR",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/SEGS/ControlNet"
+
+    def doit(self, version, ckpt_name):
+        obj = DepthAnything_Preprocessor_wrapper(ckpt_name, version)
+        return (obj, )
+
+
 NODE_CLASS_MAPPINGS = {
     "OpenPose_Preprocessor_Provider_for_SEGS //Inspire": OpenPose_Preprocessor_Provider_for_SEGS,
     "DWPreprocessor_Provider_for_SEGS //Inspire": DWPreprocessor_Provider_for_SEGS,
@@ -620,6 +692,8 @@ NODE_CLASS_MAPPINGS = {
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": InpaintPreprocessor_Provider_for_SEGS,
     "TilePreprocessor_Provider_for_SEGS //Inspire": TilePreprocessor_Provider_for_SEGS,
     "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire": MeshGraphormerDepthMapPreprocessorProvider_for_SEGS,
+    "NormalMap_Preprocessor_Provider_for_SEGS //Inspire": NormalMap_Preprocessor_Provider_for_SEGS,
+    "DepthAnything_Preprocessor_Provider_for_SEGS //Inspire": DepthAnything_Preprocessor_Provider_for_SEGS,
     "MediaPipeFaceMeshDetectorProvider //Inspire": MediaPipeFaceMeshDetectorProvider,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -639,5 +713,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InpaintPreprocessor_Provider_for_SEGS //Inspire": "Inpaint Preprocessor Provider (SEGS)",
     "TilePreprocessor_Provider_for_SEGS //Inspire": "Tile Preprocessor Provider (SEGS)",
     "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire": "MeshGraphormer Depth Map Preprocessor Provider (SEGS)",
+    "NormalMap_Preprocessor_Provider_for_SEGS //Inspire": "NormalMap Preprocessor Provider (SEGS)",
+    "DepthAnything_Preprocessor_Provider_for_SEGS //Inspire": "DepthAnything Preprocessor Provider (SEGS)",
     "MediaPipeFaceMeshDetectorProvider //Inspire": "MediaPipeFaceMesh Detector Provider",
 }
