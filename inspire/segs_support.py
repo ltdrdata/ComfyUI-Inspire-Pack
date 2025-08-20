@@ -604,15 +604,57 @@ class MeshGraphormerDepthMapPreprocessorProvider_for_SEGS:
 
 
 class NormalMap_Preprocessor_wrapper:
-    def apply(self, image, mask=None):
-        if 'NormalMapPreprocessor' not in nodes.NODE_CLASS_MAPPINGS:
-            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                          "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
-            raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+    def __init__(self, model_type="DSINE", fov=60.0, iterations=5, backbone="vit-small", fx=1000, fy=1000):
+        self.model_type = model_type
+        self.fov = fov
+        self.iterations = iterations
+        self.backbone = backbone
+        self.fx = fx
+        self.fy = fy
 
-        obj = nodes.NODE_CLASS_MAPPINGS['NormalMapPreprocessor']()
+    def apply(self, image, mask=None):
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
-        return obj.execute(image, resolution=resolution)[0]
+        
+        if self.model_type == "DSINE":
+            node_name = 'DSINE-NormalMapPreprocessor'
+            if node_name not in nodes.NODE_CLASS_MAPPINGS:
+                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+            
+            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
+            return obj.execute(image, fov=self.fov, iterations=self.iterations, resolution=resolution)[0]
+            
+        elif self.model_type == "BAE":
+            node_name = 'BAE-NormalMapPreprocessor'
+            if node_name not in nodes.NODE_CLASS_MAPPINGS:
+                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+            
+            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
+            return obj.execute(image, resolution=resolution)[0]
+            
+        elif self.model_type == "Metric3D":
+            node_name = 'Metric3D-NormalMapPreprocessor'
+            if node_name not in nodes.NODE_CLASS_MAPPINGS:
+                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+            
+            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
+            return obj.execute(image, backbone=self.backbone, fx=self.fx, fy=self.fy, resolution=resolution)[0]
+            
+        else:
+            # Fallback to generic NormalMapPreprocessor if available
+            node_name = 'NormalMapPreprocessor'
+            if node_name not in nodes.NODE_CLASS_MAPPINGS:
+                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+            
+            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
+            return obj.execute(image, resolution=resolution)[0]
 
 
 class DepthAnything_Preprocessor_wrapper:
@@ -636,14 +678,32 @@ class DepthAnything_Preprocessor_wrapper:
 class NormalMap_Preprocessor_Provider_for_SEGS:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {}}
+        return {
+            "required": {
+                "model_type": (["DSINE", "BAE", "Metric3D"], {"default": "DSINE"}),
+            },
+            "optional": {
+                "fov (DSINE)": ("FLOAT", {"default": 60.0, "min": 10.0, "max": 365.0, "step": 1.0}),
+                "iterations (DSINE)": ("INT", {"default": 5, "min": 1, "max": 20, "step": 1}),
+                "backbone (Metric3D)": (["vit-small", "vit-large", "vit-giant2"], {"default": "vit-small"}),
+                "fx (Metric3D)": ("INT", {"default": 1000, "min": 1, "max": 2048, "step": 1}),
+                "fy (Metric3D)": ("INT", {"default": 1000, "min": 1, "max": 2048, "step": 1}),
+            }
+        }
     RETURN_TYPES = ("SEGS_PREPROCESSOR",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
-    def doit(self):
-        obj = NormalMap_Preprocessor_wrapper()
+    def doit(self, model_type="DSINE", **kwargs):
+        # Extract parameters with model-specific names
+        fov = kwargs.get("fov (DSINE)", 60.0)
+        iterations = kwargs.get("iterations (DSINE)", 5)
+        backbone = kwargs.get("backbone (Metric3D)", "vit-small")
+        fx = kwargs.get("fx (Metric3D)", 1000)
+        fy = kwargs.get("fy (Metric3D)", 1000)
+        
+        obj = NormalMap_Preprocessor_wrapper(model_type, fov, iterations, backbone, fx, fy)
         return (obj, )
 
 
