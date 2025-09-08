@@ -19,6 +19,17 @@ from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
 
 import logging
+import gc
+try:
+    from .backend_support import cache
+except (ImportError, ModuleNotFoundError):
+    print("CRITICAL Inspire Pack Warning: The global 'cache' object could not be imported. Memory management will not work.")
+    # Create a dummy cache to prevent crashes, though it won't be shared.
+    class DummyCache:
+        def __delitem__(self, key): pass
+    cache = DummyCache()
+MODEL_REF_COUNT = {}
+
 
 model_path = folder_paths.models_dir
 utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
@@ -649,62 +660,132 @@ class MakeBasicPipe:
         return {"required": {
                         "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
                         "ckpt_key_opt": ("STRING", {"multiline": False, "placeholder": "If empty, use 'ckpt_name' as the key." }),
-
                         "positive_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Positive Prompt (User Input)'}),
                         "negative_wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Negative Prompt (User Input)'}),
-
                         "Add selection to": ("BOOLEAN", {"default": True, "label_on": "Positive", "label_off": "Negative"}),
                         "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"),),
                         "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
-                        "wildcard_mode": (["populate", "fixed", "reproduce"], {"default": "populate", "tooltip":
-                            "populate: Before running the workflow, it overwrites the existing value of 'populated_text' with the prompt processed from 'wildcard_text'. In this mode, 'populated_text' cannot be edited.\n"
-                            "fixed: Ignores wildcard_text and keeps 'populated_text' as is. You can edit 'populated_text' in this mode.\n"
-                            "reproduce: This mode operates as 'fixed' mode only once for reproduction, and then it switches to 'populate' mode."
-                                                                               }),
-
+                        "wildcard_mode": (["populate", "fixed"], {"default": "populate", "tooltip":
+                            "populate: Processes wildcards and linked text. On the next run, this text will be used.\n"
+                            "fixed: Ignores wildcard/linked text and uses the text in 'populated_text' as is."}),
                         "positive_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Positive Prompt (Will be generated automatically)'}),
                         "negative_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Negative Prompt (Will be generated automatically)'}),
-
                         "token_normalization": (["none", "mean", "length", "length+mean"],),
                         "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
-
                         "stop_at_clip_layer": ("INT", {"default": -2, "min": -24, "max": -1, "step": 1}),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
                 "optional": {
-                        "vae_opt": ("VAE",)
+                        "vae_opt": ("VAE",),
+                        "pos_opt": ("STRING", {"forceInput": True}),
+                        "neg_opt": ("STRING", {"forceInput": True}),
                     },
+                "hidden": {
+                    "unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO"
                 }
-
+            }
+            
     CATEGORY = "InspirePack/Prompt"
-
     RETURN_TYPES = ("BASIC_PIPE", "STRING")
     RETURN_NAMES = ("basic_pipe", "cache_key")
     FUNCTION = "doit"
 
-    def doit(self, **kwargs):
-        pos_populated = kwargs['positive_populated_text']
-        neg_populated = kwargs['negative_populated_text']
+    def doit(self, unique_id, extra_pnginfo, **kwargs):
+        # Get all other values from kwargs
+        wildcard_mode = kwargs['wildcard_mode']
+        positive_wildcard_text = kwargs['positive_wildcard_text']
+        negative_wildcard_text = kwargs['negative_wildcard_text']
+        seed = kwargs['seed']
+        pos_opt_fresh = kwargs.get('pos_opt', '')
+        neg_opt_fresh = kwargs.get('neg_opt', '')
+
+        if wildcard_mode == 'populate':
+            # 1. Calculate the final definitive prompt
+            pos_parts = [p.strip() for p in [pos_opt_fresh, positive_wildcard_text] if p and p.strip()]
+            pos_combined_source = ", ".join(pos_parts)
+            neg_parts = [p.strip() for p in [neg_opt_fresh, negative_wildcard_text] if p and p.strip()]
+            neg_combined_source = ", ".join(neg_parts)
+
+            final_positive_prompt = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process(text=pos_combined_source, seed=seed)
+            final_negative_prompt = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process(text=neg_combined_source, seed=seed)
+            
+            # --- 2. BACKEND: Modify the PNG info for correct image saving ---
+            if extra_pnginfo and 'workflow' in extra_pnginfo:
+                workflow = extra_pnginfo['workflow']
+                node = next((n for n in workflow['nodes'] if n['id'] == int(unique_id)), None)
+                if node:
+                    all_widgets = list(self.INPUT_TYPES()['required'].keys())
+                    pos_widget_index = all_widgets.index('positive_populated_text')
+                    neg_widget_index = all_widgets.index('negative_populated_text')
+                    mode_widget_index = all_widgets.index('wildcard_mode')
+                    
+                    # Overwrite values to be saved in the PNG with the locked-in state
+                    node['widgets_values'][pos_widget_index] = final_positive_prompt
+                    node['widgets_values'][neg_widget_index] = final_negative_prompt
+                    node['widgets_values'][mode_widget_index] = "fixed"
+
+            server_instance = PromptServer.instance
+            server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "positive_populated_text", "data": final_positive_prompt})
+            server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "negative_populated_text", "data": final_negative_prompt})
+            
+            server_instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "wildcard_mode", "value": "populate"})
+
+        else: # wildcard_mode == 'fixed'
+            # --- REPRODUCE PATH ---
+            # Use the text that's already in the populated widgets
+            final_positive_prompt = kwargs['positive_populated_text']
+            final_negative_prompt = kwargs['negative_populated_text']
+
+        if self.last_loaded_ckpt_key != kwargs['ckpt_name']:
+            if self.last_loaded_ckpt_key is not None:
+                self._decrement_ref_count(self.last_loaded_ckpt_key)
+            
+            self._increment_ref_count(kwargs['ckpt_name'])
+
+        if MakeBasicPipe.shared_loader is None:
+            MakeBasicPipe.shared_loader = CheckpointLoaderSimpleShared()
+        model, clip, vae, key = MakeBasicPipe.shared_loader.doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
+        
+        self.last_loaded_ckpt_key = kwargs['ckpt_name']
 
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
-
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
-            utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-                                          "To use 'Make Basic Pipe (Inspire)' node, 'Impact Pack' extension is required.")
-            raise Exception("[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
+            raise Exception("[ERROR] 'Impact Pack' is required.")
 
-        model, clip, vae, key = CheckpointLoaderSimpleShared().doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
-        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder)
-        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=final_positive_prompt, model=model, clip=clip, clip_encoder=clip_encoder)
+        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=final_negative_prompt, model=model, clip=clip, clip_encoder=clip_encoder)
 
         if 'vae_opt' in kwargs:
             vae = kwargs['vae_opt']
 
         basic_pipe = model, clip, vae, positive, negative
-
         return (basic_pipe, key)
+    
+    shared_loader = None
 
+    def __init__(self):
+        self.last_loaded_ckpt_key = None
+
+    def __del__(self):
+        if self.last_loaded_ckpt_key:
+            self._decrement_ref_count(self.last_loaded_ckpt_key)
+
+    def _increment_ref_count(self, key):
+        MODEL_REF_COUNT[key] = MODEL_REF_COUNT.get(key, 0) + 1
+
+    def _decrement_ref_count(self, key):
+        if key in MODEL_REF_COUNT:
+            MODEL_REF_COUNT[key] -= 1
+            # If the reference count drops to zero, it's safe to unload the model.
+            if MODEL_REF_COUNT[key] <= 0:
+                try:
+                    del cache[key]
+                    del MODEL_REF_COUNT[key]
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                except KeyError:
+                    pass # Already gone, which is fine.
 
 class PromptBuilder:
     @classmethod
