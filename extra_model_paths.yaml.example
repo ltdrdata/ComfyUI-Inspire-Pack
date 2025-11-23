@@ -1,0 +1,25 @@
+# ComfyUI-Inspire-Pack Extra Model Paths Configuration Example
+# Copy this file to your ComfyUI root directory as 'extra_model_paths.yaml'
+# and uncomment/modify the paths below to match your setup.
+
+# Basic configuration example
+# my_config:
+#   base_path: "/path/to/your/models/"
+#   ipadapter: "ipadapter/"
+#   checkpoints: "checkpoints/"
+#   loras: "loras/"
+#   clip_vision: "clip_vision/"
+
+# Windows example with different drive
+# windows_config:
+#   base_path: "E:/AI_Models/"
+#   ipadapter: "IPAdapter/"
+#   checkpoints: "checkpoints/"
+
+# Multiple paths example
+# multi_path_config:
+#   ipadapter: |
+#     /first/ipadapter/path/
+#     /second/ipadapter/path/
+
+# After configuring, restart ComfyUI to load models from your custom locations.

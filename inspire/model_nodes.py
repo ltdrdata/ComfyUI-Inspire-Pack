@@ -8,39 +8,6 @@ from comfy import sdxl_clip
 import logging
 
 
-model_preset = {
-    # base
-    "SD1.5":                ("ip-adapter_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Light v11":      ("ip-adapter_sd15_light_v11",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Light":          ("ip-adapter_sd15_light",           "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Plus":           ("ip-adapter-plus_sd15",            "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Plus Face":      ("ip-adapter-plus-face_sd15",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 Full Face":      ("ip-adapter-full-face_sd15",       "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SD1.5 ViT-G":          ("ip-adapter_sd15_vit-G",           "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
-    "SDXL":                 ("ip-adapter_sdxl",                 "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
-    "SDXL ViT-H":           ("ip-adapter_sdxl_vit-h",           "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SDXL Plus ViT-H":      ("ip-adapter-plus_sdxl_vit-h",      "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SDXL Plus Face ViT-H": ("ip-adapter-plus-face_sdxl_vit-h", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "Kolors Plus":          ("Kolors-IP-Adapter-Plus",          "clip-vit-large-patch14-336", None, False),
-
-    # faceid
-    "SD1.5 FaceID":                ("ip-adapter-faceid_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sd15_lora", True),
-    "SD1.5 FaceID Plus v2":        ("ip-adapter-faceid-plusv2_sd15",          "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sd15_lora", True),
-    "SD1.5 FaceID Plus":           ("ip-adapter-faceid-plus_sd15",            "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plus_sd15_lora", True),
-    "SD1.5 FaceID Portrait v11":   ("ip-adapter-faceid-portrait-v11_sd15",    "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
-    "SD1.5 FaceID Portrait":       ("ip-adapter-faceid-portrait_sd15",        "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
-    "SDXL FaceID":                 ("ip-adapter-faceid_sdxl",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid_sdxl_lora", True),
-    "SDXL FaceID Plus v2":         ("ip-adapter-faceid-plusv2_sdxl",          "CLIP-ViT-H-14-laion2B-s32B-b79K", "ip-adapter-faceid-plusv2_sdxl_lora", True),
-    "SDXL FaceID Portrait":        ("ip-adapter-faceid-portrait_sdxl",        "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
-    "SDXL FaceID Portrait unnorm": ("ip-adapter-faceid-portrait_sdxl_unnorm", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, True),
-    "Kolors FaceID Plus":          ("Kolors-IP-Adapter-FaceID-Plus",          "clip-vit-large-patch14-336", None, True),
-
-    # composition
-    "SD1.5 Plus Composition":      ("ip-adapter_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SDXL Plus Composition":       ("ip-adapter_sdxl", "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
-    }
-
-
 def lookup_model(model_dir, name):
     if name is None:
         return None, "N/A"
@@ -58,10 +25,46 @@ def lookup_model(model_dir, name):
 class IPAdapterModelHelper:
     @classmethod
     def INPUT_TYPES(s):
+        # Scan for IPAdapter model files in the ipadapter folders
+        ipadapter_options = []
+        try:
+            ipadapter_files = folder_paths.get_filename_list("ipadapter")
+            for filename in ipadapter_files:
+                # Remove extension to get the base name
+                base_name = os.path.splitext(filename)[0]
+                ipadapter_options.append(base_name)
+        except Exception as e:
+            logging.warning(f"[Inspire Pack] IPAdapterModelHelper: Failed to scan ipadapter folder: {e}")
+        
+        # Scan for CLIP vision model files in the clip_vision folders
+        clipvision_options = []
+        try:
+            clip_vision_files = folder_paths.get_filename_list("clip_vision")
+            for filename in clip_vision_files:
+                # Remove extension to get the base name
+                base_name = os.path.splitext(filename)[0]
+                clipvision_options.append(base_name)
+        except Exception as e:
+            logging.warning(f"[Inspire Pack] IPAdapterModelHelper: Failed to scan clip_vision folder: {e}")
+        
+        # Scan for LoRA model files in the loras folders
+        lora_options = ["None"]  # Add "None" as first option for no LoRA
+        try:
+            lora_files = folder_paths.get_filename_list("loras")
+            for filename in lora_files:
+                # Remove extension to get the base name
+                base_name = os.path.splitext(filename)[0]
+                lora_options.append(base_name)
+        except Exception as e:
+            logging.warning(f"[Inspire Pack] IPAdapterModelHelper: Failed to scan loras folder: {e}")
+        
         return {
             "required": {
                 "model": ("MODEL",),
-                "preset": (list(model_preset.keys()),),
+                "ipadapter_model": (ipadapter_options,),
+                "clip_vision_model": (clipvision_options,),
+                "lora_model": (lora_options,),
+                "is_insightface": ("BOOLEAN", {"default": False}),
                 "lora_strength_model": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
                 "lora_strength_clip": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
                 "insightface_provider": (["CPU", "CUDA", "ROCM"], ),
@@ -80,28 +83,16 @@ class IPAdapterModelHelper:
 
     CATEGORY = "InspirePack/models"
 
-    def doit(self, model, preset, lora_strength_model, lora_strength_clip, insightface_provider, clip=None, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
+    def doit(self, model, ipadapter_model, clip_vision_model, lora_model, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, clip=None, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
         if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
             raise Exception("[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
-        is_sdxl_preset = 'SDXL' in preset
-        if clip is not None:
-            is_sdxl_model = isinstance(clip.tokenizer, sdxl_clip.SDXLTokenizer)
-        else:
-            is_sdxl_model = False
-
-        if is_sdxl_preset != is_sdxl_model:
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "IPADAPTER (fail)"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": "CLIP_VISION (fail)"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE (fail)"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL (fail)"})
-            server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 5, "label": "CLIP (fail)"})
-            logging.error("[Inspire Pack] IPAdapterModelHelper: You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
-            raise Exception("[ERROR] You cannot mix SDXL and SD1.5 in the checkpoint and IPAdapter.")
-
-        ipadapter, clipvision, lora, is_insightface = model_preset[preset]
+        # Use the selected models directly
+        ipadapter = ipadapter_model
+        clipvision = clip_vision_model
+        lora = None if lora_model == "None" else lora_model
 
         ipadapter, ok1 = lookup_model("ipadapter", ipadapter)
         clipvision, ok2 = lookup_model("clip_vision", clipvision)
