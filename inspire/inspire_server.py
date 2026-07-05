@@ -255,7 +255,7 @@ def workflow_loadimage_update(json_data):
     prompt = json_data['prompt']
 
     for v in prompt.values():
-        if 'class_type' in v and v['class_type'] == 'LoadImage //Inspire':
+        if isinstance(v, dict) and v.get('class_type') == 'LoadImage //Inspire':
             v['inputs']['image'] = "#DATA"
 
 
@@ -271,7 +271,7 @@ def populate_wildcards(json_data):
         updated_widget_values = {}
         mbp_updated_widget_values = {}
         for k, v in prompt.items():
-            if 'class_type' in v and v['class_type'] == 'WildcardEncode //Inspire':
+            if isinstance(v, dict) and v.get('class_type') == 'WildcardEncode //Inspire':
                 inputs = v['inputs']
 
                 # legacy adapter
