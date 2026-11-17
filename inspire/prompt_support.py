@@ -1009,7 +1009,7 @@ class RemoveControlNetFromRegionalPrompts:
         rcn = RemoveControlNet()
         res = []
         for rp in regional_prompts:
-            _, _, _, _, positive, negative = rp.sampler.params
+            positive, negative = rp.sampler.params[4:6]
             positive, negative = rcn.doit(positive)[0], rcn.doit(negative)[0]
             sampler = rp.sampler.clone_with_conditionings(positive, negative)
             res.append(rp.clone_with_sampler(sampler))
