@@ -333,7 +333,22 @@ async function queuePrompt_with_widget_idxs(number, { output, workflow }, ...arg
 		}
 	}
 
-	return await original_queuePrompt.call(api, number, { output, workflow }, ...args);
+	const seeds_updated = global_seed_updated(output);
+	const result = await original_queuePrompt.call(api, number, { output, workflow }, ...args);
+	await seeds_updated;
+	return result;
+}
+
+// The server sends the seeds for the next prompt in an event of its own. That event can come after the answer to the request,
+// and the page builds the next prompt of a batch from the widgets as soon as it has that answer.
+function global_seed_updated(output) {
+	if(!Object.values(output).some((node) => node.class_type == 'GlobalSeed //Inspire'))
+		return Promise.resolve();
+
+	return new Promise((resolve) => {
+		api.addEventListener("inspire-global-seed", resolve, { once: true });
+		setTimeout(resolve, 1000);
+	});
 }
 
 api.queuePrompt = queuePrompt_with_widget_idxs;
