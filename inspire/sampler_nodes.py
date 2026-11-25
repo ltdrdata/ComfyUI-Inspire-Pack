@@ -191,7 +191,6 @@ class Guider_scheduled(CFGGuider):
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
-        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -223,11 +222,11 @@ class Guider_scheduled(CFGGuider):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
+            # a sigma between two steps takes the cfg of the step it leads to
+            i = next((i for i, x in enumerate(self.sigmas) if float(x) < k), len(self.sigmas) - 1)
+            v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
-        self.last_i = v[1]
         self.cfg = v[0]
 
         return super().predict_noise(x, timestep, model_options, seed)
@@ -244,7 +243,6 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
         self.to_cfg = to_cfg
         self.schedule = schedule
         self.neg_scale = neg_scale
-        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -276,11 +274,11 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
+            # a sigma between two steps takes the cfg of the step it leads to
+            i = next((i for i, x in enumerate(self.sigmas) if float(x) < k), len(self.sigmas) - 1)
+            v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
-        self.last_i = v[1]
         self.cfg = v[0]
 
         return super().predict_noise(x, timestep, model_options, seed)
