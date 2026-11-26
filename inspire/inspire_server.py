@@ -291,7 +291,7 @@ def populate_wildcards(json_data):
                                 input_seed = int(input_node['inputs']['value'])
                                 if not isinstance(input_seed, int):
                                     continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
+                            elif input_node['class_type'] == 'Seed (rgthree)':
                                 input_seed = int(input_node['inputs']['seed'])
                                 if not isinstance(input_seed, int):
                                     continue
@@ -322,7 +322,7 @@ def populate_wildcards(json_data):
                                 input_seed = int(input_node['inputs']['value'])
                                 if not isinstance(input_seed, int):
                                     continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
+                            elif input_node['class_type'] == 'Seed (rgthree)':
                                 input_seed = int(input_node['inputs']['seed'])
                                 if not isinstance(input_seed, int):
                                     continue
