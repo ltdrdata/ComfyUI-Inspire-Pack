@@ -222,7 +222,7 @@ class Guider_scheduled(CFGGuider):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # a sigma between two steps takes the cfg of the step it leads to, and one that a sampler worked out again is a rounding away from its step
+            # a sigma that a sampler worked out again is a rounding away from its step
             i = next((i for i, s in enumerate(self.sigmas) if float(s) < k or math.isclose(float(s), k, rel_tol=1e-5)), len(self.sigmas) - 1)
             v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
@@ -274,7 +274,7 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # a sigma between two steps takes the cfg of the step it leads to, and one that a sampler worked out again is a rounding away from its step
+            # a sigma that a sampler worked out again is a rounding away from its step
             i = next((i for i, s in enumerate(self.sigmas) if float(s) < k or math.isclose(float(s), k, rel_tol=1e-5)), len(self.sigmas) - 1)
             v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
