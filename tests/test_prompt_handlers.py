@@ -220,6 +220,19 @@ def test_prompt_builder_is_validated_whatever_category_the_workflow_holds(pack, 
     assert pack.backend_support.cache["unit"] == ("text", (False, "a fox"))
 
 
+def test_prompt_builder_is_validated_whatever_preset_the_prompt_holds(pack, comfyui):
+    prompt = {
+        "1": {"class_type": "PromptBuilder //Inspire", "inputs": {"category": "Angle of View", "preset": "From Above", "text": "a fox, From Above"}},
+        "2": {"class_type": "CacheBackendData //Inspire", "inputs": {"key": "unit", "tag": "text", "data": ["1", 0]}},
+    }
+    assert not comfyui.validate(prompt)
+    data = submit(pack, prompt)
+    assert data["prompt"]["1"]["inputs"]["preset"] == "#PRESET"
+    assert comfyui.validate(data["prompt"])
+    comfyui.execute(data["prompt"], ["2"])
+    assert pack.backend_support.cache["unit"] == ("text", (False, "a fox, From Above"))
+
+
 def test_list_counter_starts_again_with_each_prompt(pack):
     counter = pack.prompt_support.ListCounter()
     assert [counter.doit("x", 10, "4")[0] for _ in range(3)] == [10, 11, 12]

@@ -365,6 +365,7 @@ def force_reset_useless_params(json_data):
     for k, v in prompt.items():
         if 'class_type' in v and v['class_type'] == 'PromptBuilder //Inspire':
             v['inputs']['category'] = '#PLACEHOLDER'
+            v['inputs']['preset'] = '#PRESET'
 
     return json_data
 
