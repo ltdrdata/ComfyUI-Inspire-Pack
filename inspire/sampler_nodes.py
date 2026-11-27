@@ -185,13 +185,12 @@ class Guider_scheduled(CFGGuider):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule):
         super().__init__(model_patcher)
         self.default_cfg = self.cfg
-        self.sigmas = sigmas
+        self.sigmas = sigmas.tolist()
         self.cfg_sigmas = None
         self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
-        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -223,11 +222,11 @@ class Guider_scheduled(CFGGuider):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
+            # a sigma that a sampler worked out again is a rounding away from its step
+            i = next((i for i, s in enumerate(self.sigmas) if s < k or math.isclose(s, k, rel_tol=1e-5)), len(self.sigmas) - 1)
+            v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
-        self.last_i = v[1]
         self.cfg = v[0]
 
         return super().predict_noise(x, timestep, model_options, seed)
@@ -237,14 +236,13 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule, neg_scale):
         super().__init__(model_patcher)
         self.default_cfg = self.cfg
-        self.sigmas = sigmas
+        self.sigmas = sigmas.tolist()
         self.cfg_sigmas = None
         self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
         self.neg_scale = neg_scale
-        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -276,11 +274,11 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
+            # a sigma that a sampler worked out again is a rounding away from its step
+            i = next((i for i, s in enumerate(self.sigmas) if s < k or math.isclose(s, k, rel_tol=1e-5)), len(self.sigmas) - 1)
+            v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
-        self.last_i = v[1]
         self.cfg = v[0]
 
         return super().predict_noise(x, timestep, model_options, seed)
