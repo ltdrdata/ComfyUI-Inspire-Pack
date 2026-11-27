@@ -16,6 +16,7 @@ from PIL import Image
 import numpy as np
 import logging
 import re
+import json
 
 
 def extract_first_number(s):
@@ -74,7 +75,8 @@ class LoadImagesFromDirBatch:
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK", "INT")
+    RETURN_TYPES = ("IMAGE", "MASK", "INT", "STRING")
+    RETURN_NAMES = ("images", "masks", "count", "image_paths_json")
     FUNCTION = "load_images"
 
     CATEGORY = "image"
@@ -107,6 +109,7 @@ class LoadImagesFromDirBatch:
 
         images = []
         masks = []
+        image_paths = []
 
         limit_images = False
         if image_load_cap > 0:
@@ -133,10 +136,11 @@ class LoadImagesFromDirBatch:
                 mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             images.append(image)
             masks.append(mask)
+            image_paths.append(image_path)
             image_count += 1
 
         if len(images) == 1:
-            return (images[0], masks[0], 1)
+            return (images[0], masks[0], 1, json.dumps(image_paths), )
 
         elif len(images) > 1:
             image1 = images[0]
@@ -162,7 +166,7 @@ class LoadImagesFromDirBatch:
                 else:
                     mask1 = torch.cat((mask1, mask2), dim=0)
 
-            return (image1, mask1, len(images))
+            return (image1, mask1, len(images), json.dumps(image_paths), )
 
 
 class LoadImagesFromDirList:

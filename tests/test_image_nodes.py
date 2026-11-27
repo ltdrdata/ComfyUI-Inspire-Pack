@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 
 import pytest
 import torch
@@ -61,24 +62,32 @@ def test_load_image_list_from_dir_starts_at_the_index_and_stops_at_the_cap(pack,
 
 
 def test_load_image_batch_from_dir_resizes_every_picture_to_the_first(pack, folder):
-    image, mask, count = pack.image_util.LoadImagesFromDirBatch().load_images(str(folder), sort_method="Numerical (DESC)")
+    image, mask, count, paths = pack.image_util.LoadImagesFromDirBatch().load_images(str(folder), sort_method="Numerical (DESC)")
     assert count == 3 and image.shape == (3, 8, 8, 3)
     assert colors(image) == [GREEN, RED, BLUE]
     assert mask.shape == (3, 64, 64)
+    assert json.loads(paths) == [str(folder / name) for name in ("unit-10.png", "unit-2.png", "unit-1.png")]
 
 
 def test_load_image_batch_from_dir_gives_the_transparency_of_each_picture_at_its_size(pack, tmp_path):
     Image.new("RGB", (4, 4), RED).save(tmp_path / "unit-1.png")
     clear = Image.new("RGBA", (4, 4), (0, 0, 255, 0))
     clear.save(tmp_path / "unit-2.png")
-    image, mask, count = pack.image_util.LoadImagesFromDirBatch().load_images(str(tmp_path), sort_method="Alphabetical (ASC)")
+    image, mask, count, _ = pack.image_util.LoadImagesFromDirBatch().load_images(str(tmp_path), sort_method="Alphabetical (ASC)")
     assert count == 2 and mask.shape == (2, 4, 4)
     assert not mask[0].any() and bool((mask[1] == 1).all())
 
 
 def test_load_image_batch_from_dir_gives_a_single_picture_with_its_own_size(pack, folder):
-    image, mask, count = pack.image_util.LoadImagesFromDirBatch().load_images(str(folder), 1, sort_method="Alphabetical (ASC)")
+    image, mask, count, paths = pack.image_util.LoadImagesFromDirBatch().load_images(str(folder), 1, sort_method="Alphabetical (ASC)")
     assert count == 1 and image.shape == (1, 4, 16, 3)
+    assert json.loads(paths) == [str(folder / "unit-1.png")]
+
+
+def test_load_image_batch_from_dir_names_the_pictures_it_loaded_from_the_index_to_the_cap(pack, folder):
+    _, _, count, paths = pack.image_util.LoadImagesFromDirBatch().load_images(str(folder), 2, 1, sort_method="Numerical (ASC)")
+    assert count == 2
+    assert json.loads(paths) == [str(folder / name) for name in ("unit-2.png", "unit-10.png")]
 
 
 def test_the_directory_loaders_say_what_is_missing(pack, tmp_path):
