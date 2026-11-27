@@ -2,6 +2,7 @@
 This repository offers various extension nodes for ComfyUI. Nodes here have different characteristics compared to those in the ComfyUI Impact Pack. The Impact Pack has become too large now...
 
 ## Notice:
+* V1.24: `Remove ControlNet [RegionalPrompts] (Inspire)` requires Impact Pack V8.32 or later. With an older Impact Pack the regional prompts it returns lose their `sigma_factor` and `scheduler_func_opt`.
 * V1.18: To use the 'OSS' Scheduler, please update to ComfyUI version 0.3.28 or later (April 13th or newer) and Impact Pack version V8.11 or higher.
 * V1.9.1 To avoid confusion with the `NOISE` type in core, the type name has been changed to `NOISE_IMAGE`.
 * V0.73 The Variation Seed feature is added to Regional Prompt nodes, and it is only compatible with versions Impact Pack V5.10 and above.
@@ -101,7 +102,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Random Generator for List (Inspire)`: When connecting the list output to the signal input, this node generates random values for all items in the list.
   * `Make Basic Pipe (Inspire)`: This is a node that creates a BASIC_PIPE using Wildcard Encode. The `Add select to` determines whether the selected item from the `Select to...` combo will be input as positive wildcard text or negative wildcard text.
   * `Remove ControlNet (Inspire)`, `Remove ControlNet [RegionalPrompts] (Inspire)`: Remove ControlNet from CONDITIONING or REGIONAL_PROMPTS.
-    * `Remove ControlNet [RegionalPrompts] (Inspire)` requires Impact Pack V4.73.1 or above.
+    * `Remove ControlNet [RegionalPrompts] (Inspire)` requires Impact Pack V8.32 or above.
 
 ### Regional Nodes - These node simplifies the application of prompts by region.
   * Regional Sampler - These nodes assists in the easy utilization of the regional sampler in the `Impact Pack`.

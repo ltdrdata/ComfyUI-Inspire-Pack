@@ -1,0 +1,4868 @@
+{
+  "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
+  "revision": 0,
+  "last_node_id": 101,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "XY Input: Lora Block Weight //Inspire",
+      "pos": [
+        250,
+        1690
+      ],
+      "size": [
+        400,
+        444
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "X (vectors)",
+          "type": "XY",
+          "links": null
+        },
+        {
+          "name": "Y (effect_compares)",
+          "type": "XY",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "XY Input: Lora Block Weight //Inspire"
+      },
+      "widgets_values": [
+        "All",
+        "lcm-lora-sdv1-5.safetensors",
+        1,
+        1,
+        false,
+        0,
+        "randomize",
+        1,
+        1,
+        "Preset",
+        "SD-NONE/SD-ALL\nSD-ALL/SD-ALL\nSD-INS/SD-ALL\nSD-IND/SD-ALL\nSD-INALL/SD-ALL\nSD-MIDD/SD-ALL\nSD-MIDD0.2/SD-ALL\nSD-MIDD0.8/SD-ALL\nSD-MOUT/SD-ALL\nSD-OUTD/SD-ALL\nSD-OUTS/SD-ALL\nSD-OUTALL/SD-ALL",
+        "viridis",
+        0.8,
+        1.5,
+        "Simple"
+      ],
+      "widgets_values_named": {
+        "category_filter": "All",
+        "lora_name": "lcm-lora-sdv1-5.safetensors",
+        "strength_model": 1,
+        "strength_clip": 1,
+        "inverse": false,
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "A": 1,
+        "B": 1,
+        "preset": "Preset",
+        "block_vectors": "SD-NONE/SD-ALL\nSD-ALL/SD-ALL\nSD-INS/SD-ALL\nSD-IND/SD-ALL\nSD-INALL/SD-ALL\nSD-MIDD/SD-ALL\nSD-MIDD0.2/SD-ALL\nSD-MIDD0.8/SD-ALL\nSD-MOUT/SD-ALL\nSD-OUTD/SD-ALL\nSD-OUTS/SD-ALL\nSD-OUTALL/SD-ALL",
+        "heatmap_palette": "viridis",
+        "heatmap_alpha": 0.8,
+        "heatmap_strength": 1.5,
+        "xyplot_mode": "Simple"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoraLoaderBlockWeight //Inspire",
+      "pos": [
+        1050,
+        1690
+      ],
+      "size": [
+        400,
+        392
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "populated_vector",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderBlockWeight //Inspire"
+      },
+      "widgets_values": [
+        "All",
+        "lcm-lora-sdv1-5.safetensors",
+        1,
+        1,
+        false,
+        0,
+        "randomize",
+        4,
+        1,
+        "Preset",
+        "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1",
+        false
+      ],
+      "widgets_values_named": {
+        "category_filter": "All",
+        "lora_name": "lcm-lora-sdv1-5.safetensors",
+        "strength_model": 1,
+        "strength_clip": 1,
+        "inverse": false,
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "A": 4,
+        "B": 1,
+        "preset": "Preset",
+        "block_vector": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1",
+        "bypass": false
+      }
+    },
+    {
+      "id": 3,
+      "type": "LoraBlockInfo //Inspire",
+      "pos": [
+        1850,
+        1690
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "LoraBlockInfo //Inspire"
+      },
+      "widgets_values": [
+        "lcm-lora-sdv1-5.safetensors",
+        ""
+      ],
+      "widgets_values_named": {
+        "lora_name": "lcm-lora-sdv1-5.safetensors",
+        "block_info": ""
+      }
+    },
+    {
+      "id": 4,
+      "type": "MakeLBW //Inspire",
+      "pos": [
+        2650,
+        1690
+      ],
+      "size": [
+        400,
+        324
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lbw_model",
+          "type": "LBW_MODEL",
+          "links": null
+        },
+        {
+          "name": "populated_vector",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MakeLBW //Inspire"
+      },
+      "widgets_values": [
+        "All",
+        "lcm-lora-sdv1-5.safetensors",
+        false,
+        0,
+        "randomize",
+        4,
+        1,
+        "Preset",
+        "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1",
+        false
+      ],
+      "widgets_values_named": {
+        "category_filter": "All",
+        "lora_name": "lcm-lora-sdv1-5.safetensors",
+        "inverse": false,
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "A": 4,
+        "B": 1,
+        "preset": "Preset",
+        "block_vector": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1",
+        "bypass": false
+      }
+    },
+    {
+      "id": 5,
+      "type": "ApplyLBW //Inspire",
+      "pos": [
+        3515,
+        1690
+      ],
+      "size": [
+        270,
+        122
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "name": "lbw_model",
+          "type": "LBW_MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ApplyLBW //Inspire"
+      },
+      "widgets_values": [
+        1,
+        1
+      ],
+      "widgets_values_named": {
+        "strength_model": 1,
+        "strength_clip": 1
+      }
+    },
+    {
+      "id": 6,
+      "type": "SaveLBW //Inspire",
+      "pos": [
+        4315,
+        1690
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lbw_model",
+          "type": "LBW_MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveLBW //Inspire"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI"
+      }
+    },
+    {
+      "id": 7,
+      "type": "LoadLBW //Inspire",
+      "pos": [
+        5115,
+        1690
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LBW_MODEL",
+          "type": "LBW_MODEL",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadLBW //Inspire"
+      },
+      "widgets_values": [
+        null
+      ],
+      "widgets_values_named": {
+        "lbw_model": null
+      }
+    },
+    {
+      "id": 8,
+      "type": "OpenPose_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        5864.30537109375,
+        1690
+      ],
+      "size": [
+        371.3892578125,
+        130
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OpenPose_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        1
+      ],
+      "widgets_values_named": {
+        "detect_hand": true,
+        "detect_body": true,
+        "detect_face": true,
+        "resolution_upscale_by": 1
+      }
+    },
+    {
+      "id": 9,
+      "type": "DWPreprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        6688.58662109375,
+        1690
+      ],
+      "size": [
+        322.8267578125,
+        178
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DWPreprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        1,
+        "yolox_l.onnx",
+        "dw-ll_ucoco_384_bs5.torchscript.pt"
+      ],
+      "widgets_values_named": {
+        "detect_hand": true,
+        "detect_body": true,
+        "detect_face": true,
+        "resolution_upscale_by": 1,
+        "bbox_detector": "yolox_l.onnx",
+        "pose_estimator": "dw-ll_ucoco_384_bs5.torchscript.pt"
+      }
+    },
+    {
+      "id": 10,
+      "type": "MiDaS_DepthMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        7438.74921875,
+        1690
+      ],
+      "size": [
+        422.5015625,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiDaS_DepthMap_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        6.283185307179586,
+        0.1
+      ],
+      "widgets_values_named": {
+        "a": 6.283185307179586,
+        "bg_threshold": 0.1
+      }
+    },
+    {
+      "id": 11,
+      "type": "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        8239.227734375,
+        1690
+      ],
+      "size": [
+        421.54453125,
+        106
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        0,
+        0,
+        false
+      ],
+      "widgets_values_named": {
+        "rm_nearest": 0,
+        "rm_background": 0,
+        "boost": false
+      }
+    },
+    {
+      "id": 12,
+      "type": "Canny_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        9077.4201171875,
+        1690
+      ],
+      "size": [
+        345.159765625,
+        82
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Canny_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        0.4,
+        0.8
+      ],
+      "widgets_values_named": {
+        "low_threshold": 0.4,
+        "high_threshold": 0.8
+      }
+    },
+    {
+      "id": 13,
+      "type": "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        9827.53828125,
+        1690
+      ],
+      "size": [
+        444.9234375,
+        106
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        10,
+        0.5,
+        1
+      ],
+      "widgets_values_named": {
+        "max_faces": 10,
+        "min_confidence": 0.5,
+        "resolution_upscale_by": 1
+      }
+    },
+    {
+      "id": 14,
+      "type": "HEDPreprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        10684.1056640625,
+        1690
+      ],
+      "size": [
+        331.788671875,
+        58
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HEDPreprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "safe": true
+      }
+    },
+    {
+      "id": 15,
+      "type": "FakeScribblePreprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        10653.70283203125,
+        3190
+      ],
+      "size": [
+        392.5943359375,
+        58
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FakeScribblePreprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "safe": true
+      }
+    },
+    {
+      "id": 16,
+      "type": "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        9884.19501953125,
+        3190
+      ],
+      "size": [
+        331.6099609375,
+        26
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire"
+      }
+    },
+    {
+      "id": 17,
+      "type": "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        9055.3439453125,
+        3190
+      ],
+      "size": [
+        389.312109375,
+        26
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire"
+      }
+    },
+    {
+      "id": 18,
+      "type": "LineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        8275.0685546875,
+        3190
+      ],
+      "size": [
+        349.862890625,
+        58
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LineArt_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "coarse": false
+      }
+    },
+    {
+      "id": 19,
+      "type": "Color_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        7510.7287109375,
+        3190
+      ],
+      "size": [
+        278.542578125,
+        26
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Color_Preprocessor_Provider_for_SEGS //Inspire"
+      }
+    },
+    {
+      "id": 20,
+      "type": "InpaintPreprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        6676.14521484375,
+        3190
+      ],
+      "size": [
+        347.7095703125,
+        58
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InpaintPreprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "black_pixel_for_xinsir_cn": false
+      }
+    },
+    {
+      "id": 21,
+      "type": "TilePreprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        5886.57685546875,
+        3190
+      ],
+      "size": [
+        326.8462890625,
+        58
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TilePreprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        3
+      ],
+      "widgets_values_named": {
+        "pyrUp_iters": 3
+      }
+    },
+    {
+      "id": 22,
+      "type": "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire",
+      "pos": [
+        5031.99921875,
+        3190
+      ],
+      "size": [
+        436.0015625,
+        26
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire"
+      }
+    },
+    {
+      "id": 23,
+      "type": "MediaPipeFaceMeshDetectorProvider //Inspire",
+      "pos": [
+        4270.88154296875,
+        3190
+      ],
+      "size": [
+        358.2369140625,
+        270
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BBOX_DETECTOR",
+          "type": "BBOX_DETECTOR",
+          "links": null
+        },
+        {
+          "name": "SEGM_DETECTOR",
+          "type": "SEGM_DETECTOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MediaPipeFaceMeshDetectorProvider //Inspire"
+      },
+      "widgets_values": [
+        10,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "max_faces": 10,
+        "face": true,
+        "mouth": false,
+        "left_eyebrow": false,
+        "left_eye": false,
+        "left_pupil": false,
+        "right_eyebrow": false,
+        "right_eye": false,
+        "right_pupil": false
+      }
+    },
+    {
+      "id": 24,
+      "type": "KSampler //Inspire",
+      "pos": [
+        3515,
+        3190
+      ],
+      "size": [
+        270,
+        426
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        1,
+        "GPU(=A1111)",
+        "incremental",
+        0,
+        0,
+        "linear",
+        0
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "noise_mode": "GPU(=A1111)",
+        "batch_seed_mode": "incremental",
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "variation_method": "linear",
+        "internal_seed": 0
+      }
+    },
+    {
+      "id": 25,
+      "type": "KSamplerAdvanced //Inspire",
+      "pos": [
+        2693.8232421875,
+        3190
+      ],
+      "size": [
+        312.353515625,
+        518
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "noise_opt",
+          "shape": 7,
+          "type": "NOISE_IMAGE",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerAdvanced //Inspire"
+      },
+      "widgets_values": [
+        true,
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        0,
+        10000,
+        "GPU(=A1111)",
+        false,
+        "incremental",
+        0,
+        0,
+        "linear",
+        0
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "start_at_step": 0,
+        "end_at_step": 10000,
+        "noise_mode": "GPU(=A1111)",
+        "return_with_leftover_noise": false,
+        "batch_seed_mode": "incremental",
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "variation_method": "linear",
+        "internal_seed": 0
+      }
+    },
+    {
+      "id": 26,
+      "type": "KSamplerPipe //Inspire",
+      "pos": [
+        1915,
+        3190
+      ],
+      "size": [
+        270,
+        362
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "basic_pipe",
+          "type": "BASIC_PIPE",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerPipe //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        1,
+        "GPU(=A1111)",
+        "incremental",
+        0,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "noise_mode": "GPU(=A1111)",
+        "batch_seed_mode": "incremental",
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "internal_seed": 0
+      }
+    },
+    {
+      "id": 27,
+      "type": "KSamplerAdvancedPipe //Inspire",
+      "pos": [
+        1084.508984375,
+        3190
+      ],
+      "size": [
+        330.98203125,
+        454
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "basic_pipe",
+          "type": "BASIC_PIPE",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "noise_opt",
+          "shape": 7,
+          "type": "NOISE_IMAGE",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerAdvancedPipe //Inspire"
+      },
+      "widgets_values": [
+        true,
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        0,
+        10000,
+        "GPU(=A1111)",
+        false,
+        "incremental",
+        0,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "start_at_step": 0,
+        "end_at_step": 10000,
+        "noise_mode": "GPU(=A1111)",
+        "return_with_leftover_noise": false,
+        "batch_seed_mode": "incremental",
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "internal_seed": 0
+      }
+    },
+    {
+      "id": 28,
+      "type": "RandomNoise //Inspire",
+      "pos": [
+        315,
+        3190
+      ],
+      "size": [
+        270,
+        226
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        "GPU(=A1111)",
+        "incremental",
+        0,
+        0,
+        "linear",
+        0
+      ],
+      "widgets_values_named": {
+        "noise_seed": 0,
+        "control_after_generate": "randomize",
+        "noise_mode": "GPU(=A1111)",
+        "batch_seed_mode": "incremental",
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "variation_method": "linear",
+        "internal_seed": 0
+      }
+    },
+    {
+      "id": 29,
+      "type": "HyperTile //Inspire",
+      "pos": [
+        315,
+        4690
+      ],
+      "size": [
+        270,
+        178
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HyperTile //Inspire"
+      },
+      "widgets_values": [
+        256,
+        2,
+        0,
+        false,
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "tile_size": 256,
+        "swap_size": 2,
+        "max_depth": 0,
+        "scale_depth": false,
+        "seed": 0,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 30,
+      "type": "LoadPromptsFromDir //Inspire",
+      "pos": [
+        1094.735546875,
+        4690
+      ],
+      "size": [
+        310.52890625,
+        170
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "zipped_prompt",
+          "shape": 6,
+          "type": "ZIPPED_PROMPT",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "remaining_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadPromptsFromDir //Inspire"
+      },
+      "widgets_values": [
+        "example",
+        false,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt_dir": "example",
+        "reload": false,
+        "load_cap": 0,
+        "start_index": 0
+      }
+    },
+    {
+      "id": 31,
+      "type": "LoadPromptsFromFile //Inspire",
+      "pos": [
+        1892.5138671875002,
+        4690
+      ],
+      "size": [
+        314.972265625,
+        170
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text_data_opt",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "zipped_prompt",
+          "shape": 6,
+          "type": "ZIPPED_PROMPT",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "remaining_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadPromptsFromFile //Inspire"
+      },
+      "widgets_values": [
+        "example/prompt2.txt",
+        false,
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "prompt_file": "example/prompt2.txt",
+        "reload": false,
+        "load_cap": 0,
+        "start_index": 0
+      }
+    },
+    {
+      "id": 32,
+      "type": "LoadSinglePromptFromFile //Inspire",
+      "pos": [
+        2673.77998046875,
+        4690
+      ],
+      "size": [
+        352.4400390625,
+        82
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text_data_opt",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ZIPPED_PROMPT",
+          "shape": 6,
+          "type": "ZIPPED_PROMPT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadSinglePromptFromFile //Inspire"
+      },
+      "widgets_values": [
+        "example/prompt2.txt",
+        0
+      ],
+      "widgets_values_named": {
+        "prompt_file": "example/prompt2.txt",
+        "index": 0
+      }
+    },
+    {
+      "id": 33,
+      "type": "UnzipPrompt //Inspire",
+      "pos": [
+        3555.70576171875,
+        4690
+      ],
+      "size": [
+        188.5884765625,
+        66
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "zipped_prompt",
+          "type": "ZIPPED_PROMPT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "name",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UnzipPrompt //Inspire"
+      }
+    },
+    {
+      "id": 34,
+      "type": "ZipPrompt //Inspire",
+      "pos": [
+        4350.7685546875,
+        4690
+      ],
+      "size": [
+        198.462890625,
+        66
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "name_opt",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ZIPPED_PROMPT",
+          "type": "ZIPPED_PROMPT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ZipPrompt //Inspire"
+      }
+    },
+    {
+      "id": 35,
+      "type": "PromptExtractor //Inspire",
+      "pos": [
+        5050,
+        4690
+      ],
+      "size": [
+        400,
+        412
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PromptExtractor //Inspire"
+      },
+      "widgets_values": [
+        "all-inspire-nodes.input.png",
+        "",
+        "",
+        "",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "all-inspire-nodes.input.png",
+        "positive_id": "",
+        "negative_id": "",
+        "info": "",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 36,
+      "type": "GlobalSeed //Inspire",
+      "pos": [
+        5915,
+        4690
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "GlobalSeed //Inspire"
+      },
+      "widgets_values": [
+        0,
+        true,
+        "fixed",
+        ""
+      ],
+      "widgets_values_named": {
+        "value": 0,
+        "mode": true,
+        "action": "fixed",
+        "last_seed": ""
+      }
+    },
+    {
+      "id": 37,
+      "type": "SeedLogger //Inspire",
+      "pos": [
+        6650,
+        4690
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SeedLogger //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        "",
+        5
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "seeds": "",
+        "limit": 5
+      }
+    },
+    {
+      "id": 38,
+      "type": "GlobalSampler //Inspire",
+      "pos": [
+        7515,
+        4690
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "GlobalSampler //Inspire"
+      },
+      "widgets_values": [
+        "euler",
+        "simple"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "euler",
+        "scheduler": "simple"
+      }
+    },
+    {
+      "id": 39,
+      "type": "BindImageListPromptList //Inspire",
+      "pos": [
+        8250,
+        4690
+      ],
+      "size": [
+        400,
+        202
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "zipped_prompts",
+          "type": "ZIPPED_PROMPT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "positive",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "prompt_label",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BindImageListPromptList //Inspire"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "default_positive": "",
+        "default_negative": ""
+      }
+    },
+    {
+      "id": 40,
+      "type": "WildcardEncode //Inspire",
+      "pos": [
+        9050,
+        4690
+      ],
+      "size": [
+        400,
+        370
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "populated_text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WildcardEncode //Inspire"
+      },
+      "widgets_values": [
+        "none",
+        "comfy++",
+        "",
+        "",
+        "populate",
+        "Select the LoRA to add to the text",
+        "Select Wildcard 🟢 Full Cache",
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "token_normalization": "none",
+        "weight_interpretation": "comfy++",
+        "wildcard_text": "",
+        "populated_text": "",
+        "mode": "populate",
+        "Select to add LoRA": "Select the LoRA to add to the text",
+        "Select to add Wildcard": "Select Wildcard 🟢 Full Cache",
+        "seed": 0,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 41,
+      "type": "PromptBuilder //Inspire",
+      "pos": [
+        9850,
+        4690
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PromptBuilder //Inspire"
+      },
+      "widgets_values": [
+        "Angle of View",
+        "#PRESET",
+        ""
+      ],
+      "widgets_values_named": {
+        "category": "Angle of View",
+        "preset": "#PRESET",
+        "text": ""
+      }
+    },
+    {
+      "id": 42,
+      "type": "SeedExplorer //Inspire",
+      "pos": [
+        10650,
+        4690
+      ],
+      "size": [
+        400,
+        276
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE_IMAGE",
+          "type": "NOISE_IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SeedExplorer //Inspire"
+      },
+      "widgets_values": [
+        "",
+        true,
+        0,
+        0,
+        "GPU(=A1111)",
+        "incremental",
+        "linear",
+        null
+      ],
+      "widgets_values_named": {
+        "seed_prompt": "",
+        "enable_additional": true,
+        "additional_seed": 0,
+        "additional_strength": 0,
+        "noise_mode": "GPU(=A1111)",
+        "initial_batch_seed_mode": "incremental",
+        "variation_method": "linear",
+        "Add to prompt": null
+      }
+    },
+    {
+      "id": 43,
+      "type": "ListCounter //Inspire",
+      "pos": [
+        10715,
+        6190
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "signal",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ListCounter //Inspire"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "base_value": 0
+      }
+    },
+    {
+      "id": 44,
+      "type": "CLIPTextEncodeWithWeight //Inspire",
+      "pos": [
+        9850,
+        6190
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncodeWithWeight //Inspire"
+      },
+      "widgets_values": [
+        "",
+        1,
+        0
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "strength": 1,
+        "add_weight": 0
+      }
+    },
+    {
+      "id": 45,
+      "type": "RandomGeneratorForList //Inspire",
+      "pos": [
+        9083.70576171875,
+        6190
+      ],
+      "size": [
+        332.5884765625,
+        102
+      ],
+      "flags": {},
+      "order": 44,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "signal",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "signal",
+          "type": "*",
+          "links": null
+        },
+        {
+          "name": "random_value",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomGeneratorForList //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 46,
+      "type": "MakeBasicPipe //Inspire",
+      "pos": [
+        8250,
+        6190
+      ],
+      "size": [
+        400,
+        534
+      ],
+      "flags": {},
+      "order": 45,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "vae_opt",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "basic_pipe",
+          "type": "BASIC_PIPE",
+          "links": null
+        },
+        {
+          "name": "cache_key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MakeBasicPipe //Inspire"
+      },
+      "widgets_values": [
+        "dreamshaper_7.safetensors",
+        "",
+        "",
+        "",
+        true,
+        "Select the LoRA to add to the text",
+        "Select Wildcard 🟢 Full Cache",
+        "populate",
+        "",
+        "",
+        "none",
+        "comfy++",
+        -2,
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "dreamshaper_7.safetensors",
+        "ckpt_key_opt": "",
+        "positive_wildcard_text": "",
+        "negative_wildcard_text": "",
+        "Add selection to": true,
+        "Select to add LoRA": "Select the LoRA to add to the text",
+        "Select to add Wildcard": "Select Wildcard 🟢 Full Cache",
+        "wildcard_mode": "populate",
+        "positive_populated_text": "",
+        "negative_populated_text": "",
+        "token_normalization": "none",
+        "weight_interpretation": "comfy++",
+        "stop_at_clip_layer": -2,
+        "seed": 0,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 47,
+      "type": "RemoveControlNet //Inspire",
+      "pos": [
+        7536.4455078125,
+        6190
+      ],
+      "size": [
+        227.108984375,
+        26
+      ],
+      "flags": {},
+      "order": 46,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveControlNet //Inspire"
+      }
+    },
+    {
+      "id": 48,
+      "type": "RemoveControlNetFromRegionalPrompts //Inspire",
+      "pos": [
+        6673.4181640625,
+        6190
+      ],
+      "size": [
+        353.163671875,
+        26
+      ],
+      "flags": {},
+      "order": 47,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "regional_prompts",
+          "type": "REGIONAL_PROMPTS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_PROMPTS",
+          "type": "REGIONAL_PROMPTS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveControlNetFromRegionalPrompts //Inspire"
+      }
+    },
+    {
+      "id": 49,
+      "type": "CompositeNoise //Inspire",
+      "pos": [
+        5914.231640625,
+        6190
+      ],
+      "size": [
+        271.53671875,
+        126
+      ],
+      "flags": {},
+      "order": 48,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "destination",
+          "type": "NOISE_IMAGE",
+          "link": null
+        },
+        {
+          "name": "source",
+          "type": "NOISE_IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE_IMAGE",
+          "type": "NOISE_IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CompositeNoise //Inspire"
+      },
+      "widgets_values": [
+        "center",
+        0,
+        0
+      ],
+      "widgets_values_named": {
+        "mode": "center",
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 50,
+      "type": "LoadImagesFromDir //Inspire",
+      "pos": [
+        5081.10126953125,
+        6190
+      ],
+      "size": [
+        337.7974609375,
+        194
+      ],
+      "flags": {},
+      "order": 49,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImagesFromDir //Inspire"
+      },
+      "widgets_values": [
+        "",
+        0,
+        0,
+        false,
+        "None"
+      ],
+      "widgets_values_named": {
+        "directory": "",
+        "image_load_cap": 0,
+        "start_index": 0,
+        "load_always": false,
+        "sort_method": "None"
+      }
+    },
+    {
+      "id": 51,
+      "type": "LoadImageListFromDir //Inspire",
+      "pos": [
+        4288.33369140625,
+        6190
+      ],
+      "size": [
+        323.3326171875,
+        194
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "shape": 6,
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "shape": 6,
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "FILE PATH",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImageListFromDir //Inspire"
+      },
+      "widgets_values": [
+        "",
+        0,
+        0,
+        false,
+        "None"
+      ],
+      "widgets_values_named": {
+        "directory": "",
+        "image_load_cap": 0,
+        "start_index": 0,
+        "load_always": false,
+        "sort_method": "None"
+      }
+    },
+    {
+      "id": 52,
+      "type": "LoadImage //Inspire",
+      "pos": [
+        3515,
+        6190
+      ],
+      "size": [
+        270,
+        338
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage //Inspire"
+      },
+      "widgets_values": [
+        "all-inspire-nodes.input.png",
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABdklEQVR4AezSEVBEURjF8TtvFoIgCIIgCIIgCIIgCIIgCIIgCIIgCIJgIQiCIAiCIAiCIAiCIAiCYGFhYWFhYWFhYWFndv/Xrt25s7Tfd+A382beg3fOd6oQ6uMa5jCPBSxiCctYwSrWsI4NbGIL29jBLvawjwMc4gjHOMEpznCOC1ziCteo4wa3uMM9HvCIJzzjBa94wzs+8IkvfOMHv/jDPxpoooU2Ouiihz4GGGKEKtRC8KzyHD5mVwGxBc+0AM/Xj9m1gNiCZ1qA5+vH7FpAbMEzLcDz9WN2dwuIoVMqIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MWYP3quXxaQK4h6++1AOsXzuXTAnINWX+vBVi/cC6fFpBryPp7LcD6hXP5tIBcQ9bfawHWLlyaRwsobcza91qAtYuW5tECShuz9r0WYO2ipXm0gNLGrH2vBVi7aGkeLaC0MWvfawGzftFp/38CAAD//1+N+cYAAAAGSURBVAMAnEu+waseJkMAAAAASUVORK5CYII=",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "all-inspire-nodes.input.png",
+        "image_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABdklEQVR4AezSEVBEURjF8TtvFoIgCIIgCIIgCIIgCIIgCIIgCIIgCIJgIQiCIAiCIAiCIAiCIAiCYGFhYWFhYWFhYWFndv/Xrt25s7Tfd+A382beg3fOd6oQ6uMa5jCPBSxiCctYwSrWsI4NbGIL29jBLvawjwMc4gjHOMEpznCOC1ziCteo4wa3uMM9HvCIJzzjBa94wzs+8IkvfOMHv/jDPxpoooU2Ouiihz4GGGKEKtRC8KzyHD5mVwGxBc+0AM/Xj9m1gNiCZ1qA5+vH7FpAbMEzLcDz9WN2dwuIoVMqIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MWYP3quXxaQK4h6++1AOsXzuXTAnINWX+vBVi/cC6fFpBryPp7LcD6hXP5tIBcQ9bfawHWLlyaRwsobcza91qAtYuW5tECShuz9r0WYO2ipXm0gNLGrH2vBVi7aGkeLaC0MWvfawGzftFp/38CAAD//1+N+cYAAAAGSURBVAMAnEu+waseJkMAAAAASUVORK5CYII=",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 53,
+      "type": "ChangeImageBatchSize //Inspire",
+      "pos": [
+        2685.94453125,
+        6190
+      ],
+      "size": [
+        328.1109375,
+        82
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ChangeImageBatchSize //Inspire"
+      },
+      "widgets_values": [
+        1,
+        "simple"
+      ],
+      "widgets_values_named": {
+        "batch_size": 1,
+        "mode": "simple"
+      }
+    },
+    {
+      "id": 54,
+      "type": "ChangeLatentBatchSize //Inspire",
+      "pos": [
+        1885.6437500000002,
+        6190
+      ],
+      "size": [
+        328.7125,
+        82
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ChangeLatentBatchSize //Inspire"
+      },
+      "widgets_values": [
+        1,
+        "simple"
+      ],
+      "widgets_values_named": {
+        "batch_size": 1,
+        "mode": "simple"
+      }
+    },
+    {
+      "id": 55,
+      "type": "ImageBatchSplitter //Inspire",
+      "pos": [
+        1104.24091796875,
+        6190
+      ],
+      "size": [
+        291.5181640625,
+        138
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image 1",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image 2",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image 3",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image 4",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "remained",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageBatchSplitter //Inspire"
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "split_count": 4
+      }
+    },
+    {
+      "id": 56,
+      "type": "LatentBatchSplitter //Inspire",
+      "pos": [
+        303.94013671874995,
+        6190
+      ],
+      "size": [
+        292.1197265625,
+        138
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent 1",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "latent 2",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "latent 3",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "latent 4",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "remained",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LatentBatchSplitter //Inspire"
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "split_count": 4
+      }
+    },
+    {
+      "id": 57,
+      "type": "ColorMapToMasks //Inspire",
+      "pos": [
+        302.82246093749995,
+        7690
+      ],
+      "size": [
+        294.355078125,
+        82
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "color_map",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ColorMapToMasks //Inspire"
+      },
+      "widgets_values": [
+        500,
+        5
+      ],
+      "widgets_values_named": {
+        "min_pixels": 500,
+        "max_count": 5
+      }
+    },
+    {
+      "id": 58,
+      "type": "SelectNthMask //Inspire",
+      "pos": [
+        1115,
+        7690
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SelectNthMask //Inspire"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "idx": 0
+      }
+    },
+    {
+      "id": 59,
+      "type": "RegionalPromptSimple //Inspire",
+      "pos": [
+        1850,
+        7690
+      ],
+      "size": [
+        400,
+        320
+      ],
+      "flags": {},
+      "order": 58,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "basic_pipe",
+          "type": "BASIC_PIPE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_PROMPTS",
+          "type": "REGIONAL_PROMPTS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPromptSimple //Inspire"
+      },
+      "widgets_values": [
+        8,
+        "euler",
+        "simple",
+        "",
+        false,
+        1,
+        0,
+        0,
+        "linear"
+      ],
+      "widgets_values_named": {
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "wildcard_prompt": "",
+        "controlnet_in_pipe": false,
+        "sigma_factor": 1,
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "variation_method": "linear"
+      }
+    },
+    {
+      "id": 60,
+      "type": "RegionalPromptColorMask //Inspire",
+      "pos": [
+        2650,
+        7690
+      ],
+      "size": [
+        400,
+        344
+      ],
+      "flags": {},
+      "order": 59,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "basic_pipe",
+          "type": "BASIC_PIPE",
+          "link": null
+        },
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_PROMPTS",
+          "type": "REGIONAL_PROMPTS",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPromptColorMask //Inspire"
+      },
+      "widgets_values": [
+        "#FFFFFF",
+        8,
+        "euler",
+        "simple",
+        "",
+        false,
+        1,
+        0,
+        0,
+        "linear"
+      ],
+      "widgets_values_named": {
+        "mask_color": "#FFFFFF",
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "wildcard_prompt": "",
+        "controlnet_in_pipe": false,
+        "sigma_factor": 1,
+        "variation_seed": 0,
+        "variation_strength": 0,
+        "variation_method": "linear"
+      }
+    },
+    {
+      "id": 61,
+      "type": "RegionalConditioningSimple //Inspire",
+      "pos": [
+        3450,
+        7690
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalConditioningSimple //Inspire"
+      },
+      "widgets_values": [
+        1,
+        "default",
+        ""
+      ],
+      "widgets_values_named": {
+        "strength": 1,
+        "set_cond_area": "default",
+        "prompt": ""
+      }
+    },
+    {
+      "id": 62,
+      "type": "RegionalConditioningColorMask //Inspire",
+      "pos": [
+        4248.442578125,
+        7690
+      ],
+      "size": [
+        403.11484375,
+        204
+      ],
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": null
+        },
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalConditioningColorMask //Inspire"
+      },
+      "widgets_values": [
+        "#FFFFFF",
+        1,
+        "default",
+        "",
+        0
+      ],
+      "widgets_values_named": {
+        "mask_color": "#FFFFFF",
+        "strength": 1,
+        "set_cond_area": "default",
+        "prompt": "",
+        "dilation": 0
+      }
+    },
+    {
+      "id": 63,
+      "type": "RegionalIPAdapterMask //Inspire",
+      "pos": [
+        5088.49775390625,
+        7690
+      ],
+      "size": [
+        323.0044921875,
+        290
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "neg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_IPADAPTER",
+          "type": "REGIONAL_IPADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalIPAdapterMask //Inspire"
+      },
+      "widgets_values": [
+        0.7,
+        0.5,
+        "linear",
+        0,
+        1,
+        false,
+        false,
+        1,
+        "concat"
+      ],
+      "widgets_values_named": {
+        "weight": 0.7,
+        "noise": 0.5,
+        "weight_type": "linear",
+        "start_at": 0,
+        "end_at": 1,
+        "unfold_batch": false,
+        "faceid_v2": false,
+        "weight_v2": 1,
+        "combine_embeds": "concat"
+      }
+    },
+    {
+      "id": 64,
+      "type": "RegionalIPAdapterColorMask //Inspire",
+      "pos": [
+        5858.20771484375,
+        7690
+      ],
+      "size": [
+        383.5845703125,
+        314
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "neg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_IPADAPTER",
+          "type": "REGIONAL_IPADAPTER",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalIPAdapterColorMask //Inspire"
+      },
+      "widgets_values": [
+        "#FFFFFF",
+        0.7,
+        0.5,
+        "linear",
+        0,
+        1,
+        false,
+        false,
+        1,
+        "concat"
+      ],
+      "widgets_values_named": {
+        "mask_color": "#FFFFFF",
+        "weight": 0.7,
+        "noise": 0.5,
+        "weight_type": "linear",
+        "start_at": 0,
+        "end_at": 1,
+        "unfold_batch": false,
+        "faceid_v2": false,
+        "weight_v2": 1,
+        "combine_embeds": "concat"
+      }
+    },
+    {
+      "id": 65,
+      "type": "RegionalIPAdapterEncodedMask //Inspire",
+      "pos": [
+        6657.3361328125,
+        7690
+      ],
+      "size": [
+        385.327734375,
+        194
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "embeds",
+          "type": "EMBEDS",
+          "link": null
+        },
+        {
+          "name": "neg_embeds",
+          "shape": 7,
+          "type": "EMBEDS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_IPADAPTER",
+          "type": "REGIONAL_IPADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalIPAdapterEncodedMask //Inspire"
+      },
+      "widgets_values": [
+        0.7,
+        "linear",
+        0,
+        1,
+        false
+      ],
+      "widgets_values_named": {
+        "weight": 0.7,
+        "weight_type": "linear",
+        "start_at": 0,
+        "end_at": 1,
+        "unfold_batch": false
+      }
+    },
+    {
+      "id": 66,
+      "type": "RegionalIPAdapterEncodedColorMask //Inspire",
+      "pos": [
+        7427.04609375,
+        7690
+      ],
+      "size": [
+        445.9078125,
+        218
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "embeds",
+          "type": "EMBEDS",
+          "link": null
+        },
+        {
+          "name": "neg_embeds",
+          "shape": 7,
+          "type": "EMBEDS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_IPADAPTER",
+          "type": "REGIONAL_IPADAPTER",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalIPAdapterEncodedColorMask //Inspire"
+      },
+      "widgets_values": [
+        "#FFFFFF",
+        0.7,
+        "linear",
+        0,
+        1,
+        false
+      ],
+      "widgets_values_named": {
+        "mask_color": "#FFFFFF",
+        "weight": 0.7,
+        "weight_type": "linear",
+        "start_at": 0,
+        "end_at": 1,
+        "unfold_batch": false
+      }
+    },
+    {
+      "id": 67,
+      "type": "RegionalSeedExplorerMask //Inspire",
+      "pos": [
+        8250,
+        7690
+      ],
+      "size": [
+        400,
+        252
+      ],
+      "flags": {},
+      "order": 66,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "noise",
+          "type": "NOISE_IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE_IMAGE",
+          "type": "NOISE_IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalSeedExplorerMask //Inspire"
+      },
+      "widgets_values": [
+        "",
+        true,
+        0,
+        0,
+        "GPU(=A1111)",
+        "linear",
+        null
+      ],
+      "widgets_values_named": {
+        "seed_prompt": "",
+        "enable_additional": true,
+        "additional_seed": 0,
+        "additional_strength": 0,
+        "noise_mode": "GPU(=A1111)",
+        "variation_method": "linear",
+        "Add to prompt": null
+      }
+    },
+    {
+      "id": 68,
+      "type": "RegionalSeedExplorerColorMask //Inspire",
+      "pos": [
+        9043.96162109375,
+        7690
+      ],
+      "size": [
+        412.0767578125,
+        276
+      ],
+      "flags": {},
+      "order": 67,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "noise",
+          "type": "NOISE_IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "NOISE_IMAGE",
+          "type": "NOISE_IMAGE",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalSeedExplorerColorMask //Inspire"
+      },
+      "widgets_values": [
+        "#FFFFFF",
+        "",
+        true,
+        0,
+        0,
+        "GPU(=A1111)",
+        "linear",
+        null
+      ],
+      "widgets_values_named": {
+        "mask_color": "#FFFFFF",
+        "seed_prompt": "",
+        "enable_additional": true,
+        "additional_seed": 0,
+        "additional_strength": 0,
+        "noise_mode": "GPU(=A1111)",
+        "variation_method": "linear",
+        "Add to prompt": null
+      }
+    },
+    {
+      "id": 69,
+      "type": "ToIPAdapterPipe //Inspire",
+      "pos": [
+        9945.844921875,
+        7690
+      ],
+      "size": [
+        208.31015625,
+        86
+      ],
+      "flags": {},
+      "order": 68,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "link": null
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "shape": 7,
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "insightface",
+          "shape": 7,
+          "type": "INSIGHTFACE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IPADAPTER_PIPE",
+          "type": "IPADAPTER_PIPE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ToIPAdapterPipe //Inspire"
+      }
+    },
+    {
+      "id": 70,
+      "type": "FromIPAdapterPipe //Inspire",
+      "pos": [
+        10737.2384765625,
+        7690
+      ],
+      "size": [
+        225.523046875,
+        86
+      ],
+      "flags": {},
+      "order": 69,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ipadapter_pipe",
+          "type": "IPADAPTER_PIPE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ipadapter",
+          "type": "IPADAPTER",
+          "links": null
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "links": null
+        },
+        {
+          "name": "insight_face",
+          "type": "INSIGHTFACE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FromIPAdapterPipe //Inspire"
+      }
+    },
+    {
+      "id": 71,
+      "type": "ApplyRegionalIPAdapters //Inspire",
+      "pos": [
+        10713.52802734375,
+        9190
+      ],
+      "size": [
+        272.9439453125,
+        46
+      ],
+      "flags": {},
+      "order": 70,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "ipadapter_pipe",
+          "type": "IPADAPTER_PIPE",
+          "link": null
+        },
+        {
+          "name": "regional_ipadapter1",
+          "type": "REGIONAL_IPADAPTER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ApplyRegionalIPAdapters //Inspire"
+      }
+    },
+    {
+      "id": 72,
+      "type": "RegionalCFG //Inspire",
+      "pos": [
+        9955.89375,
+        9190
+      ],
+      "size": [
+        188.2125,
+        46
+      ],
+      "flags": {},
+      "order": 71,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalCFG //Inspire"
+      }
+    },
+    {
+      "id": 73,
+      "type": "ColorMaskToDepthMask //Inspire",
+      "pos": [
+        9050,
+        9190
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 72,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "color_mask",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ColorMaskToDepthMask //Inspire"
+      },
+      "widgets_values": [
+        "#FF0000:1.0\n#000000:1.0",
+        0,
+        0,
+        "override"
+      ],
+      "widgets_values_named": {
+        "spec": "#FF0000:1.0\n#000000:1.0",
+        "base_value": 0,
+        "dilation": 0,
+        "flatten_method": "override"
+      }
+    },
+    {
+      "id": 74,
+      "type": "KSamplerProgress //Inspire",
+      "pos": [
+        8298.20703125,
+        9190
+      ],
+      "size": [
+        303.5859375,
+        378
+      ],
+      "flags": {},
+      "order": 73,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "progress_latent",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerProgress //Inspire"
+      },
+      "widgets_values": [
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        1,
+        "GPU(=A1111)",
+        1,
+        true,
+        false
+      ],
+      "widgets_values_named": {
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "noise_mode": "GPU(=A1111)",
+        "interval": 1,
+        "omit_start_latent": true,
+        "omit_final_latent": false
+      }
+    },
+    {
+      "id": 75,
+      "type": "KSamplerAdvancedProgress //Inspire",
+      "pos": [
+        7471.985546875,
+        9190
+      ],
+      "size": [
+        356.02890625,
+        470
+      ],
+      "flags": {},
+      "order": 74,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "prev_progress_latent_opt",
+          "shape": 7,
+          "type": "LATENT",
+          "link": null
+        },
+        {
+          "name": "scheduler_func_opt",
+          "shape": 7,
+          "type": "SCHEDULER_FUNC",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "progress_latent",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerAdvancedProgress //Inspire"
+      },
+      "widgets_values": [
+        true,
+        0,
+        "randomize",
+        20,
+        8,
+        "euler",
+        "simple",
+        0,
+        10000,
+        "GPU(=A1111)",
+        false,
+        1,
+        false,
+        false
+      ],
+      "widgets_values_named": {
+        "add_noise": true,
+        "noise_seed": 0,
+        "control_after_generate": "randomize",
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "start_at_step": 0,
+        "end_at_step": 10000,
+        "noise_mode": "GPU(=A1111)",
+        "return_with_leftover_noise": false,
+        "interval": 1,
+        "omit_start_latent": false,
+        "omit_final_latent": false
+      }
+    },
+    {
+      "id": 76,
+      "type": "ScheduledCFGGuider //Inspire",
+      "pos": [
+        6697.0666015625,
+        9190
+      ],
+      "size": [
+        305.866796875,
+        166
+      ],
+      "flags": {},
+      "order": 75,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": null
+        },
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ScheduledCFGGuider //Inspire"
+      },
+      "widgets_values": [
+        6.5,
+        1,
+        "log"
+      ],
+      "widgets_values_named": {
+        "from_cfg": 6.5,
+        "to_cfg": 1,
+        "schedule": "log"
+      }
+    },
+    {
+      "id": 77,
+      "type": "ScheduledPerpNegCFGGuider //Inspire",
+      "pos": [
+        5865.90498046875,
+        9190
+      ],
+      "size": [
+        368.1900390625,
+        210
+      ],
+      "flags": {},
+      "order": 76,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "empty_conditioning",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": null
+        },
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ScheduledPerpNegCFGGuider //Inspire"
+      },
+      "widgets_values": [
+        1,
+        6.5,
+        1,
+        "log"
+      ],
+      "widgets_values_named": {
+        "neg_scale": 1,
+        "from_cfg": 6.5,
+        "to_cfg": 1,
+        "schedule": "log"
+      }
+    },
+    {
+      "id": 78,
+      "type": "CacheBackendData //Inspire",
+      "pos": [
+        5101.626171875,
+        9190
+      ],
+      "size": [
+        296.74765625,
+        82
+      ],
+      "flags": {},
+      "order": 77,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "data",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "data opt",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CacheBackendData //Inspire"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "key": "",
+        "tag": ""
+      }
+    },
+    {
+      "id": 79,
+      "type": "CacheBackendDataNumberKey //Inspire",
+      "pos": [
+        4255.58955078125,
+        9190
+      ],
+      "size": [
+        388.8208984375,
+        82
+      ],
+      "flags": {},
+      "order": 78,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "data",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "data opt",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CacheBackendDataNumberKey //Inspire"
+      },
+      "widgets_values": [
+        0,
+        ""
+      ],
+      "widgets_values_named": {
+        "key": 0,
+        "tag": ""
+      }
+    },
+    {
+      "id": 80,
+      "type": "CacheBackendDataList //Inspire",
+      "pos": [
+        3488.01923828125,
+        9190
+      ],
+      "size": [
+        323.9615234375,
+        82
+      ],
+      "flags": {},
+      "order": 79,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "data",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "data opt",
+          "shape": 6,
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CacheBackendDataList //Inspire"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "key": "",
+        "tag": ""
+      }
+    },
+    {
+      "id": 81,
+      "type": "CacheBackendDataNumberKeyList //Inspire",
+      "pos": [
+        2641.9826171875,
+        9190
+      ],
+      "size": [
+        416.034765625,
+        82
+      ],
+      "flags": {},
+      "order": 80,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "data",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "data opt",
+          "shape": 6,
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CacheBackendDataNumberKeyList //Inspire"
+      },
+      "widgets_values": [
+        0,
+        ""
+      ],
+      "widgets_values_named": {
+        "key": 0,
+        "tag": ""
+      }
+    },
+    {
+      "id": 82,
+      "type": "RetrieveBackendData //Inspire",
+      "pos": [
+        1895.8942382812502,
+        9190
+      ],
+      "size": [
+        308.2115234375,
+        58
+      ],
+      "flags": {},
+      "order": 81,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "data",
+          "shape": 6,
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RetrieveBackendData //Inspire"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "key": ""
+      }
+    },
+    {
+      "id": 83,
+      "type": "RetrieveBackendDataNumberKey //Inspire",
+      "pos": [
+        1049.8576171875,
+        9190
+      ],
+      "size": [
+        400.284765625,
+        58
+      ],
+      "flags": {},
+      "order": 82,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "data",
+          "shape": 6,
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RetrieveBackendDataNumberKey //Inspire"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "key": 0
+      }
+    },
+    {
+      "id": 84,
+      "type": "RemoveBackendData //Inspire",
+      "pos": [
+        296.33515624999995,
+        9190
+      ],
+      "size": [
+        307.3296875,
+        58
+      ],
+      "flags": {},
+      "order": 83,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "signal_opt",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "signal",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackendData //Inspire"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "key": ""
+      }
+    },
+    {
+      "id": 85,
+      "type": "RemoveBackendDataNumberKey //Inspire",
+      "pos": [
+        250.29853515624995,
+        10690
+      ],
+      "size": [
+        399.4029296875,
+        58
+      ],
+      "flags": {},
+      "order": 84,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "signal_opt",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "signal",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RemoveBackendDataNumberKey //Inspire"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "key": 0
+      }
+    },
+    {
+      "id": 86,
+      "type": "ShowCachedInfo //Inspire",
+      "pos": [
+        1050,
+        10690
+      ],
+      "size": [
+        400,
+        208
+      ],
+      "flags": {},
+      "order": 85,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ShowCachedInfo //Inspire"
+      },
+      "widgets_values": [
+        "---- [String Key Caches] ----\n\n---- [Number Key Caches] ----\n\n---- [TagCache Settings] ----\nckpt: 5\nlatent: 100\nimage: 100\n",
+        "",
+        null,
+        null,
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "cache_info": "---- [String Key Caches] ----\n\n---- [Number Key Caches] ----\n\n---- [TagCache Settings] ----\nckpt: 5\nlatent: 100\nimage: 100\n",
+        "key": "",
+        "Remove Key": null,
+        "Save Settings": null,
+        "Refresh": null,
+        "Clear": null
+      }
+    },
+    {
+      "id": 87,
+      "type": "CheckpointLoaderSimpleShared //Inspire",
+      "pos": [
+        1882.4411132812502,
+        10690
+      ],
+      "size": [
+        335.1177734375,
+        166
+      ],
+      "flags": {},
+      "order": 86,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": null
+        },
+        {
+          "name": "cache key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimpleShared //Inspire"
+      },
+      "widgets_values": [
+        "dreamshaper_7.safetensors",
+        "",
+        "Auto"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "dreamshaper_7.safetensors",
+        "key_opt": "",
+        "mode": "Auto"
+      }
+    },
+    {
+      "id": 88,
+      "type": "LoadDiffusionModelShared //Inspire",
+      "pos": [
+        2668.1505859375,
+        10690
+      ],
+      "size": [
+        363.698828125,
+        150
+      ],
+      "flags": {},
+      "order": 87,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "cache key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadDiffusionModelShared //Inspire"
+      },
+      "widgets_values": [
+        "lotus-depth-d-v-1-1-fp16.safetensors",
+        "default",
+        "",
+        "Auto"
+      ],
+      "widgets_values_named": {
+        "model_name": "lotus-depth-d-v-1-1-fp16.safetensors",
+        "weight_dtype": "default",
+        "key_opt": "",
+        "mode": "Auto"
+      }
+    },
+    {
+      "id": 89,
+      "type": "LoadTextEncoderShared //Inspire",
+      "pos": [
+        3476.565625,
+        10690
+      ],
+      "size": [
+        346.86875,
+        222
+      ],
+      "flags": {},
+      "order": 88,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "cache key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadTextEncoderShared //Inspire"
+      },
+      "widgets_values": [
+        "clip_l.safetensors",
+        "None",
+        "None",
+        "stable_diffusion",
+        "",
+        "Auto",
+        "default"
+      ],
+      "widgets_values_named": {
+        "model_name1": "clip_l.safetensors",
+        "model_name2": "None",
+        "model_name3": "None",
+        "type": "stable_diffusion",
+        "key_opt": "",
+        "mode": "Auto",
+        "device": "default"
+      }
+    },
+    {
+      "id": 90,
+      "type": "StableCascade_CheckpointLoader //Inspire",
+      "pos": [
+        4254.00703125,
+        10690
+      ],
+      "size": [
+        391.9859375,
+        294
+      ],
+      "flags": {},
+      "order": 89,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "b_model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "b_vae",
+          "type": "VAE",
+          "links": null
+        },
+        {
+          "name": "c_model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "c_vae",
+          "type": "VAE",
+          "links": null
+        },
+        {
+          "name": "c_clip_vision",
+          "type": "CLIP_VISION",
+          "links": null
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "key_b",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "key_c",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StableCascade_CheckpointLoader //Inspire"
+      },
+      "widgets_values": [
+        "stable_cascade_stage_b.safetensors",
+        "",
+        "stable_cascade_stage_c.safetensors",
+        "",
+        "none"
+      ],
+      "widgets_values_named": {
+        "stage_b": "stable_cascade_stage_b.safetensors",
+        "key_opt_b": "",
+        "stage_c": "stable_cascade_stage_c.safetensors",
+        "key_opt_c": "",
+        "cache_mode": "none"
+      }
+    },
+    {
+      "id": 91,
+      "type": "IsCached //Inspire",
+      "pos": [
+        5115,
+        10690
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 90,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IsCached //Inspire"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "key": ""
+      }
+    },
+    {
+      "id": 92,
+      "type": "FloatRange //Inspire",
+      "pos": [
+        5915,
+        10690
+      ],
+      "size": [
+        270,
+        154
+      ],
+      "flags": {},
+      "order": 91,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "shape": 6,
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FloatRange //Inspire"
+      },
+      "widgets_values": [
+        0,
+        1,
+        0.01,
+        100,
+        true
+      ],
+      "widgets_values_named": {
+        "start": 0,
+        "stop": 1,
+        "step": 0.01,
+        "limit": 100,
+        "ensure_end": true
+      }
+    },
+    {
+      "id": 93,
+      "type": "WorklistToItemList //Inspire",
+      "pos": [
+        6733.9298828125,
+        10690
+      ],
+      "size": [
+        232.140234375,
+        26
+      ],
+      "flags": {},
+      "order": 92,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "item",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item_list",
+          "type": "ITEM_LIST",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WorklistToItemList //Inspire"
+      }
+    },
+    {
+      "id": 94,
+      "type": "ForeachListBegin //Inspire",
+      "pos": [
+        7539.2548828125,
+        10690
+      ],
+      "size": [
+        221.490234375,
+        86
+      ],
+      "flags": {},
+      "order": 93,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "item_list",
+          "type": "ITEM_LIST",
+          "link": null
+        },
+        {
+          "name": "initial_input",
+          "shape": 7,
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "flow_control",
+          "type": "FOREACH_LIST_CONTROL",
+          "links": null
+        },
+        {
+          "name": "remained_list",
+          "type": "ITEM_LIST",
+          "links": null
+        },
+        {
+          "name": "item",
+          "type": "*",
+          "links": null
+        },
+        {
+          "name": "intermediate_output",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ForeachListBegin //Inspire"
+      }
+    },
+    {
+      "id": 95,
+      "type": "ForeachListEnd //Inspire",
+      "pos": [
+        8353.364483642577,
+        10690
+      ],
+      "size": [
+        193.27103271484376,
+        66
+      ],
+      "flags": {},
+      "order": 94,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "flow_control",
+          "type": "FOREACH_LIST_CONTROL",
+          "link": null
+        },
+        {
+          "name": "remained_list",
+          "type": "ITEM_LIST",
+          "link": null
+        },
+        {
+          "name": "intermediate_output",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ForeachListEnd //Inspire"
+      }
+    },
+    {
+      "id": 96,
+      "type": "DropItems //Inspire",
+      "pos": [
+        9164.62666015625,
+        10690
+      ],
+      "size": [
+        170.7466796875,
+        26
+      ],
+      "flags": {},
+      "order": 95,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "item_list",
+          "type": "ITEM_LIST",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ITEM_LIST",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DropItems //Inspire"
+      }
+    },
+    {
+      "id": 97,
+      "type": "ConcatConditioningsWithMultiplier //Inspire",
+      "pos": [
+        9851.06416015625,
+        10690
+      ],
+      "size": [
+        397.8716796875,
+        58
+      ],
+      "flags": {},
+      "order": 96,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning1",
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConcatConditioningsWithMultiplier //Inspire"
+      },
+      "widgets_values": [
+        1
+      ],
+      "widgets_values_named": {
+        "multiplier1": 1
+      }
+    },
+    {
+      "id": 98,
+      "type": "ConditioningUpscale //Inspire",
+      "pos": [
+        10699.958203125,
+        10690
+      ],
+      "size": [
+        300.08359375,
+        58
+      ],
+      "flags": {},
+      "order": 97,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningUpscale //Inspire"
+      },
+      "widgets_values": [
+        2
+      ],
+      "widgets_values_named": {
+        "scalar": 2
+      }
+    },
+    {
+      "id": 99,
+      "type": "ConditioningStretch //Inspire",
+      "pos": [
+        10703.18134765625,
+        12190
+      ],
+      "size": [
+        293.6373046875,
+        130
+      ],
+      "flags": {},
+      "order": 98,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ConditioningStretch //Inspire"
+      },
+      "widgets_values": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "widgets_values_named": {
+        "resolutionX": 512,
+        "resolutionY": 512,
+        "newWidth": 512,
+        "newHeight": 512
+      }
+    },
+    {
+      "id": 100,
+      "type": "IPAdapterModelHelper //Inspire",
+      "pos": [
+        9892.15498046875,
+        12190
+      ],
+      "size": [
+        315.6900390625,
+        318
+      ],
+      "flags": {},
+      "order": 99,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IPADAPTER_PIPE",
+          "type": "IPADAPTER_PIPE",
+          "links": null
+        },
+        {
+          "name": "IPADAPTER",
+          "type": "IPADAPTER",
+          "links": null
+        },
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": null
+        },
+        {
+          "name": "INSIGHTFACE",
+          "type": "INSIGHTFACE",
+          "links": null
+        },
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "insightface_cache_key",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "clip_vision_cache_key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IPAdapterModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "SD1.5",
+        1,
+        1,
+        "CPU",
+        "insightface only",
+        "buffalo_l"
+      ],
+      "widgets_values_named": {
+        "preset": "SD1.5",
+        "lora_strength_model": 1,
+        "lora_strength_clip": 1,
+        "insightface_provider": "CPU",
+        "cache_mode": "insightface only",
+        "insightface_model_name": "buffalo_l"
+      }
+    },
+    {
+      "id": 101,
+      "type": "RGB_HexToHSV //Inspire",
+      "pos": [
+        9114.9083984375,
+        12190
+      ],
+      "size": [
+        270.183203125,
+        98
+      ],
+      "flags": {},
+      "order": 100,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "hue",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "saturation",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "value",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RGB_HexToHSV //Inspire"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "rgb_hex": ""
+      }
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        -8800,
+        -12000
+      ]
+    },
+    "frontendVersion": "1.59.10"
+  },
+  "version": 0.4
+}

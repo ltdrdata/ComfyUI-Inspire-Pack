@@ -16,7 +16,7 @@ class KSampler_progress(a1111_compat.KSampler_inspire):
                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                     "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                    "scheduler": (common.SCHEDULERS, ),
+                    "scheduler": (common.get_schedulers(), ),
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
@@ -79,7 +79,7 @@ class KSamplerAdvanced_progress(a1111_compat.KSamplerAdvanced_inspire):
                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.5, "round": 0.01}),
                     "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                    "scheduler": (common.SCHEDULERS, ),
+                    "scheduler": (common.get_schedulers(), ),
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
@@ -181,17 +181,16 @@ def cosine_interpolation(from_cfg, to_cfg, i, steps):
     return from_cfg + (to_cfg - from_cfg) * t
 
 
-class Guider_scheduled(CFGGuider):
+class CFGSchedule:
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule):
         super().__init__(model_patcher)
         self.default_cfg = self.cfg
-        self.sigmas = sigmas
+        self.sigmas = sigmas.tolist()
         self.cfg_sigmas = None
         self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
         self.to_cfg = to_cfg
         self.schedule = schedule
-        self.last_i = 0
         self.renew_cfg_sigmas()
 
     def set_cfg(self, cfg):
@@ -223,67 +222,24 @@ class Guider_scheduled(CFGGuider):
 
         v = self.cfg_sigmas.get(k)
         if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
+            # a sigma that a sampler worked out again is a rounding away from its step
+            i = next((i for i, s in enumerate(self.sigmas) if s < k or math.isclose(s, k, rel_tol=1e-5)), len(self.sigmas) - 1)
+            v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
-        self.last_i = v[1]
         self.cfg = v[0]
 
         return super().predict_noise(x, timestep, model_options, seed)
 
 
-class Guider_PerpNeg_scheduled(Guider_PerpNeg):
+class Guider_scheduled(CFGSchedule, CFGGuider):
+    pass
+
+
+class Guider_PerpNeg_scheduled(CFGSchedule, Guider_PerpNeg):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule, neg_scale):
-        super().__init__(model_patcher)
-        self.default_cfg = self.cfg
-        self.sigmas = sigmas
-        self.cfg_sigmas = None
-        self.cfg_sigmas_i = None
-        self.from_cfg = from_cfg
-        self.to_cfg = to_cfg
-        self.schedule = schedule
+        super().__init__(model_patcher, sigmas, from_cfg, to_cfg, schedule)
         self.neg_scale = neg_scale
-        self.last_i = 0
-        self.renew_cfg_sigmas()
-
-    def set_cfg(self, cfg):
-        self.default_cfg = cfg
-        self.renew_cfg_sigmas()
-
-    def renew_cfg_sigmas(self):
-        self.cfg_sigmas = {}
-        self.cfg_sigmas_i = {}
-        i = 0
-        steps = len(self.sigmas) - 1
-        for x in self.sigmas:
-            k = float(x)
-            delta = self.to_cfg - self.from_cfg
-            if self.schedule == 'exp':
-                self.cfg_sigmas[k] = exponential_interpolation(self.from_cfg, self.to_cfg, i, steps), i
-            elif self.schedule == 'log':
-                self.cfg_sigmas[k] = logarithmic_interpolation(self.from_cfg, self.to_cfg, i, steps), i
-            elif self.schedule == 'cos':
-                self.cfg_sigmas[k] = cosine_interpolation(self.from_cfg, self.to_cfg, i, steps), i
-            else:
-                self.cfg_sigmas[k] = self.from_cfg + delta * i / steps, i
-
-            self.cfg_sigmas_i[i] = self.cfg_sigmas[k]
-            i += 1
-
-    def predict_noise(self, x, timestep, model_options={}, seed=None):
-        k = float(timestep[0])
-
-        v = self.cfg_sigmas.get(k)
-        if v is None:
-            # fallback
-            v = self.cfg_sigmas_i[self.last_i+1]
-            self.cfg_sigmas[k] = v
-
-        self.last_i = v[1]
-        self.cfg = v[0]
-
-        return super().predict_noise(x, timestep, model_options, seed)
 
 
 class ScheduledCFGGuider:

@@ -521,7 +521,13 @@ class LoadTextEncoderShared:
                     logging.error("[LoadTextEncoderShared] Currently, the triple text encoder is only supported in `sd3`.")
                     raise ValueError("Currently, the triple text encoder is only supported in `sd3`.")
 
-                res = nodes.NODE_CLASS_MAPPINGS["TripleCLIPLoader"]().load_clip(model_name1, model_name2, model_name3)[0]
+                tcloader = nodes.NODE_CLASS_MAPPINGS["TripleCLIPLoader"]()
+                if hasattr(tcloader, 'execute'):
+                    # node v3
+                    res = tcloader.execute(model_name1, model_name2, model_name3)[0]
+                else:
+                    # legacy compatibility
+                    res = tcloader.load_clip(model_name1, model_name2, model_name3)[0]
 
             elif model_name2 != "None" or model_name3 != "None": # dual text encoder
                 second_model = model_name2 if model_name2 != "None" else model_name3
