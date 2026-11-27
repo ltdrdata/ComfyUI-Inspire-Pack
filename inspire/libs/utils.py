@@ -11,7 +11,7 @@ import logging
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
     latent_size = latent_image.size()
-    latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
+    latent_size_1batch = [1] + list(latent_size)[1:]
 
     if noise_device == "cpu":
         variation_generator = torch.manual_seed(variation_seed)
@@ -22,7 +22,7 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
     variation_latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
                                    generator=variation_generator, device=noise_device)
 
-    variation_noise = variation_latent.expand(latent_image.size()[0], -1, -1, -1)
+    variation_noise = variation_latent.expand(latent_image.size()[0], *latent_size_1batch[1:])
 
     if variation_strength == 0:
         return latent_image
@@ -80,7 +80,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
     """
 
     latent_size = latent_image.size()
-    latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
+    latent_size_1batch = [1] + list(latent_size)[1:]
 
     if variation_strength is not None and variation_strength > 0 or incremental_seed_mode.startswith("variation str inc"):
         if noise_device == "cpu":
@@ -103,7 +103,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
             if strength_up is not None:
                 strength += strength_up
 
-            variation_noise = variation_latent.expand(input_latent.size()[0], -1, -1, -1)
+            variation_noise = variation_latent.expand(input_latent.size()[0], *latent_size_1batch[1:])
 
             mixed_noise = mix_noise(input_latent, variation_noise, strength, variation_method)
 
