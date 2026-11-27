@@ -168,15 +168,27 @@ def prompt_seed_update(json_data):
     return value is not None, mode
 
 
+def workflow_nodes(workflow):
+    subgraphs = {x['id']: x for x in workflow.get('definitions', {}).get('subgraphs', [])}
+
+    def walk(nodes, prefix):
+        for node in nodes:
+            node_id = prefix + str(node['id'])
+            yield node_id, node
+            if node.get('type') in subgraphs:
+                yield from walk(subgraphs[node['type']]['nodes'], node_id + ':')
+
+    return walk(workflow['nodes'], '')
+
+
 def workflow_seed_update(json_data, mode):
-    nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
-    widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
+    workflow = json_data['extra_data']['extra_pnginfo']['workflow']
+    widget_idx_map = workflow['widget_idx_map']
     prompt = json_data['prompt']
 
     updated_seed_map = {}
     value = None
-    for node in nodes:
-        node_id = str(node['id'])
+    for node_id, node in workflow_nodes(workflow):
         if node_id in prompt:
             if node['type'] == 'GlobalSeed //Inspire':
                 if mode is True:
@@ -209,7 +221,7 @@ def prompt_sampler_update(json_data):
     except Exception:
         return None
 
-    nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
+    workflow = json_data['extra_data']['extra_pnginfo']['workflow']
     prompt = json_data['prompt']
 
     sampler_name = None
@@ -224,12 +236,10 @@ def prompt_sampler_update(json_data):
     if sampler_name is None:
         return
 
-    for node in nodes:
+    for node_id, node in workflow_nodes(workflow):
         cls = node.get('type')
         if cls == 'GlobalSampler //Inspire' or cls is None:
             continue
-
-        node_id = str(node['id'])
 
         if node_id in prompt and node_id in widget_idx_map:
             sampler_widget_idx = widget_idx_map[node_id].get('sampler_name')
@@ -348,8 +358,7 @@ def populate_wildcards(json_data):
         if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
             extra_pnginfo = json_data['extra_data']['extra_pnginfo']
             if 'workflow' in extra_pnginfo and extra_pnginfo['workflow'] is not None and 'nodes' in extra_pnginfo['workflow']:
-                for node in extra_pnginfo['workflow']['nodes']:
-                    key = str(node['id'])
+                for key, node in workflow_nodes(extra_pnginfo['workflow']):
                     if key in updated_widget_values:
                         node['widgets_values'][3] = updated_widget_values[key]
                         node['widgets_values'][4] = 'reproduce'

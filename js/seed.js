@@ -1,10 +1,8 @@
 import { api } from "../../scripts/api.js";
 
-function globalSeedHandler(event) {
-	let nodes = app.graph._nodes_by_id;
-
-	for(let i in nodes) {
-		let node = nodes[i];
+function updateSeeds(graph, prefix, event) {
+	for(const [key, node] of Object.entries(graph._nodes_by_id)) {
+		const id = prefix + key;
 
 		if(node.type == 'GlobalSeed //Inspire') {
 			if(node.widgets) {
@@ -18,11 +16,18 @@ function globalSeedHandler(event) {
 		else
 			if(node.widgets) {
 				const w = node.widgets.find((w) => (w.name == 'seed' || w.name == 'noise_seed') && w.type == 'number');
-				if(w && event.detail.seed_map[node.id] != undefined) {
-					w.value = event.detail.seed_map[node.id];
+				if(w && event.detail.seed_map[id] != undefined) {
+					w.value = event.detail.seed_map[id];
 				}
 			}
+
+		if(node.subgraph)
+			updateSeeds(node.subgraph, id + ':', event);
 	}
+}
+
+function globalSeedHandler(event) {
+	updateSeeds(app.graph, '', event);
 }
 
 api.addEventListener("inspire-global-seed", globalSeedHandler);
