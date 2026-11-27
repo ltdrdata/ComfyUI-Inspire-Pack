@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 101,
+  "last_node_id": 102,
   "last_link_id": 0,
   "nodes": [
     {
@@ -4849,6 +4849,101 @@
       "widgets_values_named": {
         "rgb_hex": ""
       }
+    },
+    {
+      "id": 102,
+      "type": "IPAdapterModelHelperManual //Inspire",
+      "pos": [
+        8325.833386230468,
+        12250
+      ],
+      "size": [
+        378.15,
+        390
+      ],
+      "flags": {},
+      "order": 101,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IPADAPTER_PIPE",
+          "type": "IPADAPTER_PIPE",
+          "links": null
+        },
+        {
+          "name": "IPADAPTER",
+          "type": "IPADAPTER",
+          "links": null
+        },
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": null
+        },
+        {
+          "name": "INSIGHTFACE",
+          "type": "INSIGHTFACE",
+          "links": null
+        },
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "insightface_cache_key",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "clip_vision_cache_key",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IPAdapterModelHelperManual //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter-plus_sd15.safetensors",
+        "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
+        "None",
+        false,
+        1,
+        1,
+        "CPU",
+        "insightface only",
+        "buffalo_l"
+      ],
+      "widgets_values_named": {
+        "ipadapter_model": "ip-adapter-plus_sd15.safetensors",
+        "clip_vision_model": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
+        "lora_model": "None",
+        "is_insightface": false,
+        "lora_strength_model": 1,
+        "lora_strength_clip": 1,
+        "insightface_provider": "CPU",
+        "cache_mode": "insightface only",
+        "insightface_model_name": "buffalo_l"
+      }
     }
   ],
   "links": [],
@@ -4858,8 +4953,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -8800,
-        -12000
+        -8064.908386230469,
+        -12060
       ]
     },
     "frontendVersion": "1.59.10"

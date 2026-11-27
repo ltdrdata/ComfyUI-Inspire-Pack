@@ -8,6 +8,9 @@ from comfy import sdxl_clip
 import logging
 
 
+utils.add_folder_path_and_extensions("ipadapter", [os.path.join(folder_paths.models_dir, "ipadapter")], folder_paths.supported_pt_extensions)
+
+
 model_preset = {
     # base
     "SD1.5":                ("ip-adapter_sd15",                 "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
@@ -130,6 +133,10 @@ class IPAdapterModelHelper:
         if ok1 == "FAIL" or ok2 == "FAIL" or ok3 == "FAIL":
             raise Exception("ERROR: Failed to load several models in IPAdapterModelHelper.")
 
+        return self.load_models(model, clip, ipadapter, clipvision, lora, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode, unique_id, insightface_model_name)
+
+    @staticmethod
+    def load_models(model, clip, ipadapter, clipvision, lora, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode, unique_id, insightface_model_name):
         if ipadapter is not None:
             ipadapter = nodes.NODE_CLASS_MAPPINGS["IPAdapterModelLoader"]().load_ipadapter_model(ipadapter_file=ipadapter)[0]
 
@@ -182,10 +189,44 @@ class IPAdapterModelHelper:
         return pipe, ipadapter, clipvision, insightface, model, clip, icache_key, ccache_key
 
 
+class IPAdapterModelHelperManual(IPAdapterModelHelper):
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "ipadapter_model": (folder_paths.get_filename_list("ipadapter"),),
+                "clip_vision_model": (folder_paths.get_filename_list("clip_vision"),),
+                "lora_model": (["None"] + folder_paths.get_filename_list("loras"),),
+                "is_insightface": ("BOOLEAN", {"default": False}),
+                "lora_strength_model": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
+                "lora_strength_clip": ("FLOAT", {"default": 1.0, "min": -20.0, "max": 20.0, "step": 0.01}),
+                "insightface_provider": (["CPU", "CUDA", "ROCM"], ),
+                "cache_mode": (["insightface only", "clip_vision only", "all", "none"], {"default": "insightface only"}),
+            },
+            "optional": {
+                "clip": ("CLIP",),
+                "insightface_model_name": (['buffalo_l', 'antelopev2'],),
+            },
+            "hidden": {"unique_id": "UNIQUE_ID"}
+        }
+
+    def doit(self, model, ipadapter_model, clip_vision_model, lora_model, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, clip=None, cache_mode="none", unique_id=None, insightface_model_name='buffalo_l'):
+        if 'IPAdapter' not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
+                                          "To use 'IPAdapterModelHelper' node, 'ComfyUI IPAdapter Plus' extension is required.")
+            raise Exception("[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
+
+        lora = None if lora_model == "None" else lora_model
+        return self.load_models(model, clip, ipadapter_model, clip_vision_model, lora, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode, unique_id, insightface_model_name)
+
+
 NODE_CLASS_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": IPAdapterModelHelper,
+    "IPAdapterModelHelperManual //Inspire": IPAdapterModelHelperManual,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": "IPAdapter Model Helper (Inspire)",
+    "IPAdapterModelHelperManual //Inspire": "IPAdapter Model Helper [Manual] (Inspire)",
 }
