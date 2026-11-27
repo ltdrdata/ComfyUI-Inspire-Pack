@@ -259,6 +259,29 @@ def workflow_loadimage_update(json_data):
             v['inputs']['image'] = "#DATA"
 
 
+def constant_text(value, prompt):
+    if isinstance(value, str):
+        return value
+    source = prompt.get(value[0], {})
+    if source.get('class_type') in ('PrimitiveString', 'PrimitiveStringMultiline'):
+        text = source['inputs'].get('value')
+        if isinstance(text, str):
+            return text
+    return None
+
+
+def constant_seed(value, prompt):
+    if not isinstance(value, list):
+        return int(value)
+    source = prompt.get(value[0], {})
+    seed = source.get('inputs', {}).get({'ImpactInt': 'value', 'Seed (rgthree)': 'seed'}.get(source.get('class_type')))
+    return seed if isinstance(seed, int) else None
+
+
+def populate_during_run(inputs, wildcard_key, populated_key):
+    inputs[populated_key] = inputs[wildcard_key]
+
+
 def populate_wildcards(json_data):
     prompt = json_data['prompt']
 
@@ -284,26 +307,14 @@ def populate_wildcards(json_data):
                     inputs['mode'] = new_mode
 
                 if inputs['mode'] == 'populate' and isinstance(inputs['populated_text'], str):
-                    if isinstance(inputs['seed'], list):
-                        try:
-                            input_node = prompt[inputs['seed'][0]]
-                            if input_node['class_type'] == 'ImpactInt':
-                                input_seed = int(input_node['inputs']['value'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
-                                input_seed = int(input_node['inputs']['seed'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            else:
-                                logging.warning("[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
-                                continue
-                        except:
-                            continue
-                    else:
-                        input_seed = int(inputs['seed'])
+                    wildcard_text = constant_text(inputs['wildcard_text'], prompt)
+                    input_seed = constant_seed(inputs['seed'], prompt)
 
-                    inputs['populated_text'] = wildcard_process(text=inputs['wildcard_text'], seed=input_seed)
+                    if wildcard_text is None or input_seed is None:
+                        populate_during_run(inputs, 'wildcard_text', 'populated_text')
+                        continue
+
+                    inputs['populated_text'] = wildcard_process(text=wildcard_text, seed=input_seed)
                     inputs['mode'] = 'reproduce'
 
                     server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "populated_text", "type": "text", "data": inputs['populated_text']})
@@ -314,33 +325,19 @@ def populate_wildcards(json_data):
 
             elif 'class_type' in v and v['class_type'] == 'MakeBasicPipe //Inspire':
                 inputs = v['inputs']
-                if inputs['wildcard_mode'] == 'populate' and (isinstance(inputs['positive_populated_text'], str) or isinstance(inputs['negative_populated_text'], str)):
-                    if isinstance(inputs['seed'], list):
-                        try:
-                            input_node = prompt[inputs['seed'][0]]
-                            if input_node['class_type'] == 'ImpactInt':
-                                input_seed = int(input_node['inputs']['value'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
-                                input_seed = int(input_node['inputs']['seed'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            else:
-                                logging.warning("[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
-                                continue
-                        except:
-                            continue
-                    else:
-                        input_seed = int(inputs['seed'])
+                sides = [side for side in ('positive', 'negative') if isinstance(inputs[f'{side}_populated_text'], str)]
+                if inputs['wildcard_mode'] == 'populate' and sides:
+                    texts = [constant_text(inputs[f'{side}_wildcard_text'], prompt) for side in sides]
+                    input_seed = constant_seed(inputs['seed'], prompt)
 
-                    if isinstance(inputs['positive_populated_text'], str):
-                        inputs['positive_populated_text'] = wildcard_process(text=inputs['positive_wildcard_text'], seed=input_seed)
-                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "positive_populated_text", "type": "text", "data": inputs['positive_populated_text']})
+                    if None in texts or input_seed is None:
+                        for side in sides:
+                            populate_during_run(inputs, f'{side}_wildcard_text', f'{side}_populated_text')
+                        continue
 
-                    if isinstance(inputs['negative_populated_text'], str):
-                        inputs['negative_populated_text'] = wildcard_process(text=inputs['negative_wildcard_text'], seed=input_seed)
-                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "negative_populated_text", "type": "text", "data": inputs['negative_populated_text']})
+                    for side, text in zip(sides, texts):
+                        inputs[f'{side}_populated_text'] = wildcard_process(text=text, seed=input_seed)
+                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": f"{side}_populated_text", "type": "text", "data": inputs[f'{side}_populated_text']})
 
                     inputs['wildcard_mode'] = 'reproduce'
                     mbp_updated_widget_values[k] = inputs['positive_populated_text'], inputs['negative_populated_text']
