@@ -185,7 +185,7 @@ class Guider_scheduled(CFGGuider):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule):
         super().__init__(model_patcher)
         self.default_cfg = self.cfg
-        self.sigmas = sigmas
+        self.sigmas = sigmas.tolist()
         self.cfg_sigmas = None
         self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
@@ -223,7 +223,7 @@ class Guider_scheduled(CFGGuider):
         v = self.cfg_sigmas.get(k)
         if v is None:
             # a sigma that a sampler worked out again is a rounding away from its step
-            i = next((i for i, s in enumerate(self.sigmas) if float(s) < k or math.isclose(float(s), k, rel_tol=1e-5)), len(self.sigmas) - 1)
+            i = next((i for i, s in enumerate(self.sigmas) if s < k or math.isclose(s, k, rel_tol=1e-5)), len(self.sigmas) - 1)
             v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
@@ -236,7 +236,7 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
     def __init__(self, model_patcher, sigmas, from_cfg, to_cfg, schedule, neg_scale):
         super().__init__(model_patcher)
         self.default_cfg = self.cfg
-        self.sigmas = sigmas
+        self.sigmas = sigmas.tolist()
         self.cfg_sigmas = None
         self.cfg_sigmas_i = None
         self.from_cfg = from_cfg
@@ -275,7 +275,7 @@ class Guider_PerpNeg_scheduled(Guider_PerpNeg):
         v = self.cfg_sigmas.get(k)
         if v is None:
             # a sigma that a sampler worked out again is a rounding away from its step
-            i = next((i for i, s in enumerate(self.sigmas) if float(s) < k or math.isclose(float(s), k, rel_tol=1e-5)), len(self.sigmas) - 1)
+            i = next((i for i, s in enumerate(self.sigmas) if s < k or math.isclose(s, k, rel_tol=1e-5)), len(self.sigmas) - 1)
             v = self.cfg_sigmas_i[i]
             self.cfg_sigmas[k] = v
 
