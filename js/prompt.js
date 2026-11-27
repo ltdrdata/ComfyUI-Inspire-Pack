@@ -314,24 +314,31 @@ app.registerExtension({
 
 
 const original_queuePrompt = api.queuePrompt;
-async function queuePrompt_with_widget_idxs(number, { output, workflow }, ...args) {
-	workflow.widget_idx_map = {};
-
-	for(let i in app.graph._nodes_by_id) {
-		let widgets = app.graph._nodes_by_id[i].widgets;
+function collect_widget_idxs(graph, prefix, widget_idx_map) {
+	for(const [key, node] of Object.entries(graph._nodes_by_id)) {
+		const i = prefix + key;
+		let widgets = node.widgets;
 		if(widgets) {
 			for(let j in widgets) {
 				if(['seed', 'noise_seed', 'sampler_name', 'scheduler'].includes(widgets[j].name)
 					&& widgets[j].type != 'converted-widget') {
-					if(workflow.widget_idx_map[i] == undefined) {
-						workflow.widget_idx_map[i] = {};
+					if(widget_idx_map[i] == undefined) {
+						widget_idx_map[i] = {};
 					}
 
-					workflow.widget_idx_map[i][widgets[j].name] = parseInt(j);
+					widget_idx_map[i][widgets[j].name] = parseInt(j);
 				}
 			}
 		}
+
+		if(node.subgraph)
+			collect_widget_idxs(node.subgraph, i + ':', widget_idx_map);
 	}
+}
+
+async function queuePrompt_with_widget_idxs(number, { output, workflow }, ...args) {
+	workflow.widget_idx_map = {};
+	collect_widget_idxs(app.graph, '', workflow.widget_idx_map);
 
 	const seeds_updated = global_seed_updated(output);
 	const result = await original_queuePrompt.call(api, number, { output, workflow }, ...args);
