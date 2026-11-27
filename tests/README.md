@@ -36,6 +36,7 @@ Importing the pack creates `resources/prompt-builder.yaml` from its example, as 
 | `test_image_nodes.py` | Load Image (Inspire) from its data, the directory loaders, batch sizes, the splitters, Color Map To Masks, RGB Hex To HSV |
 | `test_regional_and_conditioning.py` | Color masks, Color Mask To Depth Mask, the Regional Seed Explorers, Regional CFG, Remove ControlNet, Conditioning Upscale and Stretch |
 | `test_segs_preprocessors.py` | NormalMap and DepthAnything Preprocessor Provider (SEGS) with stand-ins for the nodes of ControlNet Auxiliary Preprocessors: the node each choice runs, the widget values and resolution it gets, the request to install the pack when it is missing |
+| `test_model_nodes.py` | IPAdapter Model Helper with a preset and the SDXL check, IPAdapter Model Helper [Manual] with the picked files and the folders of `extra_model_paths.yaml`, with stand-ins for the loaders of IPAdapter Plus |
 | `test_registration.py` | The pack registers the node types of the widget catalog, each with a display name |
 
 ## JavaScript tests

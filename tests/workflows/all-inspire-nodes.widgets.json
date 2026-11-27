@@ -2259,6 +2259,48 @@
           "value": "depth_anything_v2_vitl.pth"
         }
       ]
+    },
+    {
+      "id": "104",
+      "type": "IPAdapterModelHelperManual //Inspire",
+      "widgets": [
+        {
+          "name": "ipadapter_model",
+          "value": "ip-adapter-plus_sd15.safetensors"
+        },
+        {
+          "name": "clip_vision_model",
+          "value": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+        },
+        {
+          "name": "lora_model",
+          "value": "None"
+        },
+        {
+          "name": "is_insightface",
+          "value": false
+        },
+        {
+          "name": "lora_strength_model",
+          "value": 1
+        },
+        {
+          "name": "lora_strength_clip",
+          "value": 1
+        },
+        {
+          "name": "insightface_provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        },
+        {
+          "name": "insightface_model_name",
+          "value": "buffalo_l"
+        }
+      ]
     }
   ]
 }
