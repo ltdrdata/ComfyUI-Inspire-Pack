@@ -382,13 +382,13 @@ class LoraLoaderBlockWeight:
 
             if k_unet.startswith("input_blocks."):
                 k_unet_num = k_unet[len("input_blocks."):len("input_blocks.")+2]
-                input_blocks.append((k, v, parse_unet_num(k_unet_num), k_unet))
+                input_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
             elif k_unet.startswith("middle_block."):
                 k_unet_num = k_unet[len("middle_block."):len("middle_block.")+2]
-                middle_blocks.append((k, v, parse_unet_num(k_unet_num), k_unet))
+                middle_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
             elif k_unet.startswith("output_blocks."):
                 k_unet_num = k_unet[len("output_blocks."):len("output_blocks.")+2]
-                output_blocks.append((k, v, parse_unet_num(k_unet_num), k_unet))
+                output_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
             elif k_unet.startswith("double_blocks."):
                 k_unet_num = k_unet[len("double_blocks."):len("double_blocks.")+2]
                 double_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
@@ -396,7 +396,7 @@ class LoraLoaderBlockWeight:
                 k_unet_num = k_unet[len("single_blocks."):len("single_blocks.")+2]
                 single_blocks.append((key, v, parse_unet_num(k_unet_num), k_unet))
             else:
-                others.append((k, v, k_unet))
+                others.append((key, v, k_unet))
 
         input_blocks = sorted(input_blocks, key=lambda x: x[2])
         middle_blocks = sorted(middle_blocks, key=lambda x: x[2])

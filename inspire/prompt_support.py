@@ -620,6 +620,7 @@ class WildcardEncodeInspire:
                         "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
+                "hidden": {"unique_id": "UNIQUE_ID"},
                 }
 
     CATEGORY = "InspirePack/Prompt"
@@ -630,6 +631,7 @@ class WildcardEncodeInspire:
 
     def doit(self, *args, **kwargs):
         populated = kwargs['populated_text']
+        populated_during_run = kwargs['mode'] == 'populate'
 
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
 
@@ -640,6 +642,10 @@ class WildcardEncodeInspire:
 
         processed = []
         model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], seed=kwargs['seed'], clip_encoder=clip_encoder, processed=processed)
+
+        if populated_during_run:
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "populated_text", "type": "text", "data": processed[0]})
+
         return (model, clip, conditioning, processed[0])
 
 
@@ -674,6 +680,7 @@ class MakeBasicPipe:
                 "optional": {
                         "vae_opt": ("VAE",)
                     },
+                "hidden": {"unique_id": "UNIQUE_ID"},
                 }
 
     CATEGORY = "InspirePack/Prompt"
@@ -685,6 +692,7 @@ class MakeBasicPipe:
     def doit(self, **kwargs):
         pos_populated = kwargs['positive_populated_text']
         neg_populated = kwargs['negative_populated_text']
+        populated_during_run = kwargs['wildcard_mode'] == 'populate'
 
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
 
@@ -695,8 +703,14 @@ class MakeBasicPipe:
 
         model, clip, vae, key = CheckpointLoaderSimpleShared().doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
-        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder)
-        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+        pos_processed = []
+        neg_processed = []
+        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder, seed=kwargs['seed'], processed=pos_processed)
+        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder, seed=kwargs['seed'], processed=neg_processed)
+
+        if populated_during_run:
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "positive_populated_text", "type": "text", "data": pos_processed[0]})
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "negative_populated_text", "type": "text", "data": neg_processed[0]})
 
         if 'vae_opt' in kwargs:
             vae = kwargs['vae_opt']
@@ -1009,7 +1023,7 @@ class RemoveControlNetFromRegionalPrompts:
         rcn = RemoveControlNet()
         res = []
         for rp in regional_prompts:
-            _, _, _, _, positive, negative = rp.sampler.params
+            positive, negative = rp.sampler.params[4:6]
             positive, negative = rcn.doit(positive)[0], rcn.doit(negative)[0]
             sampler = rp.sampler.clone_with_conditionings(positive, negative)
             res.append(rp.clone_with_sampler(sampler))

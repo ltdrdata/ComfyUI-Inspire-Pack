@@ -487,7 +487,7 @@ class RegionalSeedExplorerMask:
         if len(mask.shape) == 2:
             mask = mask.unsqueeze(0)
 
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         try:
             seed_prompt = seed_prompt.replace("\n", "")
@@ -543,7 +543,7 @@ class RegionalSeedExplorerColorMask:
 
         mask = color_to_mask(color_mask, mask_color)
         original_mask = mask
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         mask = mask.to(device)
 
@@ -645,8 +645,8 @@ class RegionalCFG:
             if mask.device != x.device:
                 mask = mask.to(x.device)
 
-            if size != (x.shape[2], x.shape[3]):
-                size = (x.shape[2], x.shape[3])
+            if size != x.shape[-2:]:
+                size = x.shape[-2:]
                 mask = torch.nn.functional.interpolate(mask, size=size, mode='bilinear', align_corners=False)
 
             cond_pred = args["cond_denoised"]
