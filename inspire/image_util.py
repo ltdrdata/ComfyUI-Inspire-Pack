@@ -72,7 +72,6 @@ class LoadImagesFromDirBatch:
                 "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
                 "sort_method": (sort_methods,),
-                # XXX TODO add a switch for the size normalization
             }
         }
 
