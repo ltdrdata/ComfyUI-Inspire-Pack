@@ -2215,6 +2215,50 @@
           "value": ""
         }
       ]
+    },
+    {
+      "id": "102",
+      "type": "NormalMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "model_type",
+          "value": "DSINE"
+        },
+        {
+          "name": "fov (DSINE)",
+          "value": 60
+        },
+        {
+          "name": "iterations (DSINE)",
+          "value": 5
+        },
+        {
+          "name": "backbone (Metric3D)",
+          "value": "vit-small"
+        },
+        {
+          "name": "fx (Metric3D)",
+          "value": 1000
+        },
+        {
+          "name": "fy (Metric3D)",
+          "value": 1000
+        }
+      ]
+    },
+    {
+      "id": "103",
+      "type": "DepthAnything_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "version",
+          "value": "auto"
+        },
+        {
+          "name": "ckpt_name",
+          "value": "depth_anything_v2_vitl.pth"
+        }
+      ]
     }
   ]
 }

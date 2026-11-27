@@ -618,48 +618,20 @@ class NormalMap_Preprocessor_wrapper:
         self.fy = fy
 
     def apply(self, image, mask=None):
+        node_name = f'{self.model_type}-NormalMapPreprocessor'
+        if node_name not in nodes.NODE_CLASS_MAPPINGS:
+            utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
+                                          "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+            raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
+
+        obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
         resolution = normalize_size_base_64(image.shape[2], image.shape[1])
-        
         if self.model_type == "DSINE":
-            node_name = 'DSINE-NormalMapPreprocessor'
-            if node_name not in nodes.NODE_CLASS_MAPPINGS:
-                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
-                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
-            
-            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
             return obj.execute(image, fov=self.fov, iterations=self.iterations, resolution=resolution)[0]
-            
         elif self.model_type == "BAE":
-            node_name = 'BAE-NormalMapPreprocessor'
-            if node_name not in nodes.NODE_CLASS_MAPPINGS:
-                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
-                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
-            
-            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
             return obj.execute(image, resolution=resolution)[0]
-            
-        elif self.model_type == "Metric3D":
-            node_name = 'Metric3D-NormalMapPreprocessor'
-            if node_name not in nodes.NODE_CLASS_MAPPINGS:
-                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
-                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
-            
-            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
-            return obj.execute(image, backbone=self.backbone, fx=self.fx, fy=self.fy, resolution=resolution)[0]
-            
         else:
-            # Fallback to generic NormalMapPreprocessor if available
-            node_name = 'NormalMapPreprocessor'
-            if node_name not in nodes.NODE_CLASS_MAPPINGS:
-                utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                              "To use 'NormalMap_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
-                raise Exception("[ERROR] To use NormalMap_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.'")
-            
-            obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
-            return obj.execute(image, resolution=resolution)[0]
+            return obj.execute(image, backbone=self.backbone, fx=self.fx, fy=self.fy, resolution=resolution)[0]
 
 
 class DepthAnything_Preprocessor_wrapper:
@@ -669,10 +641,10 @@ class DepthAnything_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         node_name = 'DepthAnythingPreprocessor' if self.version == 'v1' else 'DepthAnythingV2Preprocessor'
-        
+
         if node_name not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/Fannovel16/comfyui_controlnet_aux',
-                                          f"To use 'DepthAnything_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
+                                          "To use 'DepthAnything_Preprocessor_Provider' node, 'ComfyUI's ControlNet Auxiliary Preprocessors.' extension is required.")
             raise Exception(f"[ERROR] To use DepthAnything_Preprocessor_Provider, you need to install 'ComfyUI's ControlNet Auxiliary Preprocessors.' The {node_name} node is not available.")
 
         obj = nodes.NODE_CLASS_MAPPINGS[node_name]()
@@ -701,13 +673,12 @@ class NormalMap_Preprocessor_Provider_for_SEGS:
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
     def doit(self, model_type="DSINE", **kwargs):
-        # Extract parameters with model-specific names
         fov = kwargs.get("fov (DSINE)", 60.0)
         iterations = kwargs.get("iterations (DSINE)", 5)
         backbone = kwargs.get("backbone (Metric3D)", "vit-small")
         fx = kwargs.get("fx (Metric3D)", 1000)
         fy = kwargs.get("fy (Metric3D)", 1000)
-        
+
         obj = NormalMap_Preprocessor_wrapper(model_type, fov, iterations, backbone, fx, fy)
         return (obj, )
 
@@ -717,15 +688,13 @@ class DepthAnything_Preprocessor_Provider_for_SEGS:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "version": (["v1", "v2"], {"default": "v2"}),
+                "version": (["auto", "v1", "v2"], {"default": "auto"}),
                 "ckpt_name": ([
-                    # DepthAnything V1 models
-                    "depth_anything_vitl14.pth", 
-                    "depth_anything_vitb14.pth", 
+                    "depth_anything_vitl14.pth",
+                    "depth_anything_vitb14.pth",
                     "depth_anything_vits14.pth",
-                    # DepthAnything V2 models
                     "depth_anything_v2_vitl.pth",
-                    "depth_anything_v2_vitb.pth", 
+                    "depth_anything_v2_vitb.pth",
                     "depth_anything_v2_vits.pth"
                 ], {"default": "depth_anything_v2_vitl.pth"})
             }
@@ -736,6 +705,15 @@ class DepthAnything_Preprocessor_Provider_for_SEGS:
     CATEGORY = "InspirePack/SEGS/ControlNet"
 
     def doit(self, version, ckpt_name):
+        if version == "auto":
+            if ckpt_name.startswith("depth_anything_v2_"):
+                version = "v2"
+            elif ckpt_name.startswith("depth_anything_vit"):
+                version = "v1"
+            else:
+                version = "v2"
+                logging.warning(f"[Inspire Pack] DepthAnything_Preprocessor_Provider: the version of '{ckpt_name}' cannot be told from its name. v2 is used. Set `version` to choose.")
+
         obj = DepthAnything_Preprocessor_wrapper(ckpt_name, version)
         return (obj, )
 
