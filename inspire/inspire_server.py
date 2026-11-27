@@ -124,7 +124,7 @@ def prompt_seed_update(json_data):
     action = None
 
     for k, v in json_data['prompt'].items():
-        if 'class_type' not in v:
+        if not isinstance(v, dict) or 'class_type' not in v:
             continue
 
         cls = v['class_type']
@@ -142,6 +142,9 @@ def prompt_seed_update(json_data):
         seed_generator = SeedGenerator(value, action)
 
         for k, v in json_data['prompt'].items():
+            if not isinstance(v, dict):
+                continue
+
             for k2, v2 in v['inputs'].items():
                 if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
                     v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
@@ -228,6 +231,9 @@ def prompt_sampler_update(json_data):
     scheduler = None
 
     for v in prompt.values():
+        if not isinstance(v, dict):
+            continue
+
         cls = v.get('class_type')
         if cls == 'GlobalSampler //Inspire':
             sampler_name = v['inputs']['sampler_name']
@@ -333,7 +339,7 @@ def populate_wildcards(json_data):
                 if inputs['mode'] == 'reproduce':
                     server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "mode", "type": "text", "value": 'populate'})
 
-            elif 'class_type' in v and v['class_type'] == 'MakeBasicPipe //Inspire':
+            elif isinstance(v, dict) and v.get('class_type') == 'MakeBasicPipe //Inspire':
                 inputs = v['inputs']
                 sides = [side for side in ('positive', 'negative') if isinstance(inputs[f'{side}_populated_text'], str)]
                 if inputs['wildcard_mode'] == 'populate' and sides:
@@ -372,7 +378,7 @@ def force_reset_useless_params(json_data):
     prompt = json_data['prompt']
 
     for k, v in prompt.items():
-        if 'class_type' in v and v['class_type'] == 'PromptBuilder //Inspire':
+        if isinstance(v, dict) and v.get('class_type') == 'PromptBuilder //Inspire':
             v['inputs']['category'] = '#PLACEHOLDER'
 
     return json_data
