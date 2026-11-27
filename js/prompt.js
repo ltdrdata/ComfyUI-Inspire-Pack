@@ -2,15 +2,45 @@ import { ComfyApp, app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 
 let get_wildcards_list;
+let get_wildcard_label;
+let is_wildcard_label;
+let load_wildcard_status;
+
 try {
 	const ImpactPack = await import("../ComfyUI-Impact-Pack/impact-pack.js");
+	console.log("[Inspire Pack] Impact Pack module loaded:", ImpactPack);
 	get_wildcards_list = ImpactPack.get_wildcards_list;
+	get_wildcard_label = ImpactPack.get_wildcard_label;
+	is_wildcard_label = ImpactPack.is_wildcard_label;
+	load_wildcard_status = ImpactPack.load_wildcard_status;
+	console.log("[Inspire Pack] Functions imported:", {
+		get_wildcards_list: !!get_wildcards_list,
+		get_wildcard_label: !!get_wildcard_label,
+		is_wildcard_label: !!is_wildcard_label,
+		load_wildcard_status: !!load_wildcard_status
+	});
 }
-catch (error) {}
+catch (error) {
+	console.error("[Inspire Pack] Failed to import Impact Pack module:", error);
+}
 
-// fallback
+// Fallback for get_wildcards_list
 if(!get_wildcards_list) {
-	get_wildcards_list = () => { return ["Impact Pack isn't installed or is outdated."]; }
+	console.warn("[Inspire Pack] get_wildcards_list not available. Using fallback.");
+	get_wildcards_list = () => {
+		return ["Impact Pack isn't installed or needs browser cache refresh."];
+	}
+}
+
+// Fallback for on-demand features (backward compatibility with older Impact Pack)
+if(!get_wildcard_label) {
+	get_wildcard_label = () => { return "Select the Wildcard to add to the text"; };
+}
+if(!is_wildcard_label) {
+	is_wildcard_label = (value) => { return value === "Select the Wildcard to add to the text"; };
+}
+if(!load_wildcard_status) {
+	load_wildcard_status = async () => {}; // No-op for older versions
 }
 
 let pb_cache = {};
@@ -43,8 +73,13 @@ app.registerExtension({
 			let combo_id = 5;
 
 			// lora
-            node.widgets[combo_id].callback = (value, canvas, node, pos, e) => {
+            // The page also calls a callback when it loads a workflow in API format, and on a pick it hands over the label or the picked item depending on the renderer.
+            node.widgets[combo_id].callback = () => {
                 let lora_name = node._value;
+                node._value = undefined;
+                if(lora_name === undefined)
+                    return;
+
                 if(lora_name.endsWith('.safetensors')) {
                     lora_name = lora_name.slice(0, -12);
                 }
@@ -62,19 +97,28 @@ app.registerExtension({
             });
 
             // wildcard
-            node.widgets[combo_id+1].callback = (value, canvas, node, pos, e) => {
+            node.widgets[combo_id+1].callback = async () => {
+                    const wildcard = node._wildcard_value;
+                    node._wildcard_value = undefined;
+                    if(wildcard === undefined)
+                        return;
+
                     if(wildcard_text_widget.value != '')
                         wildcard_text_widget.value += ', '
 
-                    wildcard_text_widget.value += node._wildcard_value;
+                    wildcard_text_widget.value += wildcard;
+
+                    // Reload wildcard status to update loaded count (Impact Pack staged feature)
+                    await load_wildcard_status();
+                    app.canvas.setDirty(true);
             }
 
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-                    if (value !== "Select the Wildcard to add to the text")
+                    if (!is_wildcard_label(value))
                         node._wildcard_value = value;
                 },
-				get: () => { return "Select the Wildcard to add to the text"; }
+				get: () => { return get_wildcard_label(); }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1].options, "values", {
@@ -86,7 +130,10 @@ app.registerExtension({
 
 			// Preventing validation errors from occurring in any situation.
 			node.widgets[combo_id].serializeValue = () => { return "Select the LoRA to add to the text"; }
-			node.widgets[combo_id+1].serializeValue = () => { return "Select the Wildcard to add to the text"; }
+			node.widgets[combo_id+1].serializeValue = () => {
+				// Always serialize as the default label (not the dynamic on-demand label)
+				return "Select the Wildcard to add to the text";
+			}
 
 			// wildcard populating
 			populated_text_widget.inputEl.disabled = true;
@@ -124,8 +171,12 @@ app.registerExtension({
 			// lora selector, wildcard selector
 			let combo_id = 5;
 
-            node.widgets[combo_id].callback = (value, canvas, node, pos, e) => {
+            node.widgets[combo_id].callback = () => {
                 let lora_name = node._lora_value;
+                node._lora_value = undefined;
+                if(lora_name === undefined)
+                    return;
+
                 if (lora_name.endsWith('.safetensors')) {
                     lora_name = lora_name.slice(0, -12);
                 }
@@ -145,7 +196,12 @@ app.registerExtension({
 				get: () => { return "Select the LoRA to add to the text"; }
 			});
 
-            node.widgets[combo_id+1].callback = (value, canvas, node, pos, e) => {
+            node.widgets[combo_id+1].callback = async () => {
+                const wildcard = node._wildcard_value;
+                node._wildcard_value = undefined;
+                if(wildcard === undefined)
+                    return;
+
                 let w = null;
                 if(direction_widget.value) {
                     w = pos_wildcard_text_widget;
@@ -157,15 +213,19 @@ app.registerExtension({
                 if(w.value != '')
                     w.value += ', '
 
-                w.value += node._wildcard_value;
+                w.value += wildcard;
+
+                // Reload wildcard status to update loaded count (Impact Pack staged feature)
+                await load_wildcard_status();
+                app.canvas.setDirty(true);
             }
 
 			Object.defineProperty(node.widgets[combo_id+1], "value", {
 				set: (value) => {
-                        if (value !== "Select the Wildcard to add to the text")
+                        if (!is_wildcard_label(value))
                             node._wildcard_value = value;
 					},
-				get: () => { return "Select the Wildcard to add to the text"; }
+				get: () => { return get_wildcard_label(); }
 			});
 
 			Object.defineProperty(node.widgets[combo_id+1].options, "values", {
@@ -177,7 +237,10 @@ app.registerExtension({
 
 			// Preventing validation errors from occurring in any situation.
 			node.widgets[combo_id].serializeValue = () => { return "Select the LoRA to add to the text"; }
-			node.widgets[combo_id+1].serializeValue = () => { return "Select the Wildcard to add to the text"; }
+			node.widgets[combo_id+1].serializeValue = () => {
+				// Always serialize as the default label (not the dynamic on-demand label)
+				return "Select the Wildcard to add to the text";
+			}
 
 			// wildcard populating
 			pos_populated_text_widget.inputEl.disabled = true;
@@ -219,16 +282,21 @@ app.registerExtension({
 				}
 			});
 
-            preset_widget.callback = (value, canvas, node, pos, e) => {
+            preset_widget.callback = () => {
+                const preset = node._preset_value;
+                node._preset_value = undefined;
+                if(preset === undefined)
+                    return;
+
                 if(node.widgets[2].value) {
                     node.widgets[2].value += ', ';
                 }
 
-                const y = node._preset_value.split(':');
+                const y = preset.split(':');
                 if(y.length == 2)
                     node.widgets[2].value += y[1].trim();
                 else
-                    node.widgets[2].value += node._preset_value.trim();
+                    node.widgets[2].value += preset.trim();
             }
 
 			Object.defineProperty(preset_widget, "value", {
@@ -270,26 +338,48 @@ app.registerExtension({
 
 
 const original_queuePrompt = api.queuePrompt;
-async function queuePrompt_with_widget_idxs(number, { output, workflow }) {
-	workflow.widget_idx_map = {};
-
-	for(let i in app.graph._nodes_by_id) {
-		let widgets = app.graph._nodes_by_id[i].widgets;
+function collect_widget_idxs(graph, prefix, widget_idx_map) {
+	for(const [key, node] of Object.entries(graph._nodes_by_id)) {
+		const i = prefix + key;
+		let widgets = node.widgets;
 		if(widgets) {
 			for(let j in widgets) {
 				if(['seed', 'noise_seed', 'sampler_name', 'scheduler'].includes(widgets[j].name)
 					&& widgets[j].type != 'converted-widget') {
-					if(workflow.widget_idx_map[i] == undefined) {
-						workflow.widget_idx_map[i] = {};
+					if(widget_idx_map[i] == undefined) {
+						widget_idx_map[i] = {};
 					}
 
-					workflow.widget_idx_map[i][widgets[j].name] = parseInt(j);
+					widget_idx_map[i][widgets[j].name] = parseInt(j);
 				}
 			}
 		}
-	}
 
-	return await original_queuePrompt.call(api, number, { output, workflow });
+		if(node.subgraph)
+			collect_widget_idxs(node.subgraph, i + ':', widget_idx_map);
+	}
+}
+
+async function queuePrompt_with_widget_idxs(number, { output, workflow }, ...args) {
+	workflow.widget_idx_map = {};
+	collect_widget_idxs(app.graph, '', workflow.widget_idx_map);
+
+	const seeds_updated = global_seed_updated(output);
+	const result = await original_queuePrompt.call(api, number, { output, workflow }, ...args);
+	await seeds_updated;
+	return result;
+}
+
+// The server sends the seeds for the next prompt in an event of its own. That event can come after the answer to the request,
+// and the page builds the next prompt of a batch from the widgets as soon as it has that answer.
+function global_seed_updated(output) {
+	if(!Object.values(output).some((node) => node.class_type == 'GlobalSeed //Inspire'))
+		return Promise.resolve();
+
+	return new Promise((resolve) => {
+		api.addEventListener("inspire-global-seed", resolve, { once: true });
+		setTimeout(resolve, 1000);
+	});
 }
 
 api.queuePrompt = queuePrompt_with_widget_idxs;

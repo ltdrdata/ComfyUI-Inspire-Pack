@@ -1,0 +1,126 @@
+import copy
+
+import pytest
+import torch
+
+
+def color_image():
+    image = torch.zeros(1, 2, 16, 3)
+    image[0, :, 0:4] = torch.tensor([1.0, 0.0, 0.0])
+    image[0, :, 4:8] = torch.tensor([0.0, 1.0, 0.0])
+    image[0, :, 8:12] = 1.0
+    return image
+
+
+def columns(*spans, width=16, height=2):
+    mask = torch.zeros(1, height, width)
+    for start, stop, value in spans:
+        mask[:, :, start:stop] = value
+    return mask
+
+
+@pytest.mark.parametrize("color", ["#FF0000", "red", "16711680"])
+def test_color_to_mask_takes_a_hex_code_a_name_or_a_number(pack, color):
+    assert torch.equal(pack.regional_nodes.color_to_mask(color_image(), color), columns((0, 4, 1.0)))
+
+
+def test_color_to_mask_refuses_what_is_not_a_color(pack):
+    with pytest.raises(Exception, match="Invalid mask_color"):
+        pack.regional_nodes.color_to_mask(color_image(), "#XYZ")
+
+
+@pytest.mark.parametrize("method,expected", [
+    ("override", columns((0, 4, 1.0), (4, 8, 0.5), (8, 16, 0.2))),
+    ("max", columns((0, 4, 1.0), (4, 8, 0.5), (8, 16, 0.2))),
+    ("sum", columns((0, 4, 1.0), (4, 8, 0.7), (8, 16, 0.2))),
+])
+def test_color_mask_to_depth_mask_flattens_the_layers_over_the_base_value(pack, method, expected):
+    spec = "#FF0000:1.0\n#00FF00:0.5"
+    (mask,) = pack.regional_nodes.ColorMaskToDepthMask().doit(color_image(), spec, 0.2, 0, method)
+    torch.testing.assert_close(mask, expected)
+
+
+def test_color_mask_to_depth_mask_override_lets_an_upper_layer_win(pack):
+    image = color_image()
+    (mask,) = pack.regional_nodes.ColorMaskToDepthMask().doit(image, "#FFFFFF:0.3\n#FFFFFF:0.9", 0.0, 0, "override")
+    torch.testing.assert_close(mask, columns((8, 12, 0.9)))
+
+
+def test_color_mask_to_depth_mask_dilates_each_layer(pack):
+    (mask,) = pack.regional_nodes.ColorMaskToDepthMask().doit(color_image(), "#00FF00:1.0", 0.0, 1, "max")
+    torch.testing.assert_close(mask, columns((3, 9, 1.0)))
+
+
+def noise():
+    return torch.randn(1, 4, 8, 8, generator=torch.Generator().manual_seed(1))
+
+
+def variation(seed):
+    return torch.randn(1, 4, 8, 8, generator=torch.Generator().manual_seed(seed))
+
+
+def test_regional_seed_explorer_varies_the_noise_inside_the_mask_only(pack):
+    mask = torch.zeros(1, 64, 64)
+    mask[:, :, :32] = 1.0
+    start = noise()
+    (out,) = pack.regional_nodes.RegionalSeedExplorerMask.doit(mask, start.clone(), "", True, 9, 1.0, "CPU")
+    torch.testing.assert_close(out[..., :4], variation(9)[..., :4])
+    assert torch.equal(out[..., 4:], start[..., 4:])
+    (half,) = pack.regional_nodes.RegionalSeedExplorerMask.doit(mask, start.clone(), "9:0.3", False, 0, 0.0, "CPU")
+    assert not torch.allclose(half[..., :4], start[..., :4]) and torch.equal(half[..., 4:], start[..., 4:])
+
+
+def test_regional_seed_explorer_by_color_mask_varies_the_region_of_its_color(pack):
+    image = torch.zeros(1, 64, 64, 3)
+    image[0, :, 32:] = 1.0
+    start = noise()
+    out, mask = pack.regional_nodes.RegionalSeedExplorerColorMask.doit(image, "#FFFFFF", start.clone(), "", True, 9, 1.0, "CPU")
+    assert mask.shape == (1, 64, 64) and bool(mask[0, :, 32:].all()) and not mask[0, :, :32].any()
+    torch.testing.assert_close(out[..., 4:], variation(9)[..., 4:])
+    assert torch.equal(out[..., :4], start[..., :4])
+
+
+def test_regional_cfg_applies_the_cfg_inside_the_mask_and_the_uncond_outside(pack):
+    import comfy.model_patcher
+    import comfy.samplers
+    cpu = torch.device("cpu")
+    model = comfy.model_patcher.ModelPatcher(torch.nn.Linear(1, 1), cpu, cpu)
+    mask = torch.zeros(16, 16)
+    mask[:, :8] = 1.0
+    (patched,) = pack.regional_nodes.RegionalCFG.doit(model, mask)
+    cond, uncond, x = torch.full((1, 4, 4, 4), 2.0), torch.full((1, 4, 4, 4), 0.5), torch.zeros(1, 4, 4, 4)
+    out = comfy.samplers.cfg_function(patched.model, cond, uncond, 7.0, x, torch.ones(1), model_options=patched.model_options)
+    assert torch.equal(out[..., :2], torch.full((1, 4, 4, 2), 0.5 + 1.5 * 7.0))
+    assert torch.equal(out[..., 2:], torch.full((1, 4, 4, 2), 0.5))
+    assert "sampler_cfg_function" not in model.model_options
+
+
+def conditioning():
+    return [[torch.ones(1, 2, 3), {"area": (8, 16, 0, 8), "strength": 1.0, "control": "net", "control_apply_to_uncond": True}],
+            [torch.zeros(1, 2, 3), {"pooled_output": "pooled"}]]
+
+
+def test_remove_controlnet_takes_the_controlnet_off_each_conditioning(pack):
+    given = conditioning()
+    before = copy.deepcopy(given)
+    (out,) = pack.prompt_support.RemoveControlNet().doit(given)
+    assert [entry[1] for entry in out] == [{"area": (8, 16, 0, 8), "strength": 1.0}, {"pooled_output": "pooled"}]
+    assert out[0][0] is given[0][0]
+    assert [entry[1] for entry in given] == [entry[1] for entry in before]
+
+
+def test_conditioning_upscale_scales_the_area_and_rounds_it_up_to_eight(pack):
+    given = conditioning()
+    (out,) = pack.conditioning_nodes.ConditioningUpscale.upscale(given, 2)
+    assert out[0][1]["area"] == (16, 32, 0, 16)
+    assert pack.conditioning_nodes.ConditioningUpscale.upscale([[torch.ones(1), {"area": (3, 5, 1, 2)}]], 3)[0][0][1]["area"] == (16, 16, 8, 8)
+    assert out[1][1] == {"pooled_output": "pooled"}
+    assert given[0][1]["area"] == (8, 16, 0, 8)
+
+
+def test_conditioning_stretch_moves_the_area_from_one_resolution_to_another(pack):
+    given = conditioning()
+    (out,) = pack.conditioning_nodes.ConditioningStretch.upscale(given, 512, 512, 1024, 768)
+    assert out[0][1]["area"] == (16, 32, 0, 16)
+    assert given[0][1]["area"] == (8, 16, 0, 8)
+    assert out[1][1] == {"pooled_output": "pooled"}

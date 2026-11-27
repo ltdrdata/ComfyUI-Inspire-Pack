@@ -1,8 +1,17 @@
 import { api } from "../../scripts/api.js";
 
+function nodeOfPromptId(id) {
+	let graph = app.graph;
+	let node;
+	for(const part of String(id).split(':')) {
+		node = graph?._nodes_by_id[part];
+		graph = node?.subgraph;
+	}
+	return node;
+}
+
 function nodeFeedbackHandler(event) {
-	let nodes = app.graph._nodes_by_id;
-	let node = nodes[event.detail.node_id];
+	let node = nodeOfPromptId(event.detail.node_id);
 	if(node) {
 		if(event.detail.type == "text") {
 			const w = node.widgets.find((w) => event.detail.widget_name === w.name);
@@ -17,8 +26,7 @@ api.addEventListener("inspire-node-feedback", nodeFeedbackHandler);
 
 
 function nodeOutputLabelHandler(event) {
-	let nodes = app.graph._nodes_by_id;
-	let node = nodes[event.detail.node_id];
+	let node = nodeOfPromptId(event.detail.node_id);
 	if(node) {
 		node.outputs[event.detail.output_idx].label = event.detail.label;
 	}

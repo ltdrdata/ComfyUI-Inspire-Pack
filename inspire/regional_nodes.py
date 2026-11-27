@@ -20,7 +20,7 @@ class RegionalPromptSimple:
                 "mask": ("MASK",),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (common.SCHEDULERS,),
+                "scheduler": (common.get_schedulers(),),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
@@ -107,7 +107,7 @@ class RegionalPromptColorMask:
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (common.SCHEDULERS,),
+                "scheduler": (common.get_schedulers(),),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
@@ -487,7 +487,7 @@ class RegionalSeedExplorerMask:
         if len(mask.shape) == 2:
             mask = mask.unsqueeze(0)
 
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         try:
             seed_prompt = seed_prompt.replace("\n", "")
@@ -543,7 +543,7 @@ class RegionalSeedExplorerColorMask:
 
         mask = color_to_mask(color_mask, mask_color)
         original_mask = mask
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         mask = mask.to(device)
 
@@ -645,8 +645,8 @@ class RegionalCFG:
             if mask.device != x.device:
                 mask = mask.to(x.device)
 
-            if size != (x.shape[2], x.shape[3]):
-                size = (x.shape[2], x.shape[3])
+            if size != x.shape[-2:]:
+                size = x.shape[-2:]
                 mask = torch.nn.functional.interpolate(mask, size=size, mode='bilinear', align_corners=False)
 
             cond_pred = args["cond_denoised"]

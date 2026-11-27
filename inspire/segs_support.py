@@ -301,7 +301,12 @@ class Canny_Preprocessor_wrapper:
 
     def apply(self, image, mask=None):
         obj = nodes.NODE_CLASS_MAPPINGS['Canny']()
-        return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
+        if hasattr(obj, 'execute'):
+            # node v3
+            return obj.execute(image, self.low_threshold, self.high_threshold)[0]
+        else:
+            # legacy compatibility
+            return obj.detect_edge(image, self.low_threshold, self.high_threshold)[0]
 
 
 class OpenPose_Preprocessor_Provider_for_SEGS:
