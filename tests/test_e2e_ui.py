@@ -1,0 +1,68 @@
+from argparse import Namespace
+from zipfile import ZipFile
+
+import pytest
+from playwright.sync_api import BrowserContext, Error, Page
+
+from e2e_ui import browser_session
+
+
+@pytest.fixture
+def browser_args(tmp_path, monkeypatch):
+    new_page = BrowserContext.new_page
+
+    def routed_page(context):
+        page = new_page(context)
+
+        def serve(route):
+            if route.request.url.endswith("/scripts/app.js"):
+                route.fulfill(content_type="application/javascript", body="export const app = {};")
+            else:
+                route.fulfill(content_type="text/html", body='<button data-testid="queue-button">Run</button>')
+
+        page.route("**/*", serve)
+        return page
+
+    monkeypatch.setattr(BrowserContext, "new_page", routed_page)
+    return Namespace(base_url="http://inspire.test", browser_channel="chrome", headed=False,
+                     timeout=5, artifacts=tmp_path)
+
+
+def test_closed_page_preserves_original_failure_and_trace(browser_args, caplog):
+    with pytest.raises(AssertionError, match="workflow failed"):
+        with browser_session(browser_args) as ui:
+            ui.page.close()
+            raise AssertionError("workflow failed")
+
+    assert "screenshot failed" in caplog.text
+    with ZipFile(browser_args.artifacts / "trace.zip") as trace:
+        assert any(name.endswith(".trace") for name in trace.namelist())
+
+
+def test_artifact_failure_fails_an_otherwise_successful_run(browser_args, monkeypatch):
+    def fail_screenshot(self, **kwargs):
+        raise Error("screenshot unavailable")
+
+    monkeypatch.setattr(Page, "screenshot", fail_screenshot)
+    with pytest.raises(Error, match="screenshot unavailable"):
+        with browser_session(browser_args):
+            pass
+    with ZipFile(browser_args.artifacts / "trace.zip") as trace:
+        assert any(name.endswith(".trace") for name in trace.namelist())
+
+
+def test_javascript_error_during_artifact_saving_fails_run(browser_args, monkeypatch):
+    screenshot = Page.screenshot
+
+    def late_error(page, **kwargs):
+        with page.expect_event("pageerror"):
+            page.evaluate("() => { setTimeout(() => { throw new Error('late render failure'); }, 0); }")
+        return screenshot(page, **kwargs)
+
+    monkeypatch.setattr(Page, "screenshot", late_error)
+    with pytest.raises(AssertionError, match="late render failure"):
+        with browser_session(browser_args):
+            pass
+    assert (browser_args.artifacts / "final.png").is_file()
+    with ZipFile(browser_args.artifacts / "trace.zip") as trace:
+        assert any(name.endswith(".trace") for name in trace.namelist())
