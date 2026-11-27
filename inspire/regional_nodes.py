@@ -4,10 +4,12 @@ import comfy
 import nodes
 import torch
 import re
+import webcolors
 
 from . import prompt_support
 from .libs import utils, common
 
+import logging
 
 class RegionalPromptSimple:
     @classmethod
@@ -18,7 +20,7 @@ class RegionalPromptSimple:
                 "mask": ("MASK",),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (common.SCHEDULERS,),
+                "scheduler": (common.get_schedulers(),),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
@@ -27,6 +29,7 @@ class RegionalPromptSimple:
                 "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "variation_method": (["linear", "slerp"],),
+                "scheduler_func_opt": ("SCHEDULER_FUNC",),
             }
         }
 
@@ -37,11 +40,11 @@ class RegionalPromptSimple:
 
     @staticmethod
     def doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt,
-             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear'):
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method='linear', scheduler_func_opt=None):
         if 'RegionalPrompt' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'RegionalPromptSimple' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use RegionalPromptSimple, you need to install 'ComfyUI-Impact-Pack'")
+            raise Exception("[ERROR] To use RegionalPromptSimple, you need to install 'ComfyUI-Impact-Pack'")
 
         model, clip, vae, positive, negative = basic_pipe
 
@@ -69,7 +72,7 @@ class RegionalPromptSimple:
 
         basic_pipe = model, clip, vae, new_positive, negative
 
-        sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe, sigma_factor=sigma_factor)[0]
+        sampler = kap.doit(cfg, sampler_name, scheduler, basic_pipe, sigma_factor=sigma_factor, scheduler_func_opt=scheduler_func_opt)[0]
         try:
             regional_prompts = rp.doit(mask, sampler, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
         except:
@@ -80,12 +83,13 @@ class RegionalPromptSimple:
 
 def color_to_mask(color_mask, mask_color):
     try:
-        if mask_color.startswith("#"):
-            selected = int(mask_color[1:], 16)
+        if mask_color.startswith("#") or mask_color.isalpha():
+            hex = mask_color[1:] if mask_color.startswith("#") else webcolors.name_to_hex(mask_color)[1:]
+            selected = int(hex, 16)
         else:
             selected = int(mask_color, 10)
     except Exception:
-        raise Exception(f"[ERROR] Invalid mask_color value. mask_color should be a color value for RGB")
+        raise Exception("[ERROR] Invalid mask_color value. mask_color should be a color value for RGB")
 
     temp = (torch.clamp(color_mask, 0, 1.0) * 255.0).round().to(torch.int)
     temp = torch.bitwise_left_shift(temp[:, :, :, 0], 16) + torch.bitwise_left_shift(temp[:, :, :, 1], 8) + temp[:, :, :, 2]
@@ -103,7 +107,7 @@ class RegionalPromptColorMask:
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
                 "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0}),
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS,),
-                "scheduler": (common.SCHEDULERS,),
+                "scheduler": (common.get_schedulers(),),
                 "wildcard_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "placeholder": "wildcard prompt"}),
                 "controlnet_in_pipe": ("BOOLEAN", {"default": False, "label_on": "Keep", "label_off": "Override"}),
                 "sigma_factor": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
@@ -112,6 +116,7 @@ class RegionalPromptColorMask:
                 "variation_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "variation_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01}),
                 "variation_method": (["linear", "slerp"],),
+                "scheduler_func_opt": ("SCHEDULER_FUNC",),
             }
         }
 
@@ -122,10 +127,10 @@ class RegionalPromptColorMask:
 
     @staticmethod
     def doit(basic_pipe, color_mask, mask_color, cfg, sampler_name, scheduler, wildcard_prompt,
-             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear"):
+             controlnet_in_pipe=False, sigma_factor=1.0, variation_seed=0, variation_strength=0.0, variation_method="linear", scheduler_func_opt=None):
         mask = color_to_mask(color_mask, mask_color)
         rp = RegionalPromptSimple().doit(basic_pipe, mask, cfg, sampler_name, scheduler, wildcard_prompt, controlnet_in_pipe,
-                                         sigma_factor=sigma_factor, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method)[0]
+                                         sigma_factor=sigma_factor, variation_seed=variation_seed, variation_strength=variation_strength, variation_method=variation_method, scheduler_func_opt=scheduler_func_opt)[0]
         return rp, mask
 
 
@@ -166,6 +171,9 @@ class RegionalConditioningColorMask:
                 "set_cond_area": (["default", "mask bounds"],),
                 "prompt": ("STRING", {"multiline": True, "placeholder": "prompt"}),
             },
+            "optional": {
+                "dilation": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
+            }
         }
 
     RETURN_TYPES = ("CONDITIONING", "MASK")
@@ -174,8 +182,11 @@ class RegionalConditioningColorMask:
     CATEGORY = "InspirePack/Regional"
 
     @staticmethod
-    def doit(clip, color_mask, mask_color, strength, set_cond_area, prompt):
+    def doit(clip, color_mask, mask_color, strength, set_cond_area, prompt, dilation=0):
         mask = color_to_mask(color_mask, mask_color)
+
+        if dilation != 0:
+            mask = utils.dilate_mask(mask, dilation)
 
         conditioning = nodes.CLIPTextEncode().encode(clip, prompt)[0]
         conditioning = nodes.ConditioningSetMask().append(conditioning, mask, set_cond_area, strength)[0]
@@ -250,7 +261,7 @@ class IPAdapterConditioning:
         if 'IPAdapterAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/cubiq/ComfyUI_IPAdapter_plus',
                                           "To use 'Regional IPAdapter' node, 'ComfyUI IPAdapter Plus' extension is required.")
-            raise Exception(f"[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
+            raise Exception("[ERROR] To use IPAdapterModelHelper, you need to install 'ComfyUI IPAdapter Plus'")
 
         if self.embeds is None:
             obj = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']
@@ -267,6 +278,22 @@ class IPAdapterConditioning:
         return model
 
 
+IPADAPTER_WEIGHT_TYPES_CACHE = None
+
+
+def IPADAPTER_WEIGHT_TYPES():
+    global IPADAPTER_WEIGHT_TYPES_CACHE
+
+    if IPADAPTER_WEIGHT_TYPES_CACHE is None:
+        try:
+            IPADAPTER_WEIGHT_TYPES_CACHE = nodes.NODE_CLASS_MAPPINGS['IPAdapterAdvanced']().INPUT_TYPES()['required']['weight_type'][0]
+        except Exception:
+            logging.error("[Inspire Pack] IPAdapterPlus is not installed.")
+            IPADAPTER_WEIGHT_TYPES_CACHE = ["IPAdapterPlus is not installed"]
+
+    return IPADAPTER_WEIGHT_TYPES_CACHE
+
+
 class RegionalIPAdapterMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -277,7 +304,7 @@ class RegionalIPAdapterMask:
                 "image": ("IMAGE",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -308,11 +335,10 @@ class RegionalIPAdapterColorMask:
             "required": {
                 "color_mask": ("IMAGE",),
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
-                
                 "image": ("IMAGE",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
                 "noise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}),
-                "weight_type": (["original", "linear", "channel penalty"], ),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -346,7 +372,7 @@ class RegionalIPAdapterEncodedMask:
 
                 "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -377,7 +403,7 @@ class RegionalIPAdapterEncodedColorMask:
 
                 "embeds": ("EMBEDS",),
                 "weight": ("FLOAT", {"default": 0.7, "min": -1, "max": 3, "step": 0.05}),
-                "weight_type": (["original", "linear", "channel penalty"],),
+                "weight_type": (IPADAPTER_WEIGHT_TYPES(), ),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "unfold_batch": ("BOOLEAN", {"default": False}),
@@ -434,7 +460,7 @@ class RegionalSeedExplorerMask:
             "required": {
                 "mask": ("MASK",),
 
-                "noise": ("NOISE",),
+                "noise": ("NOISE_IMAGE",),
                 "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -445,7 +471,7 @@ class RegionalSeedExplorerMask:
                 {"variation_method": (["linear", "slerp"],), }
         }
 
-    RETURN_TYPES = ("NOISE",)
+    RETURN_TYPES = ("NOISE_IMAGE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Regional"
@@ -461,7 +487,7 @@ class RegionalSeedExplorerMask:
         if len(mask.shape) == 2:
             mask = mask.unsqueeze(0)
 
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         try:
             seed_prompt = seed_prompt.replace("\n", "")
@@ -475,7 +501,7 @@ class RegionalSeedExplorerMask:
 
             noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
-            print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
+            logging.error("[Inspire Pack] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()
 
         noise = noise.cpu()
@@ -491,7 +517,7 @@ class RegionalSeedExplorerColorMask:
                 "color_mask": ("IMAGE",),
                 "mask_color": ("STRING", {"multiline": False, "default": "#FFFFFF"}),
 
-                "noise": ("NOISE",),
+                "noise": ("NOISE_IMAGE",),
                 "seed_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False, "pysssss.autocomplete": False}),
                 "enable_additional": ("BOOLEAN", {"default": True, "label_on": "true", "label_off": "false"}),
                 "additional_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
@@ -502,7 +528,7 @@ class RegionalSeedExplorerColorMask:
                 {"variation_method": (["linear", "slerp"],), }
         }
 
-    RETURN_TYPES = ("NOISE", "MASK")
+    RETURN_TYPES = ("NOISE_IMAGE", "MASK")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Regional"
@@ -517,7 +543,7 @@ class RegionalSeedExplorerColorMask:
 
         mask = color_to_mask(color_mask, mask_color)
         original_mask = mask
-        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=(noise.shape[2], noise.shape[3]), mode="bilinear").squeeze(0)
+        mask = torch.nn.functional.interpolate(mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])), size=noise.shape[-2:], mode="bilinear").squeeze(0)
 
         mask = mask.to(device)
 
@@ -533,7 +559,7 @@ class RegionalSeedExplorerColorMask:
 
             noise = prompt_support.SeedExplorer.apply_variation(noise, items, noise_device, mask, variation_method=variation_method)
         except Exception:
-            print(f"[ERROR] IGNORED: RegionalSeedExplorerColorMask is failed.")
+            logging.error("[Inspire Pack] IGNORED: RegionalSeedExplorerColorMask is failed.")
             traceback.print_exc()
 
         color_mask.cpu()
@@ -548,7 +574,10 @@ class ColorMaskToDepthMask:
         return {
             "required": {
                 "color_mask": ("IMAGE",),
-                "spec": ("STRING", {"multiline": True, "default": "#FF0000:1.0"}),
+                "spec": ("STRING", {"multiline": True, "default": "#FF0000:1.0\n#000000:1.0"}),
+                "base_value": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0}),
+                "dilation": ("INT", {"default": 0, "min": -512, "max": 512, "step": 1}),
+                "flatten_method": (["override", "sum", "max"],),
             },
         }
 
@@ -557,20 +586,29 @@ class ColorMaskToDepthMask:
 
     CATEGORY = "InspirePack/Regional"
 
-    def doit(self, color_mask, spec):
+    def doit(self, color_mask, spec, base_value, dilation, flatten_method):
         specs = spec.split('\n')
         pat = re.compile("(?P<color_code>#[A-F0-9]+):(?P<cfg>[0-9]+(.[0-9]*)?)")
 
-        masks = []
+        masks = [torch.ones((1, color_mask.shape[1], color_mask.shape[2])) * base_value]
         for x in specs:
             match = pat.match(x)
             if match:
-                mask = color_to_mask(color_mask, match['color_code']) * float(match['cfg'])
+                mask = color_to_mask(color_mask=color_mask, mask_color=match['color_code']) * float(match['cfg'])
+                mask = utils.dilate_mask(mask, dilation)
                 masks.append(mask)
 
         if masks:
             masks = torch.cat(masks, dim=0)
-            masks = torch.sum(masks, dim=0)
+            if flatten_method == 'override':
+                masks = utils.flatten_non_zero_override(masks)
+            elif flatten_method == 'max':
+                masks = torch.max(masks, dim=0)[0]
+            else:  # flatten_method == 'sum':
+                masks = torch.sum(masks, dim=0)
+
+            masks = torch.clamp(masks, min=0.0, max=1.0)
+            masks = masks.unsqueeze(0)
         else:
             masks = torch.tensor([])
 
@@ -607,8 +645,8 @@ class RegionalCFG:
             if mask.device != x.device:
                 mask = mask.to(x.device)
 
-            if size != (x.shape[2], x.shape[3]):
-                size = (x.shape[2], x.shape[3])
+            if size != x.shape[-2:]:
+                size = x.shape[-2:]
                 mask = torch.nn.functional.interpolate(mask, size=size, mode='bilinear', align_corners=False)
 
             cond_pred = args["cond_denoised"]

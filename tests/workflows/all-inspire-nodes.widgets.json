@@ -1,0 +1,2220 @@
+{
+  "frontend_version": "1.59.10",
+  "created_via": "Chrome node search and native workflow Export",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "XY Input: Lora Block Weight //Inspire",
+      "widgets": [
+        {
+          "name": "category_filter",
+          "value": "All"
+        },
+        {
+          "name": "lora_name",
+          "value": "lcm-lora-sdv1-5.safetensors"
+        },
+        {
+          "name": "strength_model",
+          "value": 1
+        },
+        {
+          "name": "strength_clip",
+          "value": 1
+        },
+        {
+          "name": "inverse",
+          "value": false
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "A",
+          "value": 1
+        },
+        {
+          "name": "B",
+          "value": 1
+        },
+        {
+          "name": "preset",
+          "value": "Preset"
+        },
+        {
+          "name": "block_vectors",
+          "value": "SD-NONE/SD-ALL\nSD-ALL/SD-ALL\nSD-INS/SD-ALL\nSD-IND/SD-ALL\nSD-INALL/SD-ALL\nSD-MIDD/SD-ALL\nSD-MIDD0.2/SD-ALL\nSD-MIDD0.8/SD-ALL\nSD-MOUT/SD-ALL\nSD-OUTD/SD-ALL\nSD-OUTS/SD-ALL\nSD-OUTALL/SD-ALL"
+        },
+        {
+          "name": "heatmap_palette",
+          "value": "viridis"
+        },
+        {
+          "name": "heatmap_alpha",
+          "value": 0.8
+        },
+        {
+          "name": "heatmap_strength",
+          "value": 1.5
+        },
+        {
+          "name": "xyplot_mode",
+          "value": "Simple"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "type": "LoraLoaderBlockWeight //Inspire",
+      "widgets": [
+        {
+          "name": "category_filter",
+          "value": "All"
+        },
+        {
+          "name": "lora_name",
+          "value": "lcm-lora-sdv1-5.safetensors"
+        },
+        {
+          "name": "strength_model",
+          "value": 1
+        },
+        {
+          "name": "strength_clip",
+          "value": 1
+        },
+        {
+          "name": "inverse",
+          "value": false
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "A",
+          "value": 4
+        },
+        {
+          "name": "B",
+          "value": 1
+        },
+        {
+          "name": "preset",
+          "value": "Preset"
+        },
+        {
+          "name": "block_vector",
+          "value": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1"
+        },
+        {
+          "name": "bypass",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "type": "LoraBlockInfo //Inspire",
+      "widgets": [
+        {
+          "name": "lora_name",
+          "value": "lcm-lora-sdv1-5.safetensors"
+        },
+        {
+          "name": "block_info",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "type": "MakeLBW //Inspire",
+      "widgets": [
+        {
+          "name": "category_filter",
+          "value": "All"
+        },
+        {
+          "name": "lora_name",
+          "value": "lcm-lora-sdv1-5.safetensors"
+        },
+        {
+          "name": "inverse",
+          "value": false
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "A",
+          "value": 4
+        },
+        {
+          "name": "B",
+          "value": 1
+        },
+        {
+          "name": "preset",
+          "value": "Preset"
+        },
+        {
+          "name": "block_vector",
+          "value": "1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1"
+        },
+        {
+          "name": "bypass",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "type": "ApplyLBW //Inspire",
+      "widgets": [
+        {
+          "name": "strength_model",
+          "value": 1
+        },
+        {
+          "name": "strength_clip",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "type": "SaveLBW //Inspire",
+      "widgets": [
+        {
+          "name": "filename_prefix",
+          "value": "ComfyUI"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "type": "LoadLBW //Inspire",
+      "widgets": [
+        {
+          "name": "lbw_model",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "type": "OpenPose_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "detect_hand",
+          "value": true
+        },
+        {
+          "name": "detect_body",
+          "value": true
+        },
+        {
+          "name": "detect_face",
+          "value": true
+        },
+        {
+          "name": "resolution_upscale_by",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "type": "DWPreprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "detect_hand",
+          "value": true
+        },
+        {
+          "name": "detect_body",
+          "value": true
+        },
+        {
+          "name": "detect_face",
+          "value": true
+        },
+        {
+          "name": "resolution_upscale_by",
+          "value": 1
+        },
+        {
+          "name": "bbox_detector",
+          "value": "yolox_l.onnx"
+        },
+        {
+          "name": "pose_estimator",
+          "value": "dw-ll_ucoco_384_bs5.torchscript.pt"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "type": "MiDaS_DepthMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "a",
+          "value": 6.283185307179586
+        },
+        {
+          "name": "bg_threshold",
+          "value": 0.1
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "type": "LeRes_DepthMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "rm_nearest",
+          "value": 0
+        },
+        {
+          "name": "rm_background",
+          "value": 0
+        },
+        {
+          "name": "boost",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "type": "Canny_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "low_threshold",
+          "value": 0.4
+        },
+        {
+          "name": "high_threshold",
+          "value": 0.8
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "type": "MediaPipe_FaceMesh_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "max_faces",
+          "value": 10
+        },
+        {
+          "name": "min_confidence",
+          "value": 0.5
+        },
+        {
+          "name": "resolution_upscale_by",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "type": "HEDPreprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "safe",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "type": "FakeScribblePreprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "safe",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "type": "AnimeLineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "17",
+      "type": "Manga2Anime_LineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "18",
+      "type": "LineArt_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "coarse",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "type": "Color_Preprocessor_Provider_for_SEGS //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "20",
+      "type": "InpaintPreprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "black_pixel_for_xinsir_cn",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "type": "TilePreprocessor_Provider_for_SEGS //Inspire",
+      "widgets": [
+        {
+          "name": "pyrUp_iters",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "type": "MeshGraphormerDepthMapPreprocessorProvider_for_SEGS //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "23",
+      "type": "MediaPipeFaceMeshDetectorProvider //Inspire",
+      "widgets": [
+        {
+          "name": "max_faces",
+          "value": 10
+        },
+        {
+          "name": "face",
+          "value": true
+        },
+        {
+          "name": "mouth",
+          "value": false
+        },
+        {
+          "name": "left_eyebrow",
+          "value": false
+        },
+        {
+          "name": "left_eye",
+          "value": false
+        },
+        {
+          "name": "left_pupil",
+          "value": false
+        },
+        {
+          "name": "right_eyebrow",
+          "value": false
+        },
+        {
+          "name": "right_eye",
+          "value": false
+        },
+        {
+          "name": "right_pupil",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "type": "KSampler //Inspire",
+      "widgets": [
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "denoise",
+          "value": 1
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "internal_seed",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "type": "KSamplerAdvanced //Inspire",
+      "widgets": [
+        {
+          "name": "add_noise",
+          "value": true
+        },
+        {
+          "name": "noise_seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "start_at_step",
+          "value": 0
+        },
+        {
+          "name": "end_at_step",
+          "value": 10000
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "return_with_leftover_noise",
+          "value": false
+        },
+        {
+          "name": "batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "internal_seed",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "type": "KSamplerPipe //Inspire",
+      "widgets": [
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "denoise",
+          "value": 1
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "internal_seed",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "type": "KSamplerAdvancedPipe //Inspire",
+      "widgets": [
+        {
+          "name": "add_noise",
+          "value": true
+        },
+        {
+          "name": "noise_seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "start_at_step",
+          "value": 0
+        },
+        {
+          "name": "end_at_step",
+          "value": 10000
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "return_with_leftover_noise",
+          "value": false
+        },
+        {
+          "name": "batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "internal_seed",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "type": "RandomNoise //Inspire",
+      "widgets": [
+        {
+          "name": "noise_seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "internal_seed",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "type": "HyperTile //Inspire",
+      "widgets": [
+        {
+          "name": "tile_size",
+          "value": 256
+        },
+        {
+          "name": "swap_size",
+          "value": 2
+        },
+        {
+          "name": "max_depth",
+          "value": 0
+        },
+        {
+          "name": "scale_depth",
+          "value": false
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "type": "LoadPromptsFromDir //Inspire",
+      "widgets": [
+        {
+          "name": "prompt_dir",
+          "value": "example"
+        },
+        {
+          "name": "reload",
+          "value": false
+        },
+        {
+          "name": "load_cap",
+          "value": 0
+        },
+        {
+          "name": "start_index",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "type": "LoadPromptsFromFile //Inspire",
+      "widgets": [
+        {
+          "name": "prompt_file",
+          "value": "example/prompt2.txt"
+        },
+        {
+          "name": "reload",
+          "value": false
+        },
+        {
+          "name": "load_cap",
+          "value": 0
+        },
+        {
+          "name": "start_index",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "type": "LoadSinglePromptFromFile //Inspire",
+      "widgets": [
+        {
+          "name": "prompt_file",
+          "value": "example/prompt2.txt"
+        },
+        {
+          "name": "index",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "type": "UnzipPrompt //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "34",
+      "type": "ZipPrompt //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "35",
+      "type": "PromptExtractor //Inspire",
+      "widgets": [
+        {
+          "name": "image",
+          "value": "all-inspire-nodes.input.png"
+        },
+        {
+          "name": "positive_id",
+          "value": ""
+        },
+        {
+          "name": "negative_id",
+          "value": ""
+        },
+        {
+          "name": "info",
+          "value": ""
+        },
+        {
+          "name": "upload",
+          "value": "image"
+        },
+        {
+          "name": "$$canvas-image-preview",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "36",
+      "type": "GlobalSeed //Inspire",
+      "widgets": [
+        {
+          "name": "value",
+          "value": 0
+        },
+        {
+          "name": "mode",
+          "value": true
+        },
+        {
+          "name": "action",
+          "value": "fixed"
+        },
+        {
+          "name": "last_seed",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "37",
+      "type": "SeedLogger //Inspire",
+      "widgets": [
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "seeds",
+          "value": ""
+        },
+        {
+          "name": "limit",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "38",
+      "type": "GlobalSampler //Inspire",
+      "widgets": [
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        }
+      ]
+    },
+    {
+      "id": "39",
+      "type": "BindImageListPromptList //Inspire",
+      "widgets": [
+        {
+          "name": "default_positive",
+          "value": ""
+        },
+        {
+          "name": "default_negative",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "40",
+      "type": "WildcardEncode //Inspire",
+      "widgets": [
+        {
+          "name": "token_normalization",
+          "value": "none"
+        },
+        {
+          "name": "weight_interpretation",
+          "value": "comfy++"
+        },
+        {
+          "name": "wildcard_text",
+          "value": ""
+        },
+        {
+          "name": "populated_text",
+          "value": ""
+        },
+        {
+          "name": "mode",
+          "value": "populate"
+        },
+        {
+          "name": "Select to add LoRA",
+          "value": "Select the LoRA to add to the text"
+        },
+        {
+          "name": "Select to add Wildcard",
+          "value": "Select Wildcard 🟢 Full Cache"
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        }
+      ]
+    },
+    {
+      "id": "41",
+      "type": "PromptBuilder //Inspire",
+      "widgets": [
+        {
+          "name": "category",
+          "value": "Angle of View"
+        },
+        {
+          "name": "preset",
+          "value": "#PRESET"
+        },
+        {
+          "name": "text",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "42",
+      "type": "SeedExplorer //Inspire",
+      "widgets": [
+        {
+          "name": "seed_prompt",
+          "value": ""
+        },
+        {
+          "name": "enable_additional",
+          "value": true
+        },
+        {
+          "name": "additional_seed",
+          "value": 0
+        },
+        {
+          "name": "additional_strength",
+          "value": 0
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "initial_batch_seed_mode",
+          "value": "incremental"
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "Add to prompt",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "43",
+      "type": "ListCounter //Inspire",
+      "widgets": [
+        {
+          "name": "base_value",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "44",
+      "type": "CLIPTextEncodeWithWeight //Inspire",
+      "widgets": [
+        {
+          "name": "text",
+          "value": ""
+        },
+        {
+          "name": "strength",
+          "value": 1
+        },
+        {
+          "name": "add_weight",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "45",
+      "type": "RandomGeneratorForList //Inspire",
+      "widgets": [
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        }
+      ]
+    },
+    {
+      "id": "46",
+      "type": "MakeBasicPipe //Inspire",
+      "widgets": [
+        {
+          "name": "ckpt_name",
+          "value": "dreamshaper_7.safetensors"
+        },
+        {
+          "name": "ckpt_key_opt",
+          "value": ""
+        },
+        {
+          "name": "positive_wildcard_text",
+          "value": ""
+        },
+        {
+          "name": "negative_wildcard_text",
+          "value": ""
+        },
+        {
+          "name": "Add selection to",
+          "value": true
+        },
+        {
+          "name": "Select to add LoRA",
+          "value": "Select the LoRA to add to the text"
+        },
+        {
+          "name": "Select to add Wildcard",
+          "value": "Select Wildcard 🟢 Full Cache"
+        },
+        {
+          "name": "wildcard_mode",
+          "value": "populate"
+        },
+        {
+          "name": "positive_populated_text",
+          "value": ""
+        },
+        {
+          "name": "negative_populated_text",
+          "value": ""
+        },
+        {
+          "name": "token_normalization",
+          "value": "none"
+        },
+        {
+          "name": "weight_interpretation",
+          "value": "comfy++"
+        },
+        {
+          "name": "stop_at_clip_layer",
+          "value": -2
+        },
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        }
+      ]
+    },
+    {
+      "id": "47",
+      "type": "RemoveControlNet //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "48",
+      "type": "RemoveControlNetFromRegionalPrompts //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "49",
+      "type": "CompositeNoise //Inspire",
+      "widgets": [
+        {
+          "name": "mode",
+          "value": "center"
+        },
+        {
+          "name": "x",
+          "value": 0
+        },
+        {
+          "name": "y",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "50",
+      "type": "LoadImagesFromDir //Inspire",
+      "widgets": [
+        {
+          "name": "directory",
+          "value": ""
+        },
+        {
+          "name": "image_load_cap",
+          "value": 0
+        },
+        {
+          "name": "start_index",
+          "value": 0
+        },
+        {
+          "name": "load_always",
+          "value": false
+        },
+        {
+          "name": "sort_method",
+          "value": "None"
+        }
+      ]
+    },
+    {
+      "id": "51",
+      "type": "LoadImageListFromDir //Inspire",
+      "widgets": [
+        {
+          "name": "directory",
+          "value": ""
+        },
+        {
+          "name": "image_load_cap",
+          "value": 0
+        },
+        {
+          "name": "start_index",
+          "value": 0
+        },
+        {
+          "name": "load_always",
+          "value": false
+        },
+        {
+          "name": "sort_method",
+          "value": "None"
+        }
+      ]
+    },
+    {
+      "id": "52",
+      "type": "LoadImage //Inspire",
+      "widgets": [
+        {
+          "name": "image",
+          "value": "all-inspire-nodes.input.png"
+        },
+        {
+          "name": "image_data",
+          "value": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABdklEQVR4AezSEVBEURjF8TtvFoIgCIIgCIIgCIIgCIIgCIIgCIIgCIJgIQiCIAiCIAiCIAiCIAiCYGFhYWFhYWFhYWFndv/Xrt25s7Tfd+A382beg3fOd6oQ6uMa5jCPBSxiCctYwSrWsI4NbGIL29jBLvawjwMc4gjHOMEpznCOC1ziCteo4wa3uMM9HvCIJzzjBa94wzs+8IkvfOMHv/jDPxpoooU2Ouiihz4GGGKEKtRC8KzyHD5mVwGxBc+0AM/Xj9m1gNiCZ1qA5+vH7FpAbMEzLcDz9WN2dwuIoVMqIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MW4PHqaWYtIG3D47MWYP3quXxaQK4h6++1AOsXzuXTAnINWX+vBVi/cC6fFpBryPp7LcD6hXP5tIBcQ9bfawHWLlyaRwsobcza91qAtYuW5tECShuz9r0WYO2ipXm0gNLGrH2vBVi7aGkeLaC0MWvfawGzftFp/38CAAD//1+N+cYAAAAGSURBVAMAnEu+waseJkMAAAAASUVORK5CYII="
+        },
+        {
+          "name": "upload",
+          "value": "image"
+        },
+        {
+          "name": "$$canvas-image-preview",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "53",
+      "type": "ChangeImageBatchSize //Inspire",
+      "widgets": [
+        {
+          "name": "batch_size",
+          "value": 1
+        },
+        {
+          "name": "mode",
+          "value": "simple"
+        }
+      ]
+    },
+    {
+      "id": "54",
+      "type": "ChangeLatentBatchSize //Inspire",
+      "widgets": [
+        {
+          "name": "batch_size",
+          "value": 1
+        },
+        {
+          "name": "mode",
+          "value": "simple"
+        }
+      ]
+    },
+    {
+      "id": "55",
+      "type": "ImageBatchSplitter //Inspire",
+      "widgets": [
+        {
+          "name": "split_count",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "56",
+      "type": "LatentBatchSplitter //Inspire",
+      "widgets": [
+        {
+          "name": "split_count",
+          "value": 4
+        }
+      ]
+    },
+    {
+      "id": "57",
+      "type": "ColorMapToMasks //Inspire",
+      "widgets": [
+        {
+          "name": "min_pixels",
+          "value": 500
+        },
+        {
+          "name": "max_count",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "58",
+      "type": "SelectNthMask //Inspire",
+      "widgets": [
+        {
+          "name": "idx",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "59",
+      "type": "RegionalPromptSimple //Inspire",
+      "widgets": [
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "wildcard_prompt",
+          "value": ""
+        },
+        {
+          "name": "controlnet_in_pipe",
+          "value": false
+        },
+        {
+          "name": "sigma_factor",
+          "value": 1
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "type": "RegionalPromptColorMask //Inspire",
+      "widgets": [
+        {
+          "name": "mask_color",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "wildcard_prompt",
+          "value": ""
+        },
+        {
+          "name": "controlnet_in_pipe",
+          "value": false
+        },
+        {
+          "name": "sigma_factor",
+          "value": 1
+        },
+        {
+          "name": "variation_seed",
+          "value": 0
+        },
+        {
+          "name": "variation_strength",
+          "value": 0
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        }
+      ]
+    },
+    {
+      "id": "61",
+      "type": "RegionalConditioningSimple //Inspire",
+      "widgets": [
+        {
+          "name": "strength",
+          "value": 1
+        },
+        {
+          "name": "set_cond_area",
+          "value": "default"
+        },
+        {
+          "name": "prompt",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "62",
+      "type": "RegionalConditioningColorMask //Inspire",
+      "widgets": [
+        {
+          "name": "mask_color",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "strength",
+          "value": 1
+        },
+        {
+          "name": "set_cond_area",
+          "value": "default"
+        },
+        {
+          "name": "prompt",
+          "value": ""
+        },
+        {
+          "name": "dilation",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "63",
+      "type": "RegionalIPAdapterMask //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 0.7
+        },
+        {
+          "name": "noise",
+          "value": 0.5
+        },
+        {
+          "name": "weight_type",
+          "value": "linear"
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "unfold_batch",
+          "value": false
+        },
+        {
+          "name": "faceid_v2",
+          "value": false
+        },
+        {
+          "name": "weight_v2",
+          "value": 1
+        },
+        {
+          "name": "combine_embeds",
+          "value": "concat"
+        }
+      ]
+    },
+    {
+      "id": "64",
+      "type": "RegionalIPAdapterColorMask //Inspire",
+      "widgets": [
+        {
+          "name": "mask_color",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "weight",
+          "value": 0.7
+        },
+        {
+          "name": "noise",
+          "value": 0.5
+        },
+        {
+          "name": "weight_type",
+          "value": "linear"
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "unfold_batch",
+          "value": false
+        },
+        {
+          "name": "faceid_v2",
+          "value": false
+        },
+        {
+          "name": "weight_v2",
+          "value": 1
+        },
+        {
+          "name": "combine_embeds",
+          "value": "concat"
+        }
+      ]
+    },
+    {
+      "id": "65",
+      "type": "RegionalIPAdapterEncodedMask //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 0.7
+        },
+        {
+          "name": "weight_type",
+          "value": "linear"
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "unfold_batch",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "66",
+      "type": "RegionalIPAdapterEncodedColorMask //Inspire",
+      "widgets": [
+        {
+          "name": "mask_color",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "weight",
+          "value": 0.7
+        },
+        {
+          "name": "weight_type",
+          "value": "linear"
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "unfold_batch",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "67",
+      "type": "RegionalSeedExplorerMask //Inspire",
+      "widgets": [
+        {
+          "name": "seed_prompt",
+          "value": ""
+        },
+        {
+          "name": "enable_additional",
+          "value": true
+        },
+        {
+          "name": "additional_seed",
+          "value": 0
+        },
+        {
+          "name": "additional_strength",
+          "value": 0
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "Add to prompt",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "68",
+      "type": "RegionalSeedExplorerColorMask //Inspire",
+      "widgets": [
+        {
+          "name": "mask_color",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "seed_prompt",
+          "value": ""
+        },
+        {
+          "name": "enable_additional",
+          "value": true
+        },
+        {
+          "name": "additional_seed",
+          "value": 0
+        },
+        {
+          "name": "additional_strength",
+          "value": 0
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "variation_method",
+          "value": "linear"
+        },
+        {
+          "name": "Add to prompt",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "69",
+      "type": "ToIPAdapterPipe //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "70",
+      "type": "FromIPAdapterPipe //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "71",
+      "type": "ApplyRegionalIPAdapters //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "72",
+      "type": "RegionalCFG //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "73",
+      "type": "ColorMaskToDepthMask //Inspire",
+      "widgets": [
+        {
+          "name": "spec",
+          "value": "#FF0000:1.0\n#000000:1.0"
+        },
+        {
+          "name": "base_value",
+          "value": 0
+        },
+        {
+          "name": "dilation",
+          "value": 0
+        },
+        {
+          "name": "flatten_method",
+          "value": "override"
+        }
+      ]
+    },
+    {
+      "id": "74",
+      "type": "KSamplerProgress //Inspire",
+      "widgets": [
+        {
+          "name": "seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "denoise",
+          "value": 1
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "interval",
+          "value": 1
+        },
+        {
+          "name": "omit_start_latent",
+          "value": true
+        },
+        {
+          "name": "omit_final_latent",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "75",
+      "type": "KSamplerAdvancedProgress //Inspire",
+      "widgets": [
+        {
+          "name": "add_noise",
+          "value": true
+        },
+        {
+          "name": "noise_seed",
+          "value": 0
+        },
+        {
+          "name": "control_after_generate",
+          "value": "randomize"
+        },
+        {
+          "name": "steps",
+          "value": 20
+        },
+        {
+          "name": "cfg",
+          "value": 8
+        },
+        {
+          "name": "sampler_name",
+          "value": "euler"
+        },
+        {
+          "name": "scheduler",
+          "value": "simple"
+        },
+        {
+          "name": "start_at_step",
+          "value": 0
+        },
+        {
+          "name": "end_at_step",
+          "value": 10000
+        },
+        {
+          "name": "noise_mode",
+          "value": "GPU(=A1111)"
+        },
+        {
+          "name": "return_with_leftover_noise",
+          "value": false
+        },
+        {
+          "name": "interval",
+          "value": 1
+        },
+        {
+          "name": "omit_start_latent",
+          "value": false
+        },
+        {
+          "name": "omit_final_latent",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "76",
+      "type": "ScheduledCFGGuider //Inspire",
+      "widgets": [
+        {
+          "name": "from_cfg",
+          "value": 6.5
+        },
+        {
+          "name": "to_cfg",
+          "value": 1
+        },
+        {
+          "name": "schedule",
+          "value": "log"
+        }
+      ]
+    },
+    {
+      "id": "77",
+      "type": "ScheduledPerpNegCFGGuider //Inspire",
+      "widgets": [
+        {
+          "name": "neg_scale",
+          "value": 1
+        },
+        {
+          "name": "from_cfg",
+          "value": 6.5
+        },
+        {
+          "name": "to_cfg",
+          "value": 1
+        },
+        {
+          "name": "schedule",
+          "value": "log"
+        }
+      ]
+    },
+    {
+      "id": "78",
+      "type": "CacheBackendData //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": ""
+        },
+        {
+          "name": "tag",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "79",
+      "type": "CacheBackendDataNumberKey //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": 0
+        },
+        {
+          "name": "tag",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "80",
+      "type": "CacheBackendDataList //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": ""
+        },
+        {
+          "name": "tag",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "81",
+      "type": "CacheBackendDataNumberKeyList //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": 0
+        },
+        {
+          "name": "tag",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "82",
+      "type": "RetrieveBackendData //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "83",
+      "type": "RetrieveBackendDataNumberKey //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "84",
+      "type": "RemoveBackendData //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "85",
+      "type": "RemoveBackendDataNumberKey //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "86",
+      "type": "ShowCachedInfo //Inspire",
+      "widgets": [
+        {
+          "name": "cache_info",
+          "value": "---- [String Key Caches] ----\n\n---- [Number Key Caches] ----\n\n---- [TagCache Settings] ----\nckpt: 5\nlatent: 100\nimage: 100\n"
+        },
+        {
+          "name": "key",
+          "value": ""
+        },
+        {
+          "name": "Remove Key",
+          "value": null
+        },
+        {
+          "name": "Save Settings",
+          "value": null
+        },
+        {
+          "name": "Refresh",
+          "value": null
+        },
+        {
+          "name": "Clear",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "87",
+      "type": "CheckpointLoaderSimpleShared //Inspire",
+      "widgets": [
+        {
+          "name": "ckpt_name",
+          "value": "dreamshaper_7.safetensors"
+        },
+        {
+          "name": "key_opt",
+          "value": ""
+        },
+        {
+          "name": "mode",
+          "value": "Auto"
+        }
+      ]
+    },
+    {
+      "id": "88",
+      "type": "LoadDiffusionModelShared //Inspire",
+      "widgets": [
+        {
+          "name": "model_name",
+          "value": "lotus-depth-d-v-1-1-fp16.safetensors"
+        },
+        {
+          "name": "weight_dtype",
+          "value": "default"
+        },
+        {
+          "name": "key_opt",
+          "value": ""
+        },
+        {
+          "name": "mode",
+          "value": "Auto"
+        }
+      ]
+    },
+    {
+      "id": "89",
+      "type": "LoadTextEncoderShared //Inspire",
+      "widgets": [
+        {
+          "name": "model_name1",
+          "value": "clip_l.safetensors"
+        },
+        {
+          "name": "model_name2",
+          "value": "None"
+        },
+        {
+          "name": "model_name3",
+          "value": "None"
+        },
+        {
+          "name": "type",
+          "value": "stable_diffusion"
+        },
+        {
+          "name": "key_opt",
+          "value": ""
+        },
+        {
+          "name": "mode",
+          "value": "Auto"
+        },
+        {
+          "name": "device",
+          "value": "default"
+        }
+      ]
+    },
+    {
+      "id": "90",
+      "type": "StableCascade_CheckpointLoader //Inspire",
+      "widgets": [
+        {
+          "name": "stage_b",
+          "value": "stable_cascade_stage_b.safetensors"
+        },
+        {
+          "name": "key_opt_b",
+          "value": ""
+        },
+        {
+          "name": "stage_c",
+          "value": "stable_cascade_stage_c.safetensors"
+        },
+        {
+          "name": "key_opt_c",
+          "value": ""
+        },
+        {
+          "name": "cache_mode",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "91",
+      "type": "IsCached //Inspire",
+      "widgets": [
+        {
+          "name": "key",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "92",
+      "type": "FloatRange //Inspire",
+      "widgets": [
+        {
+          "name": "start",
+          "value": 0
+        },
+        {
+          "name": "stop",
+          "value": 1
+        },
+        {
+          "name": "step",
+          "value": 0.01
+        },
+        {
+          "name": "limit",
+          "value": 100
+        },
+        {
+          "name": "ensure_end",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "93",
+      "type": "WorklistToItemList //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "94",
+      "type": "ForeachListBegin //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "95",
+      "type": "ForeachListEnd //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "96",
+      "type": "DropItems //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "97",
+      "type": "ConcatConditioningsWithMultiplier //Inspire",
+      "widgets": [
+        {
+          "name": "multiplier1",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "98",
+      "type": "ConditioningUpscale //Inspire",
+      "widgets": [
+        {
+          "name": "scalar",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "99",
+      "type": "ConditioningStretch //Inspire",
+      "widgets": [
+        {
+          "name": "resolutionX",
+          "value": 512
+        },
+        {
+          "name": "resolutionY",
+          "value": 512
+        },
+        {
+          "name": "newWidth",
+          "value": 512
+        },
+        {
+          "name": "newHeight",
+          "value": 512
+        }
+      ]
+    },
+    {
+      "id": "100",
+      "type": "IPAdapterModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "preset",
+          "value": "SD1.5"
+        },
+        {
+          "name": "lora_strength_model",
+          "value": 1
+        },
+        {
+          "name": "lora_strength_clip",
+          "value": 1
+        },
+        {
+          "name": "insightface_provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        },
+        {
+          "name": "insightface_model_name",
+          "value": "buffalo_l"
+        }
+      ]
+    },
+    {
+      "id": "101",
+      "type": "RGB_HexToHSV //Inspire",
+      "widgets": [
+        {
+          "name": "rgb_hex",
+          "value": ""
+        }
+      ]
+    }
+  ]
+}

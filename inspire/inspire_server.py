@@ -6,6 +6,8 @@ from enum import Enum
 from . import prompt_support
 from aiohttp import web
 from . import backend_support
+from .libs import common
+import logging
 
 
 max_seed = 2**32 - 1
@@ -49,7 +51,7 @@ async def set_cache_settings(request):
     try:
         backend_support.ShowCachedInfo.set_cache_settings(data)
         return web.Response(text='OK', status=200)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         return web.Response(text=f"{e}", status=500)
 
 
@@ -166,15 +168,27 @@ def prompt_seed_update(json_data):
     return value is not None, mode
 
 
+def workflow_nodes(workflow):
+    subgraphs = {x['id']: x for x in workflow.get('definitions', {}).get('subgraphs', [])}
+
+    def walk(nodes, prefix):
+        for node in nodes:
+            node_id = prefix + str(node['id'])
+            yield node_id, node
+            if node.get('type') in subgraphs:
+                yield from walk(subgraphs[node['type']]['nodes'], node_id + ':')
+
+    return walk(workflow['nodes'], '')
+
+
 def workflow_seed_update(json_data, mode):
-    nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
-    widget_idx_map = json_data['extra_data']['extra_pnginfo']['workflow']['widget_idx_map']
+    workflow = json_data['extra_data']['extra_pnginfo']['workflow']
+    widget_idx_map = workflow['widget_idx_map']
     prompt = json_data['prompt']
 
     updated_seed_map = {}
     value = None
-    for node in nodes:
-        node_id = str(node['id'])
+    for node_id, node in workflow_nodes(workflow):
         if node_id in prompt:
             if node['type'] == 'GlobalSeed //Inspire':
                 if mode is True:
@@ -207,7 +221,7 @@ def prompt_sampler_update(json_data):
     except Exception:
         return None
 
-    nodes = json_data['extra_data']['extra_pnginfo']['workflow']['nodes']
+    workflow = json_data['extra_data']['extra_pnginfo']['workflow']
     prompt = json_data['prompt']
 
     sampler_name = None
@@ -222,12 +236,10 @@ def prompt_sampler_update(json_data):
     if sampler_name is None:
         return
 
-    for node in nodes:
+    for node_id, node in workflow_nodes(workflow):
         cls = node.get('type')
         if cls == 'GlobalSampler //Inspire' or cls is None:
             continue
-
-        node_id = str(node['id'])
 
         if node_id in prompt and node_id in widget_idx_map:
             sampler_widget_idx = widget_idx_map[node_id].get('sampler_name')
@@ -257,89 +269,103 @@ def workflow_loadimage_update(json_data):
             v['inputs']['image'] = "#DATA"
 
 
+def constant_text(value, prompt):
+    if isinstance(value, str):
+        return value
+    source = prompt.get(value[0], {})
+    if source.get('class_type') in ('PrimitiveString', 'PrimitiveStringMultiline'):
+        text = source['inputs'].get('value')
+        if isinstance(text, str):
+            return text
+    return None
+
+
+def constant_seed(value, prompt):
+    if not isinstance(value, list):
+        return int(value)
+    source = prompt.get(value[0], {})
+    seed = source.get('inputs', {}).get({'ImpactInt': 'value', 'Seed (rgthree)': 'seed'}.get(source.get('class_type')))
+    return seed if isinstance(seed, int) else None
+
+
+def populate_during_run(inputs, wildcard_key, populated_key):
+    inputs[populated_key] = inputs[wildcard_key]
+
+
 def populate_wildcards(json_data):
     prompt = json_data['prompt']
 
     if 'ImpactWildcardProcessor' in nodes.NODE_CLASS_MAPPINGS:
         if not hasattr(nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'], 'process'):
-            print(f"[Inspire Pack] Your Impact Pack is outdated. Please update to the latest version.")
+            logging.warning("[Inspire Pack] Your Impact Pack is outdated. Please update to the latest version.")
             return
-        
+
         wildcard_process = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardProcessor'].process
         updated_widget_values = {}
         mbp_updated_widget_values = {}
         for k, v in prompt.items():
             if 'class_type' in v and v['class_type'] == 'WildcardEncode //Inspire':
                 inputs = v['inputs']
-                if inputs['mode'] and isinstance(inputs['populated_text'], str):
-                    if isinstance(inputs['seed'], list):
-                        try:
-                            input_node = prompt[inputs['seed'][0]]
-                            if input_node['class_type'] == 'ImpactInt':
-                                input_seed = int(input_node['inputs']['value'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
-                                input_seed = int(input_node['inputs']['seed'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            else:
-                                print(f"[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
-                                continue
-                        except:
-                            continue
-                    else:
-                        input_seed = int(inputs['seed'])
 
-                    inputs['populated_text'] = wildcard_process(text=inputs['wildcard_text'], seed=input_seed)
-                    inputs['mode'] = False
+                # legacy adapter
+                if isinstance(inputs['mode'], bool):
+                    if inputs['mode']:
+                        new_mode = 'populate'
+                    else:
+                        new_mode = 'fixed'
+
+                    inputs['mode'] = new_mode
+
+                if inputs['mode'] == 'populate' and isinstance(inputs['populated_text'], str):
+                    wildcard_text = constant_text(inputs['wildcard_text'], prompt)
+                    input_seed = constant_seed(inputs['seed'], prompt)
+
+                    if wildcard_text is None or input_seed is None:
+                        populate_during_run(inputs, 'wildcard_text', 'populated_text')
+                        continue
+
+                    inputs['populated_text'] = wildcard_process(text=wildcard_text, seed=input_seed)
+                    inputs['mode'] = 'reproduce'
 
                     server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "populated_text", "type": "text", "data": inputs['populated_text']})
                     updated_widget_values[k] = inputs['populated_text']
 
+                if inputs['mode'] == 'reproduce':
+                    server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "mode", "type": "text", "value": 'populate'})
+
             elif 'class_type' in v and v['class_type'] == 'MakeBasicPipe //Inspire':
                 inputs = v['inputs']
-                if inputs['wildcard_mode'] and (isinstance(inputs['positive_populated_text'], str) or isinstance(inputs['negative_populated_text'], str)):
-                    if isinstance(inputs['seed'], list):
-                        try:
-                            input_node = prompt[inputs['seed'][0]]
-                            if input_node['class_type'] == 'ImpactInt':
-                                input_seed = int(input_node['inputs']['value'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            if input_node['class_type'] == 'Seed (rgthree)':
-                                input_seed = int(input_node['inputs']['seed'])
-                                if not isinstance(input_seed, int):
-                                    continue
-                            else:
-                                print(f"[Inspire Pack] Only `ImpactInt`, `Seed (rgthree)` and `Primitive` Node are allowed as the seed for '{v['class_type']}'. It will be ignored. ")
-                                continue
-                        except:
-                            continue
-                    else:
-                        input_seed = int(inputs['seed'])
+                sides = [side for side in ('positive', 'negative') if isinstance(inputs[f'{side}_populated_text'], str)]
+                if inputs['wildcard_mode'] == 'populate' and sides:
+                    texts = [constant_text(inputs[f'{side}_wildcard_text'], prompt) for side in sides]
+                    input_seed = constant_seed(inputs['seed'], prompt)
 
-                    if isinstance(inputs['positive_populated_text'], str):
-                        inputs['positive_populated_text'] = wildcard_process(text=inputs['positive_wildcard_text'], seed=input_seed)
-                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "positive_populated_text", "type": "text", "data": inputs['positive_populated_text']})
+                    if None in texts or input_seed is None:
+                        for side in sides:
+                            populate_during_run(inputs, f'{side}_wildcard_text', f'{side}_populated_text')
+                        continue
 
-                    if isinstance(inputs['negative_populated_text'], str):
-                        inputs['negative_populated_text'] = wildcard_process(text=inputs['negative_wildcard_text'], seed=input_seed)
-                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "negative_populated_text", "type": "text", "data": inputs['negative_populated_text']})
+                    for side, text in zip(sides, texts):
+                        inputs[f'{side}_populated_text'] = wildcard_process(text=text, seed=input_seed)
+                        server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": f"{side}_populated_text", "type": "text", "data": inputs[f'{side}_populated_text']})
 
-                    inputs['wildcard_mode'] = False
+                    inputs['wildcard_mode'] = 'reproduce'
                     mbp_updated_widget_values[k] = inputs['positive_populated_text'], inputs['negative_populated_text']
 
+                if inputs['wildcard_mode'] == 'reproduce':
+                    server.PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": k, "widget_name": "wildcard_mode", "type": "text", "value": 'populate'})
+
         if 'extra_data' in json_data and 'extra_pnginfo' in json_data['extra_data']:
-            for node in json_data['extra_data']['extra_pnginfo']['workflow']['nodes']:
-                key = str(node['id'])
-                if key in updated_widget_values:
-                    node['widgets_values'][3] = updated_widget_values[key]
-                    node['widgets_values'][4] = False
-                if key in mbp_updated_widget_values:
-                    node['widgets_values'][7] = mbp_updated_widget_values[key][0]
-                    node['widgets_values'][8] = mbp_updated_widget_values[key][1]
-                    node['widgets_values'][5] = False
+            extra_pnginfo = json_data['extra_data']['extra_pnginfo']
+            if 'workflow' in extra_pnginfo and extra_pnginfo['workflow'] is not None and 'nodes' in extra_pnginfo['workflow']:
+                for key, node in workflow_nodes(extra_pnginfo['workflow']):
+                    if key in updated_widget_values:
+                        node['widgets_values'][3] = updated_widget_values[key]
+                        node['widgets_values'][4] = 'reproduce'
+                    if key in mbp_updated_widget_values:
+                        node['widgets_values'][7] = mbp_updated_widget_values[key][0]
+                        node['widgets_values'][8] = mbp_updated_widget_values[key][1]
+                        node['widgets_values'][5] = 'reproduce'
 
 
 def force_reset_useless_params(json_data):
@@ -348,6 +374,21 @@ def force_reset_useless_params(json_data):
     for k, v in prompt.items():
         if 'class_type' in v and v['class_type'] == 'PromptBuilder //Inspire':
             v['inputs']['category'] = '#PLACEHOLDER'
+
+    return json_data
+
+
+def clear_unused_node_changed_cache(json_data):
+    prompt = json_data['prompt']
+
+    unused = []
+    for x in common.changed_cache.keys():
+        if x not in prompt:
+            unused.append(x)
+
+    for x in unused:
+        del common.changed_cache[x]
+        del common.changed_count_cache[x]
 
     return json_data
 
@@ -365,6 +406,7 @@ def onprompt(json_data):
     populate_wildcards(json_data)
 
     force_reset_useless_params(json_data)
+    clear_unused_node_changed_cache(json_data)
 
     return json_data
 

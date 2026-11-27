@@ -2,12 +2,62 @@ import os
 
 import torch
 from PIL import ImageOps
+try:
+    import pillow_jxl      # noqa: F401
+    jxl = True
+except ImportError:
+    jxl = False
 import comfy
 import folder_paths
 import base64
 from io import BytesIO
-from .libs.utils import *
+from .libs.utils import ByPassTypeTuple, empty_pil_tensor, empty_latent
+from PIL import Image
+import numpy as np
+import logging
+import re
 import json
+
+
+def extract_first_number(s):
+    match = re.search(r'\d+', s)
+    return int(match.group()) if match else float('inf')
+
+
+sort_methods = [
+    "None",
+    "Alphabetical (ASC)",
+    "Alphabetical (DESC)",
+    "Numerical (ASC)",
+    "Numerical (DESC)",
+    "Datetime (ASC)",
+    "Datetime (DESC)"
+]
+
+
+def sort_by(items, base_path='.', method=None):
+    def fullpath(x): return os.path.join(base_path, x)
+
+    def get_timestamp(path):
+        try:
+            return os.path.getmtime(path)
+        except FileNotFoundError:
+            return float('-inf')
+
+    if method == "Alphabetical (ASC)":
+        return sorted(items)
+    elif method == "Alphabetical (DESC)":
+        return sorted(items, reverse=True)
+    elif method == "Numerical (ASC)":
+        return sorted(items, key=lambda x: extract_first_number(os.path.splitext(x)[0]))
+    elif method == "Numerical (DESC)":
+        return sorted(items, key=lambda x: extract_first_number(os.path.splitext(x)[0]), reverse=True)
+    elif method == "Datetime (ASC)":
+        return sorted(items, key=lambda x: get_timestamp(fullpath(x)))
+    elif method == "Datetime (DESC)":
+        return sorted(items, key=lambda x: get_timestamp(fullpath(x)), reverse=True)
+    else:
+        return items
 
 
 class LoadImagesFromDirBatch:
@@ -19,8 +69,9 @@ class LoadImagesFromDirBatch:
             },
             "optional": {
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
-                "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_method": (sort_methods,),
                 # XXX TODO add a switch for the size normalization
             }
         }
@@ -38,7 +89,7 @@ class LoadImagesFromDirBatch:
         else:
             return hash(frozenset(kwargs))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_method=None):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory} cannot be found.'")
         dir_files = os.listdir(directory)
@@ -47,9 +98,11 @@ class LoadImagesFromDirBatch:
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        if jxl:
+            valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
-        dir_files = sorted(dir_files)
+        dir_files = sort_by(dir_files, directory, sort_method)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
         # start at start_index
@@ -99,10 +152,10 @@ class LoadImagesFromDirBatch:
                     image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "bilinear", "center").movedim(1, -1)
                 image1 = torch.cat((image1, image2), dim=0)
 
-            for mask2 in masks[1:]:
+            for mask2 in masks:
                 if has_non_empty_mask:
                     if image1.shape[1:3] != mask2.shape:
-                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[2], image1.shape[1]), mode='bilinear', align_corners=False)
+                        mask2 = torch.nn.functional.interpolate(mask2.unsqueeze(0).unsqueeze(0), size=(image1.shape[1], image1.shape[2]), mode='bilinear', align_corners=False)
                         mask2 = mask2.squeeze(0)
                     else:
                         mask2 = mask2.unsqueeze(0)
@@ -126,13 +179,15 @@ class LoadImagesFromDirList:
             },
             "optional": {
                 "image_load_cap": ("INT", {"default": 0, "min": 0, "step": 1}),
-                "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "start_index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
                 "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sort_method": (sort_methods,),
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "MASK")
-    OUTPUT_IS_LIST = (True, True)
+    RETURN_TYPES = ("IMAGE", "MASK", "STRING")
+    RETURN_NAMES = ("IMAGE", "MASK", "FILE PATH")
+    OUTPUT_IS_LIST = (True, True, True)
 
     FUNCTION = "load_images"
 
@@ -145,7 +200,7 @@ class LoadImagesFromDirList:
         else:
             return hash(frozenset(kwargs))
 
-    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False):
+    def load_images(self, directory: str, image_load_cap: int = 0, start_index: int = 0, load_always=False, sort_method=None):
         if not os.path.isdir(directory):
             raise FileNotFoundError(f"Directory '{directory}' cannot be found.")
         dir_files = os.listdir(directory)
@@ -154,9 +209,11 @@ class LoadImagesFromDirList:
 
         # Filter files by extension
         valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        if jxl:
+            valid_extensions.extend('.jxl')
         dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
 
-        dir_files = sorted(dir_files)
+        dir_files = sort_by(dir_files, directory, sort_method)
         dir_files = [os.path.join(directory, x) for x in dir_files]
 
         # start at start_index
@@ -164,6 +221,7 @@ class LoadImagesFromDirList:
 
         images = []
         masks = []
+        file_paths = []
 
         limit_images = False
         if image_load_cap > 0:
@@ -189,9 +247,10 @@ class LoadImagesFromDirList:
 
             images.append(image)
             masks.append(mask)
+            file_paths.append(str(image_path))
             image_count += 1
 
-        return images, masks
+        return (images, masks, file_paths)
 
 
 class LoadImageInspire:
@@ -250,7 +309,7 @@ class ChangeImageBatchSize:
                 output_tensor = input_tensor[:batch_size, :, :, :]
             return output_tensor
         else:
-            print(f"[WARN] ChangeImage(Latent)BatchSize: Unknown mode `{mode}` - ignored")
+            logging.warning(f"[Inspire Pack] ChangeImage(Latent)BatchSize: Unknown mode `{mode}` - ignored")
             return input_tensor
 
     @staticmethod
@@ -395,7 +454,7 @@ class ColorMapToMasks:
 
     def doit(self, color_map, max_count, min_pixels):
         if len(color_map) > 0:
-            print(f"[Inspire Pack] WARN: ColorMapToMasks - Sure, here's the translation: `color_map` can only be a single image. Only the first image will be processed. If you want to utilize the remaining images, convert the Image Batch to an Image List.")
+            logging.warning("[Inspire Pack] ColorMapToMasks - Sure, here's the translation: `color_map` can only be a single image. Only the first image will be processed. If you want to utilize the remaining images, convert the Image Batch to an Image List.")
 
         top_colors = top_k_colors(color_map[0], max_count, min_pixels)
 

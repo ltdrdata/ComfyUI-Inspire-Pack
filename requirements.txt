@@ -1,2 +1,5 @@
 matplotlib
 cachetools
+numpy
+webcolors
+opencv-python

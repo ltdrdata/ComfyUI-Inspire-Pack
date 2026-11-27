@@ -4,11 +4,14 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw
 import math
+import cv2
+import folder_paths
+import logging
 
 
 def apply_variation_noise(latent_image, noise_device, variation_seed, variation_strength, mask=None, variation_method='linear'):
     latent_size = latent_image.size()
-    latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
+    latent_size_1batch = [1] + list(latent_size)[1:]
 
     if noise_device == "cpu":
         variation_generator = torch.manual_seed(variation_seed)
@@ -19,7 +22,7 @@ def apply_variation_noise(latent_image, noise_device, variation_seed, variation_
     variation_latent = torch.randn(latent_size_1batch, dtype=latent_image.dtype, layout=latent_image.layout,
                                    generator=variation_generator, device=noise_device)
 
-    variation_noise = variation_latent.expand(latent_image.size()[0], -1, -1, -1)
+    variation_noise = variation_latent.expand(latent_image.size()[0], *latent_size_1batch[1:])
 
     if variation_strength == 0:
         return latent_image
@@ -55,6 +58,8 @@ def slerp(val, low, high):
 
 
 def mix_noise(from_noise, to_noise, strength, variation_method):
+    to_noise = to_noise.to(from_noise.device)
+
     if variation_method == 'slerp':
         mixed_noise = slerp(strength, from_noise, to_noise)
     else:
@@ -75,7 +80,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
     """
 
     latent_size = latent_image.size()
-    latent_size_1batch = [1, latent_size[1], latent_size[2], latent_size[3]]
+    latent_size_1batch = [1] + list(latent_size)[1:]
 
     if variation_strength is not None and variation_strength > 0 or incremental_seed_mode.startswith("variation str inc"):
         if noise_device == "cpu":
@@ -98,7 +103,7 @@ def prepare_noise(latent_image, seed, noise_inds=None, noise_device="cpu", incre
             if strength_up is not None:
                 strength += strength_up
 
-            variation_noise = variation_latent.expand(input_latent.size()[0], -1, -1, -1)
+            variation_noise = variation_latent.expand(input_latent.size()[0], *latent_size_1batch[1:])
 
             mixed_noise = mix_noise(input_latent, variation_noise, strength, variation_method)
 
@@ -194,9 +199,9 @@ def try_install_custom_node(custom_node_url, msg):
         import cm_global
         cm_global.try_call(api='cm.try-install-custom-node',
                            sender="Inspire Pack", custom_node_url=custom_node_url, msg=msg)
-    except Exception as e:
-        print(msg)
-        print(f"[Inspire Pack] ComfyUI-Manager is outdated. The custom node installation feature is not available.")
+    except Exception as e:  # noqa: F841
+        logging.error(msg)
+        logging.error("[Inspire Pack] ComfyUI-Manager is outdated. The custom node installation feature is not available.")
 
 
 def empty_latent():
@@ -288,3 +293,59 @@ class TaggedCache:
     def clear(self):
         # clear all cache
         self._data = {}
+
+
+def make_3d_mask(mask):
+    if len(mask.shape) == 4:
+        return mask.squeeze(0)
+
+    elif len(mask.shape) == 2:
+        return mask.unsqueeze(0)
+
+    return mask
+
+
+def dilate_mask(mask: torch.Tensor, dilation_factor: float) -> torch.Tensor:
+    """Dilate a mask using a square kernel with a given dilation factor."""
+    kernel_size = int(dilation_factor * 2) + 1
+    kernel = np.ones((abs(kernel_size), abs(kernel_size)), np.uint8)
+
+    masks = make_3d_mask(mask).numpy()
+    dilated_masks = []
+    for m in masks:
+        if dilation_factor > 0:
+            m2 = cv2.dilate(m, kernel, iterations=1)
+        else:
+            m2 = cv2.erode(m, kernel, iterations=1)
+
+        dilated_masks.append(torch.from_numpy(m2))
+
+    return torch.stack(dilated_masks)
+
+
+def flatten_non_zero_override(masks: torch.Tensor):
+    """
+    flatten multiple layer mask tensor to 1 layer mask tensor.
+    Override the lower layer with the tensor from the upper layer, but only override non-zero values.
+
+    :param masks: 3d mask
+    :return: flatten mask
+    """
+    final_mask = masks[0]
+
+    for i in range(1, masks.size(0)):
+        non_zero_mask = masks[i] != 0
+        final_mask[non_zero_mask] = masks[i][non_zero_mask]
+
+    return final_mask
+
+
+def add_folder_path_and_extensions(folder_name, full_folder_paths, extensions):
+    for full_folder_path in full_folder_paths:
+        folder_paths.add_model_folder_path(folder_name, full_folder_path)
+    if folder_name in folder_paths.folder_names_and_paths:
+        current_paths, current_extensions = folder_paths.folder_names_and_paths[folder_name]
+        updated_extensions = current_extensions | extensions
+        folder_paths.folder_names_and_paths[folder_name] = (current_paths, updated_extensions)
+    else:
+        folder_paths.folder_names_and_paths[folder_name] = (full_folder_paths, extensions)

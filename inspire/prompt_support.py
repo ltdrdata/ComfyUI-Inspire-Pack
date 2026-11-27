@@ -12,19 +12,23 @@ import folder_paths
 import comfy
 import traceback
 import random
+import hashlib
 
 from server import PromptServer
 from .libs import utils, common
 from .backend_support import CheckpointLoaderSimpleShared
+
+import logging
+
+model_path = folder_paths.models_dir
+utils.add_folder_path_and_extensions("inspire_prompts", [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prompts"))], {'.txt'})
+
 
 prompt_builder_preset = {}
 
 
 resource_path = os.path.join(os.path.dirname(__file__), "..", "resources")
 resource_path = os.path.abspath(resource_path)
-
-prompts_path = os.path.join(os.path.dirname(__file__), "..", "prompts")
-prompts_path = os.path.abspath(prompts_path)
 
 
 try:
@@ -36,130 +40,259 @@ try:
 
     with open(pb_yaml_path, 'r', encoding="utf-8") as f:
         prompt_builder_preset = yaml.load(f, Loader=yaml.FullLoader)
-except Exception as e:
-    print(f"[Inspire Pack] Failed to load 'prompt-builder.yaml'")
+except Exception as e:  # noqa: F841
+    logging.error("[Inspire Pack] Failed to load 'prompt-builder.yaml'\nNOTE: Only files with UTF-8 encoding are supported.")
 
 
 class LoadPromptsFromDir:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
         try:
-            prompt_dirs = [d for d in os.listdir(prompts_path) if os.path.isdir(os.path.join(prompts_path, d))]
+            prompt_dirs = []
+            for x in folder_paths.get_folder_paths('inspire_prompts'):
+                for d in os.listdir(x):
+                    if os.path.isdir(os.path.join(x, d)):
+                        prompt_dirs.append(d)
         except Exception:
             prompt_dirs = []
 
-        return {"required": {"prompt_dir": (prompt_dirs,)}}
+        return {"required": {
+                    "prompt_dir": (prompt_dirs,)
+                    },
+                "optional": {
+                    "reload": ("BOOLEAN", { "default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                    "load_cap": ("INT", {"default": 0, "min": 0, "step": 1, "advanced": True, "tooltip": "The amount of prompts to load at once:\n0: Load all\n1 or higher: Load a specified number"}),
+                    "start_index": ("INT", {"default": 0, "min": -1, "step": 1, "max": 0xffffffffffffffff, "advanced": True, "tooltip": "Starting index for loading prompts:\n-1: The last prompt\n0 or higher: Load from the specified index"}),
+                    }
+                }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT",)
-    OUTPUT_IS_LIST = (True,)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count", "remaining_count")
+    OUTPUT_IS_LIST = (True, False, False)
 
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_dir):
-        global prompts_path
-        prompt_dir = os.path.join(prompts_path, prompt_dir)
-        files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
-        files.sort()
+    @staticmethod
+    def IS_CHANGED(prompt_dir, reload=False, load_cap=0, start_index=-1):
+        if not reload:
+            return prompt_dir, load_cap, start_index
+        else:
+            candidates = []
+            for d in folder_paths.get_folder_paths('inspire_prompts'):
+                candidates.append(os.path.join(d, prompt_dir))
+
+            prompt_files = []
+            for x in candidates:
+                for root, dirs, files in os.walk(x):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            prompt_files.append(os.path.join(root, file))
+
+            prompt_files.sort()
+
+            md5 = hashlib.md5()
+
+            for file_name in prompt_files:
+                md5.update(file_name.encode('utf-8'))
+                with open(folder_paths.get_full_path('inspire_prompts', file_name), 'rb') as f:
+                    while True:
+                        chunk = f.read(4096)
+                        if not chunk:
+                            break
+                        md5.update(chunk)
+
+            return md5.hexdigest(), load_cap, start_index
+
+    @staticmethod
+    def doit(prompt_dir, reload=False, load_cap=0, start_index=-1):
+        candidates = []
+        for d in folder_paths.get_folder_paths('inspire_prompts'):
+            candidates.append(os.path.join(d, prompt_dir))
+
+        prompt_files = []
+        for x in candidates:
+            for root, dirs, files in os.walk(x):
+                for file in files:
+                    if file.endswith(".txt"):
+                        prompt_files.append(os.path.join(root, file))
+
+        prompt_files.sort()
 
         prompts = []
-        for file_name in files:
-            print(f"file_name: {file_name}")
+        for file_name in prompt_files:
+            logging.info(f"file_name: {file_name}")
             try:
-                with open(os.path.join(prompt_dir, file_name), "r", encoding="utf-8") as file:
+                with open(file_name, "r", encoding="utf-8") as file:
                     prompt_data = file.read()
                     prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
                     for prompt in prompt_list:
-                        pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
-                        matches = re.search(pattern, prompt, re.DOTALL)
+                        pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
+                        matches = re.search(pattern, prompt, re.DOTALL | re.IGNORECASE)
 
                         if matches:
-                            positive_text = matches.group(1).strip()
-                            negative_text = matches.group(2).strip()
-                            result_tuple = (positive_text, negative_text, file_name)
+                            positive_text = matches.group('positive').strip()
+                            negative_text = matches.group('negative').strip()
+                            name_text = matches.group('name').strip() if matches.group('name') else file_name
+                            result_tuple = (positive_text, negative_text, name_text)
                             prompts.append(result_tuple)
                         else:
-                            print(f"[WARN] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
+                            logging.warning(f"[Inspire Pack] LoadPromptsFromDir: invalid prompt format in '{file_name}'")
             except Exception as e:
-                print(f"[ERROR] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}")
+                logging.error(f"[Inspire Pack] LoadPromptsFromDir: an error occurred while processing '{file_name}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, )
+        # slicing [start_index ~ start_index + load_cap]
+        total_prompts = len(prompts)
+        prompts = prompts[start_index:]
+        remaining_count = False
+        if load_cap > 0:
+            remaining_count = max(0, len(prompts) - load_cap)
+            prompts = prompts[:load_cap]
+
+        return prompts, total_prompts, remaining_count
 
 
 class LoadPromptsFromFile:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
+        prompt_files = []
         try:
-            prompt_files = []
-            for root, dirs, files in os.walk(prompts_path):
-                for file in files:
-                    if file.endswith(".txt"):
-                        file_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(file_path, prompts_path)
-                        prompt_files.append(rel_path)
+            prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+            for prompts_path in prompts_paths:
+                for root, dirs, files in os.walk(prompts_path):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            file_path = os.path.join(root, file)
+                            rel_path = os.path.relpath(file_path, prompts_path)
+                            prompt_files.append(rel_path)
         except Exception:
             prompt_files = []
 
-        return {"required": {"prompt_file": (prompt_files,)}}
+        return {"required": {
+                        "prompt_file": (prompt_files,)
+                        },
+                "optional": {
+                        "text_data_opt": ("STRING", {"defaultInput": True}),
+                        "reload": ("BOOLEAN", {"default": False, "label_on": "if file changed", "label_off": "if value changed"}),
+                        "load_cap": ("INT", {"default": 0, "min": 0, "step": 1, "advanced": True, "tooltip": "The amount of prompts to load at once:\n0: Load all\n1 or higher: Load a specified number"}),
+                        "start_index": ("INT", {"default": 0, "min": -1, "max": 0xffffffffffffffff, "step": 1, "advanced": True, "tooltip": "Starting index for loading prompts:\n-1: The last prompt\n0 or higher: Load from the specified index"}),
+                        }
+                }
 
-    RETURN_TYPES = ("ZIPPED_PROMPT",)
-    OUTPUT_IS_LIST = (True,)
+    RETURN_TYPES = ("ZIPPED_PROMPT", "INT", "INT")
+    RETURN_NAMES = ("zipped_prompt", "count", "remaining_count")
+    OUTPUT_IS_LIST = (True, False, False)
 
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_file):
-        prompt_path = os.path.join(prompts_path, prompt_file)
+    @staticmethod
+    def IS_CHANGED(prompt_file, text_data_opt=None, reload=False, load_cap=0, start_index=-1):
+        md5 = hashlib.md5()
+
+        if text_data_opt is not None:
+            md5.update(text_data_opt)
+            return md5.hexdigest(), load_cap, start_index
+        elif not reload:
+            return prompt_file, load_cap, start_index
+        else:
+            matched_path = None
+            for x in folder_paths.get_folder_paths('inspire_prompts'):
+                matched_path = os.path.join(x, prompt_file)
+                if not os.path.exists(matched_path):
+                    matched_path = None
+                else:
+                    break
+
+            if matched_path is None:
+                return float('NaN')
+
+            with open(matched_path, 'rb') as f:
+                while True:
+                    chunk = f.read(4096)
+                    if not chunk:
+                        break
+                    md5.update(chunk)
+
+            return md5.hexdigest(), load_cap, start_index
+
+    @staticmethod
+    def doit(prompt_file, text_data_opt=None, reload=False, load_cap=0, start_index=-1):
+        matched_path = None
+        for d in folder_paths.get_folder_paths('inspire_prompts'):
+            matched_path = os.path.join(d, prompt_file)
+            if os.path.exists(matched_path):
+                break
+            else:
+                matched_path = None
+
+        if matched_path:
+            logging.info(f"[Inspire Pack] LoadPromptsFromFile: file found '{prompt_file}'")
+        else:
+            logging.warning(f"[Inspire Pack] LoadPromptsFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
-            with open(prompt_path, "r", encoding="utf-8") as file:
-                prompt_data = file.read()
-                prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
+            if not text_data_opt:
+                with open(matched_path, "r", encoding="utf-8") as file:
+                    prompt_data = file.read()
+            else:
+                prompt_data = text_data_opt
 
-                pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
+            prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
 
-                for prompt in prompt_list:
-                    matches = re.search(pattern, prompt, re.DOTALL)
+            pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
 
-                    if matches:
-                        positive_text = matches.group(1).strip()
-                        negative_text = matches.group(2).strip()
-                        result_tuple = (positive_text, negative_text, prompt_file)
-                        prompts.append(result_tuple)
-                    else:
-                        print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+            for p in prompt_list:
+                matches = re.search(pattern, p, re.DOTALL)
+
+                if matches:
+                    positive_text = matches.group('positive').strip()
+                    negative_text = matches.group('negative').strip()
+                    name_text = matches.group('name').strip() if matches.group('name') else prompt_file
+                    result_tuple = (positive_text, negative_text, name_text)
+                    prompts.append(result_tuple)
+                else:
+                    logging.warning(f"[Inspire Pack] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
+            logging.error(f"[Inspire Pack] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
-        return (prompts, )
+        # slicing [start_index ~ start_index + load_cap]
+        total_prompts = len(prompts)
+        prompts = prompts[start_index:]
+        remaining_count = 0
+        if load_cap > 0:
+            remaining_count = max(0, len(prompts) - load_cap)
+            prompts = prompts[:load_cap]
+
+        return prompts, total_prompts, remaining_count
 
 
 class LoadSinglePromptFromFile:
     @classmethod
     def INPUT_TYPES(cls):
-        global prompts_path
+        prompt_files = []
         try:
-            prompt_files = []
-            for root, dirs, files in os.walk(prompts_path):
-                for file in files:
-                    if file.endswith(".txt"):
-                        file_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(file_path, prompts_path)
-                        prompt_files.append(rel_path)
+            prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+            for prompts_path in prompts_paths:
+                for root, dirs, files in os.walk(prompts_path):
+                    for file in files:
+                        if file.endswith(".txt"):
+                            file_path = os.path.join(root, file)
+                            rel_path = os.path.relpath(file_path, prompts_path)
+                            prompt_files.append(rel_path)
         except Exception:
             prompt_files = []
 
         return {"required": {
-            "prompt_file": (prompt_files,),
-            "index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-            }
-        }
+                    "prompt_file": (prompt_files,),
+                    "index": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                    },
+                "optional": {"text_data_opt": ("STRING", {"defaultInput": True})}
+                }
 
     RETURN_TYPES = ("ZIPPED_PROMPT",)
     OUTPUT_IS_LIST = (True,)
@@ -168,31 +301,49 @@ class LoadSinglePromptFromFile:
 
     CATEGORY = "InspirePack/Prompt"
 
-    def doit(self, prompt_file, index):
-        prompt_path = os.path.join(prompts_path, prompt_file)
+    @staticmethod
+    def doit(prompt_file, index, text_data_opt=None):
+        prompt_path = None
+        prompts_paths = folder_paths.get_folder_paths('inspire_prompts')
+        for d in prompts_paths:
+            prompt_path = os.path.join(d, prompt_file)
+            if os.path.exists(prompt_path):
+                break
+            else:
+                prompt_path = None
+
+        if prompt_path:
+            logging.info(f"[Inspire Pack] LoadSinglePromptFromFile: file found '{prompt_file}'")
+        else:
+            logging.warning(f"[Inspire Pack] LoadSinglePromptFromFile: file not found '{prompt_file}'")
 
         prompts = []
         try:
-            with open(prompt_path, "r", encoding="utf-8") as file:
-                prompt_data = file.read()
-                prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
-                try:
-                    prompt = prompt_list[index]
-                except Exception:
-                    prompt = prompt_list[-1]
+            if not text_data_opt:
+                with open(prompt_path, "r", encoding="utf-8") as file:
+                    prompt_data = file.read()
+            else:
+                prompt_data = text_data_opt
 
-                pattern = r"positive:(.*?)(?:\n*|$)negative:(.*)"
-                matches = re.search(pattern, prompt, re.DOTALL)
+            prompt_list = re.split(r'\n\s*-+\s*\n', prompt_data)
+            try:
+                prompt = prompt_list[index]
+            except Exception:
+                prompt = prompt_list[-1]
 
-                if matches:
-                    positive_text = matches.group(1).strip()
-                    negative_text = matches.group(2).strip()
-                    result_tuple = (positive_text, negative_text, prompt_file)
-                    prompts.append(result_tuple)
-                else:
-                    print(f"[WARN] LoadPromptsFromFile: invalid prompt format in '{prompt_file}'")
+            pattern = r"^(?:(?:positive:(?P<positive>.*?)|negative:(?P<negative>.*?)|name:(?P<name>.*?))\n*)+$"
+            matches = re.search(pattern, prompt, re.DOTALL)
+
+            if matches:
+                positive_text = matches.group('positive').strip()
+                negative_text = matches.group('negative').strip()
+                name_text = matches.group('name').strip() if matches.group('name') else prompt_file
+                result_tuple = (positive_text, negative_text, name_text)
+                prompts.append(result_tuple)
+            else:
+                logging.warning(f"[Inspire Pack] LoadSinglePromptFromFile: invalid prompt format in '{prompt_file}'")
         except Exception as e:
-            print(f"[ERROR] LoadPromptsFromFile: an error occurred while processing '{prompt_file}': {str(e)}")
+            logging.error(f"[Inspire Pack] LoadSinglePromptFromFile: an error occurred while processing '{prompt_file}': {str(e)}\nNOTE: Only files with UTF-8 encoding are supported.")
 
         return (prompts, )
 
@@ -235,9 +386,8 @@ class ZipPrompt:
         return ((positive, negative, name_opt), )
 
 
-prompt_blacklist = set([
-    'filename_prefix'
-])
+prompt_blacklist = set(['filename_prefix'])
+
 
 class PromptExtractor:
     @classmethod
@@ -337,13 +487,44 @@ class GlobalSeed:
         return {}
 
 
+class SeedLogger:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seeds": ("STRING", {"multiline": True, "dynamicPrompts": False, "control_after_generate": False}),
+                "limit": ("INT", {"default": 5, "min": 0, "max": 0xffffffffffffffff}),
+            },
+            "hidden": {"unique_id": "UNIQUE_ID"}
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    OUTPUT_NODE = True
+
+    def doit(self, seed, seeds: str, limit, unique_id):
+
+        if limit > 0:
+            lines = seeds.split('\n')
+            res = str(seed) + '\n' + '\n'.join(lines[:limit-1])
+        else:
+            res = str(seed) + '\n' + seeds
+
+        PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": unique_id, "widget_name": "seeds", "type": "text", "data": res})
+        return {}
+
+
 class GlobalSampler:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
-                "scheduler": (common.SCHEDULERS, ),
+                "scheduler": (common.get_schedulers(), ),
             }
         }
 
@@ -414,7 +595,7 @@ class BNK_EncoderWrapper:
         if 'BNK_CLIPTextEncodeAdvanced' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/BlenderNeko/ComfyUI_ADV_CLIP_emb',
                                           "To use 'WildcardEncodeInspire' node, 'ComfyUI_ADV_CLIP_emb' extension is required.")
-            raise Exception(f"[ERROR] To use WildcardEncodeInspire, you need to install 'Advanced CLIP Text Encode'")
+            raise Exception("[ERROR] To use WildcardEncodeInspire, you need to install 'Advanced CLIP Text Encode'")
         return nodes.NODE_CLASS_MAPPINGS['BNK_CLIPTextEncodeAdvanced']().encode(clip, text, self.token_normalization, self.weight_interpretation)
 
 
@@ -428,11 +609,18 @@ class WildcardEncodeInspire:
                         "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
                         "wildcard_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Wildcard Prompt (User Input)'}),
                         "populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Prompt (Will be generated automatically)'}),
-                        "mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
+
+                        "mode": (["populate", "fixed", "reproduce"], {"default": "populate", "tooltip":
+                            "populate: Before running the workflow, it overwrites the existing value of 'populated_text' with the prompt processed from 'wildcard_text'. In this mode, 'populated_text' cannot be edited.\n"
+                            "fixed: Ignores wildcard_text and keeps 'populated_text' as is. You can edit 'populated_text' in this mode.\n"
+                            "reproduce: This mode operates as 'fixed' mode only once for reproduction, and then it switches to 'populate' mode."
+                                                                               }),
+
                         "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"), ),
                         "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
+                "hidden": {"unique_id": "UNIQUE_ID"},
                 }
 
     CATEGORY = "InspirePack/Prompt"
@@ -443,16 +631,22 @@ class WildcardEncodeInspire:
 
     def doit(self, *args, **kwargs):
         populated = kwargs['populated_text']
+        populated_during_run = kwargs['mode'] == 'populate'
 
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
 
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'Wildcard Encode (Inspire)' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
+            raise Exception("[ERROR] To use 'Wildcard Encode (Inspire)', you need to install 'Impact Pack'")
 
-        model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], clip_encoder=clip_encoder)
-        return (model, clip, conditioning, populated)
+        processed = []
+        model, clip, conditioning = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=populated, model=kwargs['model'], clip=kwargs['clip'], seed=kwargs['seed'], clip_encoder=clip_encoder, processed=processed)
+
+        if populated_during_run:
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "populated_text", "type": "text", "data": processed[0]})
+
+        return (model, clip, conditioning, processed[0])
 
 
 class MakeBasicPipe:
@@ -468,7 +662,11 @@ class MakeBasicPipe:
                         "Add selection to": ("BOOLEAN", {"default": True, "label_on": "Positive", "label_off": "Negative"}),
                         "Select to add LoRA": (["Select the LoRA to add to the text"] + folder_paths.get_filename_list("loras"),),
                         "Select to add Wildcard": (["Select the Wildcard to add to the text"],),
-                        "wildcard_mode": ("BOOLEAN", {"default": True, "label_on": "Populate", "label_off": "Fixed"}),
+                        "wildcard_mode": (["populate", "fixed", "reproduce"], {"default": "populate", "tooltip":
+                            "populate: Before running the workflow, it overwrites the existing value of 'populated_text' with the prompt processed from 'wildcard_text'. In this mode, 'populated_text' cannot be edited.\n"
+                            "fixed: Ignores wildcard_text and keeps 'populated_text' as is. You can edit 'populated_text' in this mode.\n"
+                            "reproduce: This mode operates as 'fixed' mode only once for reproduction, and then it switches to 'populate' mode."
+                                                                               }),
 
                         "positive_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Positive Prompt (Will be generated automatically)'}),
                         "negative_populated_text": ("STRING", {"multiline": True, "dynamicPrompts": False, 'placeholder': 'Populated Negative Prompt (Will be generated automatically)'}),
@@ -477,12 +675,12 @@ class MakeBasicPipe:
                         "weight_interpretation": (["comfy", "A1111", "compel", "comfy++", "down_weight"], {'default': 'comfy++'}),
 
                         "stop_at_clip_layer": ("INT", {"default": -2, "min": -24, "max": -1, "step": 1}),
-            
                         "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                     },
                 "optional": {
                         "vae_opt": ("VAE",)
                     },
+                "hidden": {"unique_id": "UNIQUE_ID"},
                 }
 
     CATEGORY = "InspirePack/Prompt"
@@ -494,18 +692,25 @@ class MakeBasicPipe:
     def doit(self, **kwargs):
         pos_populated = kwargs['positive_populated_text']
         neg_populated = kwargs['negative_populated_text']
+        populated_during_run = kwargs['wildcard_mode'] == 'populate'
 
         clip_encoder = BNK_EncoderWrapper(kwargs['token_normalization'], kwargs['weight_interpretation'])
 
         if 'ImpactWildcardEncode' not in nodes.NODE_CLASS_MAPPINGS:
             utils.try_install_custom_node('https://github.com/ltdrdata/ComfyUI-Impact-Pack',
                                           "To use 'Make Basic Pipe (Inspire)' node, 'Impact Pack' extension is required.")
-            raise Exception(f"[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
+            raise Exception("[ERROR] To use 'Make Basic Pipe (Inspire)', you need to install 'Impact Pack'")
 
         model, clip, vae, key = CheckpointLoaderSimpleShared().doit(ckpt_name=kwargs['ckpt_name'], key_opt=kwargs['ckpt_key_opt'])
         clip = nodes.CLIPSetLastLayer().set_last_layer(clip, kwargs['stop_at_clip_layer'])[0]
-        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder)
-        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder)
+        pos_processed = []
+        neg_processed = []
+        model, clip, positive = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=pos_populated, model=model, clip=clip, clip_encoder=clip_encoder, seed=kwargs['seed'], processed=pos_processed)
+        model, clip, negative = nodes.NODE_CLASS_MAPPINGS['ImpactWildcardEncode'].process_with_loras(wildcard_opt=neg_populated, model=model, clip=clip, clip_encoder=clip_encoder, seed=kwargs['seed'], processed=neg_processed)
+
+        if populated_during_run:
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "positive_populated_text", "type": "text", "data": pos_processed[0]})
+            PromptServer.instance.send_sync("inspire-node-feedback", {"node_id": kwargs['unique_id'], "widget_name": "negative_populated_text", "type": "text", "data": neg_processed[0]})
 
         if 'vae_opt' in kwargs:
             vae = kwargs['vae_opt']
@@ -551,10 +756,13 @@ class SeedExplorer:
                 "initial_batch_seed_mode": (["incremental", "comfy"],),
             },
             "optional":
-                {"variation_method": (["linear", "slerp"],), }
+                {
+                    "variation_method": (["linear", "slerp"],),
+                    "model": ("MODEL",),
+                }
         }
 
-    RETURN_TYPES = ("NOISE",)
+    RETURN_TYPES = ("NOISE_IMAGE",)
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Prompt"
@@ -575,14 +783,18 @@ class SeedExplorer:
 
                     noise = utils.apply_variation_noise(noise, noise_device, variation_seed, variation_strength, mask=mask, variation_method=variation_method)
                 except Exception:
-                    print(f"[ERROR] IGNORED: SeedExplorer failed to processing '{x}'")
+                    logging.error(f"[Inspire Pack] IGNORED: SeedExplorer failed to processing '{x}'")
                     traceback.print_exc()
         return noise
 
     @staticmethod
     def doit(latent, seed_prompt, enable_additional, additional_seed, additional_strength, noise_mode,
-             initial_batch_seed_mode, variation_method='linear'):
+             initial_batch_seed_mode, variation_method='linear', model=None):
         latent_image = latent["samples"]
+
+        if hasattr(comfy.sample, 'fix_empty_latent_channels') and model is not None:
+            latent_image = comfy.sample.fix_empty_latent_channels(model, latent_image)
+
         device = comfy.model_management.get_torch_device()
         noise_device = "cpu" if noise_mode == "CPU" else device
 
@@ -612,12 +824,78 @@ class SeedExplorer:
             return (noise,)
 
         except Exception:
-            print(f"[ERROR] IGNORED: SeedExplorer failed")
+            logging.error("[Inspire Pack] IGNORED: SeedExplorer failed")
             traceback.print_exc()
 
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout,
                             device=noise_device)
         return (noise,)
+
+
+class CompositeNoise:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "destination": ("NOISE_IMAGE",),
+                "source": ("NOISE_IMAGE",),
+                "mode": (["center", "left-top", "right-top", "left-bottom", "right-bottom", "xy"], ),
+                "x": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                "y": ("INT", {"default": 0, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+            },
+        }
+
+    RETURN_TYPES = ("NOISE_IMAGE",)
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Prompt"
+
+    def doit(self, destination, source, mode, x, y):
+        new_tensor = destination.clone()
+
+        if mode == 'center':
+            y1 = (new_tensor.size(2) - source.size(2)) // 2
+            x1 = (new_tensor.size(3) - source.size(3)) // 2
+        elif mode == 'left-top':
+            y1 = 0
+            x1 = 0
+        elif mode == 'right-top':
+            y1 = 0
+            x1 = new_tensor.size(2) - source.size(2)
+        elif mode == 'left-bottom':
+            y1 = new_tensor.size(3) - source.size(3)
+            x1 = 0
+        elif mode == 'right-bottom':
+            y1 = new_tensor.size(3) - source.size(3)
+            x1 = new_tensor.size(2) - source.size(2)
+        else:  # mode == 'xy':
+            x1 = max(0, x)
+            y1 = max(0, y)
+
+        # raw coordinates
+        y2 = y1 + source.size(2)
+        x2 = x1 + source.size(3)
+
+        # bounding for destination
+        top = max(0, y1)
+        left = max(0, x1)
+        bottom = min(new_tensor.size(2), y2)
+        right = min(new_tensor.size(3), x2)
+
+        # bounding for source
+        left_gap = left - x1
+        top_gap = top - y1
+
+        width = right - left
+        height = bottom - top
+
+        height = min(height, y1 + source.size(2) - top)
+        width = min(width, x1 + source.size(3) - left)
+
+        # composite
+        new_tensor[:, :, top:top + height, left:left + width] = source[:, :, top_gap:top_gap + height, left_gap:left_gap + width]
+
+        return (new_tensor,)
 
 
 list_counter_map = {}
@@ -745,7 +1023,7 @@ class RemoveControlNetFromRegionalPrompts:
         rcn = RemoveControlNet()
         res = []
         for rp in regional_prompts:
-            _, _, _, _, positive, negative = rp.sampler.params
+            positive, negative = rp.sampler.params[4:6]
             positive, negative = rcn.doit(positive)[0], rcn.doit(negative)[0]
             sampler = rp.sampler.clone_with_conditionings(positive, negative)
             res.append(rp.clone_with_sampler(sampler))
@@ -760,6 +1038,7 @@ NODE_CLASS_MAPPINGS = {
     "ZipPrompt //Inspire": ZipPrompt,
     "PromptExtractor //Inspire": PromptExtractor,
     "GlobalSeed //Inspire": GlobalSeed,
+    "SeedLogger //Inspire": SeedLogger,
     "GlobalSampler //Inspire": GlobalSampler,
     "BindImageListPromptList //Inspire": BindImageListPromptList,
     "WildcardEncode //Inspire": WildcardEncodeInspire,
@@ -771,7 +1050,9 @@ NODE_CLASS_MAPPINGS = {
     "MakeBasicPipe //Inspire": MakeBasicPipe,
     "RemoveControlNet //Inspire": RemoveControlNet,
     "RemoveControlNetFromRegionalPrompts //Inspire": RemoveControlNetFromRegionalPrompts,
+    "CompositeNoise //Inspire": CompositeNoise,
 }
+
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadPromptsFromDir //Inspire": "Load Prompts From Dir (Inspire)",
     "LoadPromptsFromFile //Inspire": "Load Prompts From File (Inspire)",
@@ -780,6 +1061,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ZipPrompt //Inspire": "Zip Prompt (Inspire)",
     "PromptExtractor //Inspire": "Prompt Extractor (Inspire)",
     "GlobalSeed //Inspire": "Global Seed (Inspire)",
+    "SeedLogger //Inspire": "Seed Logger (Inspire)",
     "GlobalSampler //Inspire": "Global Sampler (Inspire)",
     "BindImageListPromptList //Inspire": "Bind [ImageList, PromptList] (Inspire)",
     "WildcardEncode //Inspire": "Wildcard Encode (Inspire)",
@@ -790,5 +1072,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "RandomGeneratorForList //Inspire": "Random Generator for List (Inspire)",
     "MakeBasicPipe //Inspire": "Make Basic Pipe (Inspire)",
     "RemoveControlNet //Inspire": "Remove ControlNet (Inspire)",
-    "RemoveControlNetFromRegionalPrompts //Inspire": "Remove ControlNet [RegionalPrompts] (Inspire)"
+    "RemoveControlNetFromRegionalPrompts //Inspire": "Remove ControlNet [RegionalPrompts] (Inspire)",
+    "CompositeNoise //Inspire": "Composite Noise (Inspire)"
 }

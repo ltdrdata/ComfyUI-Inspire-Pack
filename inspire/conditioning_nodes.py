@@ -3,24 +3,30 @@ import nodes
 import inspect
 from .libs import utils
 from nodes import MAX_RESOLUTION
+import logging
 
 
 class ConcatConditioningsWithMultiplier:
     @classmethod
     def INPUT_TYPES(s):
-        flex_inputs = {}
-
         stack = inspect.stack()
-        if stack[1].function == 'get_input_data':
+        if stack[1].function == 'get_input_info':
             # bypass validation
-            for x in range(0, 100):
-                flex_inputs[f"multiplier{x}"] = ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01})
-        else:
-            flex_inputs["multiplier1"] = ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01})
+            class AllContainer:
+                def __contains__(self, item):
+                    return True
+
+                def __getitem__(self, key):
+                    return "FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}
+
+            return {
+                "required": {"conditioning1": ("CONDITIONING",), },
+                "optional": AllContainer()
+            }
 
         return {
             "required": {"conditioning1": ("CONDITIONING",), },
-            "optional": flex_inputs
+            "optional": {"multiplier1": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}), },
         }
 
     RETURN_TYPES = ("CONDITIONING",)
@@ -46,7 +52,7 @@ class ConcatConditioningsWithMultiplier:
 
             out = []
             if len(conditioning_from) > 1:
-                print(f"Warning: ConcatConditioningsWithMultiplier {k} contains more than 1 cond, only the first one will actually be applied to conditioning1.")
+                logging.warning(f"[Inspire Pack] ConcatConditioningsWithMultiplier {k} contains more than 1 cond, only the first one will actually be applied to conditioning1.")
 
             mkey = 'multiplier' + k[12:]
             multiplier = float(kwargs[mkey])
@@ -88,7 +94,7 @@ class ConditioningStretch:
         }
 
     RETURN_TYPES = ("CONDITIONING",)
-    CATEGORY = "Davemane42"
+    CATEGORY = "InspirePack/conditioning"
 
     FUNCTION = 'upscale'
 
@@ -128,7 +134,7 @@ class ConditioningUpscale:
         }
 
     RETURN_TYPES = ("CONDITIONING",)
-    CATEGORY = "Davemane42"
+    CATEGORY = "InspirePack/conditioning"
 
     FUNCTION = 'upscale'
 

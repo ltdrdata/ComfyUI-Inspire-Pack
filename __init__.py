@@ -2,14 +2,15 @@
 @author: Dr.Lt.Data
 @title: Inspire Pack
 @nickname: Inspire Pack
-@description: This extension provides various nodes to support Lora Block Weight and the Impact Pack.
+@description: This extension provides various nodes to support Lora Block Weight, Regional Nodes, Backend Cache, Prompt Utils, List Utils and the Impact Pack.
 """
 
 import importlib
+import logging
 
-version_code = [0, 75, 1]
+version_code = [1, 24]
 version_str = f"V{version_code[0]}.{version_code[1]}" + (f'.{version_code[2]}' if len(version_code) > 2 else '')
-print(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
+logging.info(f"### Loading: ComfyUI-Inspire-Pack ({version_str})")
 
 node_list = [
     "lora_block_weight",
@@ -23,7 +24,8 @@ node_list = [
     "backend_support",
     "list_nodes",
     "conditioning_nodes",
-    "model_nodes"
+    "model_nodes",
+    "util_nodes"
 ]
 
 NODE_CLASS_MAPPINGS = {}
@@ -37,13 +39,3 @@ for module_name in node_list:
 
 WEB_DIRECTORY = "./js"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
-
-try:
-    import cm_global
-    cm_global.register_extension('ComfyUI-Inspire-Pack',
-                                 {'version': version_code,
-                                  'name': 'Inspire Pack',
-                                  'nodes': set(NODE_CLASS_MAPPINGS.keys()),
-                                  'description': 'This extension provides various nodes to support Lora Block Weight and the Impact Pack. Provides many easily applicable regional features and applications for Variation Seed.', })
-except:
-    pass
