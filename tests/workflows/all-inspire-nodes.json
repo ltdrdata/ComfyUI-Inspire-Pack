@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 101,
+  "last_node_id": 103,
   "last_link_id": 0,
   "nodes": [
     {
@@ -4849,6 +4849,82 @@
       "widgets_values_named": {
         "rgb_hex": ""
       }
+    },
+    {
+      "id": 102,
+      "type": "NormalMap_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        8324.961804199218,
+        12250
+      ],
+      "size": [
+        379.8931640625,
+        178
+      ],
+      "flags": {},
+      "order": 101,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "NormalMap_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        "DSINE",
+        60,
+        5,
+        "vit-small",
+        1000,
+        1000
+      ],
+      "widgets_values_named": {
+        "model_type": "DSINE",
+        "fov (DSINE)": 60,
+        "iterations (DSINE)": 5,
+        "backbone (Metric3D)": "vit-small",
+        "fx (Metric3D)": 1000,
+        "fy (Metric3D)": 1000
+      }
+    },
+    {
+      "id": 103,
+      "type": "DepthAnything_Preprocessor_Provider_for_SEGS //Inspire",
+      "pos": [
+        7514.174694824219,
+        12250
+      ],
+      "size": [
+        401.4673828125,
+        82
+      ],
+      "flags": {},
+      "order": 102,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SEGS_PREPROCESSOR",
+          "type": "SEGS_PREPROCESSOR",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DepthAnything_Preprocessor_Provider_for_SEGS //Inspire"
+      },
+      "widgets_values": [
+        "auto",
+        "depth_anything_v2_vitl.pth"
+      ],
+      "widgets_values_named": {
+        "version": "auto",
+        "ckpt_name": "depth_anything_v2_vitl.pth"
+      }
     }
   ],
   "links": [],
@@ -4858,8 +4934,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -8800,
-        -12000
+        -7264.908386230469,
+        -12060
       ]
     },
     "frontendVersion": "1.59.10"
