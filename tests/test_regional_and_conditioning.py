@@ -1,4 +1,5 @@
 import copy
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -93,6 +94,72 @@ def test_regional_cfg_applies_the_cfg_inside_the_mask_and_the_uncond_outside(pac
     assert torch.equal(out[..., :2], torch.full((1, 4, 4, 2), 0.5 + 1.5 * 7.0))
     assert torch.equal(out[..., 2:], torch.full((1, 4, 4, 2), 0.5))
     assert "sampler_cfg_function" not in model.model_options
+
+
+def test_apply_regional_ipadapters_applies_each_entry_with_the_models_of_the_pipe(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    def stand_in(name):
+        class Node:
+            def apply_ipadapter(self, model, **inputs):
+                calls.append((name, model, inputs))
+                return (model + (name,),)
+        return Node
+
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "IPAdapterAdvanced", stand_in("advanced"))
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "IPAdapterEmbeds", stand_in("embeds"))
+    regional = pack.regional_nodes
+    (by_image,) = regional.RegionalIPAdapterMask.doit("left", "picture", 0.7, 0.5, "linear", 0.1, 0.9, False, False, 1.2, "average", "negative")
+    (by_embeds,) = regional.RegionalIPAdapterEncodedMask.doit("right", "embeds", 0.4, "ease in", 0.2, 0.8, False, "negative embeds")
+    pipe = ("IPADAPTER", ("base",), "CLIP_VISION", "INSIGHTFACE", lambda model: model)
+    (model,) = regional.ApplyRegionalIPAdapters.doit(ipadapter_pipe=pipe, regional_ipadapter1=by_image, regional_ipadapter2=by_embeds)
+    assert model == ("base", "advanced", "embeds")
+    assert calls == [
+        ("advanced", ("base",), dict(ipadapter="IPADAPTER", weight=0.7, weight_type="linear", start_at=0.1, end_at=0.9, combine_embeds="average",
+                                     clip_vision="CLIP_VISION", image="picture", image_negative="negative", attn_mask="left",
+                                     insightface="INSIGHTFACE", weight_faceidv2=1.2)),
+        ("embeds", ("base", "advanced"), dict(ipadapter="IPADAPTER", pos_embed="embeds", weight=0.4, weight_type="ease in", start_at=0.2, end_at=0.8,
+                                              neg_embed="negative embeds", attn_mask="right", clip_vision="CLIP_VISION")),
+    ]
+
+
+def test_apply_regional_adapters_applies_each_entry_to_the_model_in_the_order_of_its_inputs(pack, comfyui, monkeypatch):
+    import nodes
+
+    class Model:
+        @classmethod
+        def INPUT_TYPES(s):
+            return {"required": {}}
+        RETURN_TYPES = ("MODEL",)
+        FUNCTION = "doit"
+
+        def doit(self):
+            return (("base",),)
+
+    class Entry:
+        @classmethod
+        def INPUT_TYPES(s):
+            return {"required": {"name": ("STRING", {"default": ""})}}
+        RETURN_TYPES = ("REGIONAL_ADAPTER",)
+        FUNCTION = "doit"
+
+        def doit(self, name):
+            return (SimpleNamespace(apply=lambda model: model + (name,)),)
+
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "UnitModel", Model)
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "UnitRegionalAdapter", Entry)
+    prompt = {
+        "1": {"class_type": "UnitModel", "inputs": {}},
+        "2": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "face of the left person"}},
+        "3": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "face of the right person"}},
+        "4": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "background"}},
+        "5": {"class_type": "ApplyRegionalAdapters //Inspire", "inputs": {"model": ["1", 0], "regional_adapter1": ["3", 0],
+                                                                          "regional_adapter2": ["2", 0], "regional_adapter3": ["4", 0]}},
+        "6": {"class_type": "CacheBackendData //Inspire", "inputs": {"key": "unit model", "tag": "model", "data": ["5", 0]}},
+    }
+    comfyui.execute(prompt, ["6"])
+    assert pack.backend_support.cache["unit model"][1][1] == ("base", "face of the right person", "face of the left person", "background")
 
 
 def conditioning():

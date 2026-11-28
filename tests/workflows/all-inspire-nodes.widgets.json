@@ -2301,6 +2301,11 @@
           "value": "buffalo_l"
         }
       ]
+    },
+    {
+      "id": "105",
+      "type": "ApplyRegionalAdapters //Inspire",
+      "widgets": []
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 104,
+  "last_node_id": 105,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5025,6 +5025,43 @@
         "cache_mode": "insightface only",
         "insightface_model_name": "buffalo_l"
       }
+    },
+    {
+      "id": 105,
+      "type": "ApplyRegionalAdapters //Inspire",
+      "pos": [
+        5994.462292480471,
+        12370
+      ],
+      "size": [
+        261.275,
+        46
+      ],
+      "flags": {},
+      "order": 104,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "regional_adapter1",
+          "type": "REGIONAL_ADAPTER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ApplyRegionalAdapters //Inspire"
+      }
     }
   ],
   "links": [],
@@ -5034,8 +5071,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -6464.174743652344,
-        -12120
+        -5675.099792480471,
+        -12180
       ]
     },
     "frontendVersion": "1.59.10"

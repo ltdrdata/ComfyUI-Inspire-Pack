@@ -22,7 +22,19 @@ function link(node, index, id) {
 
 const slots = node => node.inputs.map(input => [input.name, input.link]);
 
-for (const [type, first, entry] of [['ApplyRegionalIPAdapters //Inspire', ['ipadapter_pipe', 'IPADAPTER_PIPE'], ['regional_ipadapter', 'REGIONAL_IPADAPTER']]]) {
+test('apply regional adapters: each linked entry gets a free input after it, and an unlinked one goes away', async () => {
+    const node = await applyNode('ApplyRegionalAdapters //Inspire', [['model', 'MODEL'], ['regional_adapter1', 'REGIONAL_ADAPTER']]);
+    link(node, 0, 10);
+    link(node, 1, 11);
+    link(node, 2, 12);
+    assert.deepEqual(slots(node), [['model', 10], ['regional_adapter1', 11], ['regional_adapter2', 12], ['regional_adapter3', null]]);
+    assert.equal(node.inputs[3].type, 'REGIONAL_ADAPTER');
+    link(node, 1, null);
+    assert.deepEqual(slots(node), [['model', 10], ['regional_adapter1', 12], ['regional_adapter2', null]]);
+});
+
+for (const [type, first, entry] of [['ApplyRegionalAdapters //Inspire', ['model', 'MODEL'], ['regional_adapter', 'REGIONAL_ADAPTER']],
+                                    ['ApplyRegionalIPAdapters //Inspire', ['ipadapter_pipe', 'IPADAPTER_PIPE'], ['regional_ipadapter', 'REGIONAL_IPADAPTER']]]) {
     test(`${type}: unlinking ${first[0]} keeps its input and the entries`, async () => {
         const node = await applyNode(type, [first, [`${entry[0]}1`, entry[1]]]);
         link(node, 0, 10);

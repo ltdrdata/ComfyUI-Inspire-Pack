@@ -453,6 +453,28 @@ class ApplyRegionalIPAdapters:
         return (model, )
 
 
+class ApplyRegionalAdapters:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "model": ("MODEL",),
+                    "regional_adapter1": ("REGIONAL_ADAPTER", ),
+                    },
+                }
+
+    RETURN_TYPES = ("MODEL", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(model, **kwargs):
+        for regional_adapter in kwargs.values():
+            model = regional_adapter.apply(model)
+
+        return (model, )
+
+
 class RegionalSeedExplorerMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -676,6 +698,7 @@ NODE_CLASS_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": ToIPAdapterPipe,
     "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
+    "ApplyRegionalAdapters //Inspire": ApplyRegionalAdapters,
     "RegionalCFG //Inspire": RegionalCFG,
     "ColorMaskToDepthMask //Inspire": ColorMaskToDepthMask,
 }
@@ -694,6 +717,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": "ToIPAdapterPipe (Inspire)",
     "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
     "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
+    "ApplyRegionalAdapters //Inspire": "Apply Regional Adapters (Inspire)",
     "RegionalCFG //Inspire": "Regional CFG (Inspire)",
     "ColorMaskToDepthMask //Inspire": "Color Mask To Depth Mask (Inspire)",
 }
