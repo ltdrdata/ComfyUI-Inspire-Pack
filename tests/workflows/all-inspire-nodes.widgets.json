@@ -2301,6 +2301,171 @@
           "value": "buffalo_l"
         }
       ]
+    },
+    {
+      "id": "105",
+      "type": "ApplyRegionalAdapters //Inspire",
+      "widgets": []
+    },
+    {
+      "id": "106",
+      "type": "RegionalPulid //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 1
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "method",
+          "value": "fidelity"
+        }
+      ]
+    },
+    {
+      "id": "107",
+      "type": "RegionalInstantID //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 0.8
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "controlnet_strength",
+          "value": 0.8
+        },
+        {
+          "name": "noise",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "108",
+      "type": "PulidModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "pulid_file",
+          "value": "ip-adapter_pulid_sdxl_fp16.safetensors"
+        },
+        {
+          "name": "provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        }
+      ]
+    },
+    {
+      "id": "109",
+      "type": "InstantIDModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "instantid_file",
+          "value": "ip-adapter.bin"
+        },
+        {
+          "name": "control_net_name",
+          "value": "diffusion_pytorch_model.safetensors"
+        },
+        {
+          "name": "provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        }
+      ]
+    },
+    {
+      "id": "110",
+      "type": "ReduxModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "style_model_file",
+          "value": "flux1-redux-dev.safetensors"
+        },
+        {
+          "name": "clip_vision_file",
+          "value": "sigclip_vision_patch14_384.safetensors"
+        },
+        {
+          "name": "cache_mode",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "111",
+      "type": "RegionalRedux //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 1
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "112",
+      "type": "PulidFluxModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "pulid_file",
+          "value": "ip-adapter_pulid_sdxl_fp16.safetensors"
+        },
+        {
+          "name": "provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        }
+      ]
+    },
+    {
+      "id": "113",
+      "type": "RegionalPulidFlux //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 1
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        }
+      ]
     }
   ]
 }

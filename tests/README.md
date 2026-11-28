@@ -34,9 +34,9 @@ Importing the pack creates `resources/prompt-builder.yaml` from its example, as 
 | `test_list_nodes.py` | Float Range, the Foreach List loop and Drop Items run by ComfyUI's executor, Bind [ImageList, PromptList] |
 | `test_prompt_nodes.py` | Prompt files from a folder of the test's own, Zip and Unzip Prompt, Prompt Extractor, Seed Logger |
 | `test_image_nodes.py` | Load Image (Inspire) from its data, the directory loaders, batch sizes, the splitters, Color Map To Masks, RGB Hex To HSV |
-| `test_regional_and_conditioning.py` | Color masks, Color Mask To Depth Mask, the Regional Seed Explorers, Regional CFG, Remove ControlNet, Conditioning Upscale and Stretch |
+| `test_regional_and_conditioning.py` | Color masks, Color Mask To Depth Mask, the Regional Seed Explorers, Regional CFG, Apply Regional IPAdapters with stand-ins for the nodes of IPAdapter Plus, Apply Regional Adapters with stand-in entries: the order of the model parts in ComfyUI's executor, the changes to the prompt in the order of the entries before the copies of the prompt per region and the plain prompt where none lies, masks of different sizes, an entry without a mask, the entry it names when the prompts are missing, Regional PuLID with a stand-in for Apply PuLID, Regional InstantID with stand-ins for the split nodes of ComfyUI InstantID and the keypoints it places in its mask or takes from the reference, the message of these two and of Regional PuLID FLUX when the reference shows no face, Regional Redux with stand-ins for the Redux and CLIP vision models: the prompt of Apply Style Model without a mask, the regions and ranges of two references through Redux Model Helper and Apply Regional Adapters in ComfyUI's executor, the message for a base model of another width, Remove ControlNet, Conditioning Upscale and Stretch |
 | `test_segs_preprocessors.py` | NormalMap and DepthAnything Preprocessor Provider (SEGS) with stand-ins for the nodes of ControlNet Auxiliary Preprocessors: the node each choice runs, the widget values and resolution it gets, the request to install the pack when it is missing |
-| `test_model_nodes.py` | IPAdapter Model Helper with a preset and the SDXL check, IPAdapter Model Helper [Manual] with the picked files and the folders of `extra_model_paths.yaml`, with stand-ins for the loaders of IPAdapter Plus |
+| `test_model_nodes.py` | IPAdapter Model Helper with a preset and the SDXL check, IPAdapter Model Helper [Manual] with the picked files and the folders of `extra_model_paths.yaml`, with stand-ins for the loaders of IPAdapter Plus; PuLID and InstantID Model Helper with stand-ins for the loaders of their packs: the loads and the backend cache of each `cache_mode`, the face analysis both share, the file of another family, the request to install the pack, the model folder listed without it; Redux Model Helper with stand-ins for the loaders of ComfyUI: the loads and the backend cache of each `cache_mode`, the CLIP vision model it shares with IPAdapter Model Helper [Manual]; PuLID FLUX Model Helper: the request to install PuLID_ComfyUI, a PuLID file for SDXL |
 | `test_registration.py` | The pack registers the node types of the widget catalog, each with a display name |
 
 ## JavaScript tests
@@ -55,6 +55,7 @@ node --test tests/*.test.mjs
 | `lora_block_weight.test.mjs` | The preset combo fills `block_vector`, the category filter of the LoRA list, the test presets of the XY input |
 | `inspire_flex.test.mjs` | The outputs the batch splitters grow and the inputs and multipliers of Concat Conditionings with Multiplier |
 | `common.test.mjs` | The feedback of the server reaches the widget and the output it names |
+| `regional.test.mjs` | The numbered inputs of Apply Regional IPAdapters and Apply Regional Adapters: a free input after each linked entry, an unlinked entry goes away, unlinking the pipe, the model or a prompt keeps its input |
 
 ## Chrome suites
 

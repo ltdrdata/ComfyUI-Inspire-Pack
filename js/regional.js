@@ -4,7 +4,7 @@ import { api } from "../../scripts/api.js";
 app.registerExtension({
 	name: "Comfy.Inspire.Regional",
 	async beforeRegisterNodeDef(nodeType, nodeData, app) {
-		if (nodeData.name === 'ApplyRegionalIPAdapters //Inspire') {
+		if (nodeData.name === 'ApplyRegionalIPAdapters //Inspire' || nodeData.name === 'ApplyRegionalAdapters //Inspire') {
 			var input_name = "input";
 			var base_slot = 0;
 
@@ -12,6 +12,10 @@ app.registerExtension({
 			case 'ApplyRegionalIPAdapters //Inspire':
 				input_name = "regional_ipadapter";
 				base_slot = 1;
+				break;
+			case 'ApplyRegionalAdapters //Inspire':
+				input_name = "regional_adapter";
+				base_slot = 3;
 				break;
 			}
 
@@ -36,7 +40,7 @@ app.registerExtension({
 					}
 				}
 
-				if (!connected && (this.inputs.length > base_slot+1)) {
+				if (!connected && index >= base_slot && (this.inputs.length > base_slot+1)) {
 					const stackTrace = new Error().stack;
 
 					if(

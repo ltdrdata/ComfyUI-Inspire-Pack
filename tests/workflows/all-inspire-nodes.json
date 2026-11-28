@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 104,
+  "last_node_id": 113,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5025,6 +5025,486 @@
         "cache_mode": "insightface only",
         "insightface_model_name": "buffalo_l"
       }
+    },
+    {
+      "id": 105,
+      "type": "ApplyRegionalAdapters //Inspire",
+      "pos": [
+        5994.462292480471,
+        12370
+      ],
+      "size": [
+        261.275,
+        86
+      ],
+      "flags": {},
+      "order": 104,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "regional_adapter1",
+          "shape": 7,
+          "type": "REGIONAL_ADAPTER",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ApplyRegionalAdapters //Inspire"
+      }
+    },
+    {
+      "id": 106,
+      "type": "RegionalPulid //Inspire",
+      "pos": [
+        5174.007019042971,
+        12370
+      ],
+      "size": [
+        302.185546875,
+        210
+      ],
+      "flags": {},
+      "order": 105,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pulid",
+          "type": "PULID",
+          "link": null
+        },
+        {
+          "name": "eva_clip",
+          "type": "EVA_CLIP",
+          "link": null
+        },
+        {
+          "name": "face_analysis",
+          "type": "FACEANALYSIS",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPulid //Inspire"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1,
+        "fidelity"
+      ],
+      "widgets_values_named": {
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1,
+        "method": "fidelity"
+      }
+    },
+    {
+      "id": 107,
+      "type": "RegionalInstantID //Inspire",
+      "pos": [
+        4380.402526855471,
+        12370
+      ],
+      "size": [
+        289.39453125,
+        254
+      ],
+      "flags": {},
+      "order": 106,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "instantid",
+          "type": "INSTANTID",
+          "link": null
+        },
+        {
+          "name": "insightface",
+          "type": "FACEANALYSIS",
+          "link": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "image_kps",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalInstantID //Inspire"
+      },
+      "widgets_values": [
+        0.8,
+        0,
+        1,
+        0.8,
+        0
+      ],
+      "widgets_values_named": {
+        "weight": 0.8,
+        "start_at": 0,
+        "end_at": 1,
+        "controlnet_strength": 0.8,
+        "noise": 0
+      }
+    },
+    {
+      "id": 108,
+      "type": "PulidModelHelper //Inspire",
+      "pos": [
+        3579.8602416992208,
+        12370
+      ],
+      "size": [
+        290.4791015625,
+        146
+      ],
+      "flags": {},
+      "order": 107,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pulid",
+          "type": "PULID",
+          "links": null
+        },
+        {
+          "name": "eva_clip",
+          "type": "EVA_CLIP",
+          "links": null
+        },
+        {
+          "name": "face_analysis",
+          "type": "FACEANALYSIS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PulidModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "pulid_file": "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
+    },
+    {
+      "id": 109,
+      "type": "InstantIDModelHelper //Inspire",
+      "pos": [
+        2770.0369995117208,
+        12370
+      ],
+      "size": [
+        310.1255859375,
+        170
+      ],
+      "flags": {},
+      "order": 108,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "instantid",
+          "type": "INSTANTID",
+          "links": null
+        },
+        {
+          "name": "insightface",
+          "type": "FACEANALYSIS",
+          "links": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InstantIDModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter.bin",
+        "diffusion_pytorch_model.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "instantid_file": "ip-adapter.bin",
+        "control_net_name": "diffusion_pytorch_model.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
+    },
+    {
+      "id": 110,
+      "type": "ReduxModelHelper //Inspire",
+      "pos": [
+        1978.6297729492208,
+        12370
+      ],
+      "size": [
+        292.9400390625,
+        126
+      ],
+      "flags": {},
+      "order": 109,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "style_model",
+          "type": "STYLE_MODEL",
+          "links": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ReduxModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "flux1-redux-dev.safetensors",
+        "sigclip_vision_patch14_384.safetensors",
+        "none"
+      ],
+      "widgets_values_named": {
+        "style_model_file": "flux1-redux-dev.safetensors",
+        "clip_vision_file": "sigclip_vision_patch14_384.safetensors",
+        "cache_mode": "none"
+      }
+    },
+    {
+      "id": 111,
+      "type": "RegionalRedux //Inspire",
+      "pos": [
+        1178.0734252929706,
+        12370
+      ],
+      "size": [
+        294.052734375,
+        166
+      ],
+      "flags": {},
+      "order": 110,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "style_model",
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalRedux //Inspire"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1
+      }
+    },
+    {
+      "id": 112,
+      "type": "PulidFluxModelHelper //Inspire",
+      "pos": [
+        359.8172729492205,
+        12370
+      ],
+      "size": [
+        330.5650390625,
+        106
+      ],
+      "flags": {},
+      "order": 111,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pulid_flux",
+          "type": "PULID_FLUX",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PulidFluxModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "pulid_file": "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
+    },
+    {
+      "id": 113,
+      "type": "RegionalPulidFlux //Inspire",
+      "pos": [
+        375.9193237304705,
+        13870
+      ],
+      "size": [
+        298.3609375,
+        146
+      ],
+      "flags": {},
+      "order": 112,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pulid_flux",
+          "type": "PULID_FLUX",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPulidFlux //Inspire"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1
+      }
     }
   ],
   "links": [],
@@ -5034,8 +5514,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -6464.174743652344,
-        -12120
+        -75.09979248047057,
+        -13680
       ]
     },
     "frontendVersion": "1.59.10"

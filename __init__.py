@@ -25,7 +25,8 @@ node_list = [
     "list_nodes",
     "conditioning_nodes",
     "model_nodes",
-    "util_nodes"
+    "util_nodes",
+    "regional_adapters"
 ]
 
 NODE_CLASS_MAPPINGS = {}

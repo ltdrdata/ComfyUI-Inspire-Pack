@@ -1,6 +1,7 @@
 import traceback
 
 import comfy
+import comfy.utils
 import nodes
 import torch
 import re
@@ -453,6 +454,193 @@ class ApplyRegionalIPAdapters:
         return (model, )
 
 
+class RegionalAdapter:
+    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, `apply_conditioning(positive, negative) -> (positive, negative)`
+    that changes the prompt itself, and `region_conditioning(positive, negative) -> (positive, negative)` that gives the region
+    its own copies of the prompt, the positive one limited to `mask`. Each part may be None.
+    Without a mask the entry covers the whole picture."""
+    def __init__(self, mask, apply_model=None, apply_conditioning=None, region_conditioning=None):
+        self.mask = mask
+        self.apply_model = apply_model
+        self.apply_conditioning = apply_conditioning
+        self.region_conditioning = region_conditioning
+
+
+def uncovered_area(masks):
+    # the sampler stretches every mask to the latent, so masks of other sizes are stretched to one size here
+    size = max(mask.shape[-2] for mask in masks), max(mask.shape[-1] for mask in masks)
+    rest = torch.ones(size)
+    for mask in masks:
+        rest = rest - torch.nn.functional.interpolate(mask.reshape(-1, 1, *mask.shape[-2:]), size=size, mode="bilinear").squeeze(1)
+    return torch.clamp(rest, 0.0, 1.0)
+
+
+class ApplyRegionalAdapters:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+                    "model": ("MODEL",),
+                    },
+                "optional": {
+                    "positive": ("CONDITIONING",),
+                    "negative": ("CONDITIONING",),
+                    "regional_adapter1": ("REGIONAL_ADAPTER", ),
+                    },
+                }
+
+    RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("MODEL", "positive", "negative")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(model, positive=None, negative=None, **kwargs):
+        prompting = [name for name, x in kwargs.items() if x.apply_conditioning is not None or x.region_conditioning is not None]
+        if prompting and (positive is None or negative is None):
+            raise Exception(f"[Inspire Pack] Apply Regional Adapters: {prompting[0]} needs `positive` and `negative` linked, "
+                            "because it changes the prompt.")
+
+        for regional_adapter in kwargs.values():
+            if regional_adapter.apply_model is not None:
+                model = regional_adapter.apply_model(model)
+            if regional_adapter.apply_conditioning is not None:
+                positive, negative = regional_adapter.apply_conditioning(positive, negative)
+
+        copying = [x for x in kwargs.values() if x.region_conditioning is not None]
+        if not copying:
+            return model, positive, negative
+
+        positives, negatives = [], []
+        for regional_adapter in copying:
+            region_positive, region_negative = regional_adapter.region_conditioning(positive, negative)
+            positives += region_positive
+            negatives += region_negative
+
+        # without the plain prompt on the area that no region covers, the whole picture turns grey;
+        # a copy without a mask covers the whole picture
+        masks = [x.mask for x in copying]
+        if all(mask is not None for mask in masks):
+            rest = uncovered_area(masks)
+            if rest.any():
+                positives += nodes.ConditioningSetMask().append(positive, rest, "default", 1.0)[0]
+
+        return model, positives, negatives
+
+
+def require_face(family, face_analysis, image, stop):
+    """Stops when no picture of `image` shows a face at the detector sizes the family's pack tries: 640 down to `stop`, in steps of 64."""
+    for picture in image.mul(255).clamp(0, 255).byte().cpu()[..., [2, 1, 0]].numpy():
+        for size in range(640, stop, -64):
+            face_analysis.det_model.input_size = (size, size)
+            if face_analysis.get(picture):
+                return
+    raise Exception(f"[Inspire Pack] Regional {family}: no face was found in the reference image.")
+
+
+class RegionalPulid:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "pulid": ("PULID",),
+                "eva_clip": ("EVA_CLIP",),
+                "face_analysis": ("FACEANALYSIS",),
+                "image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 1.0, "min": -1.0, "max": 5.0, "step": 0.05}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "method": (["fidelity", "style", "neutral"],),
+            },
+            "optional": {
+                "mask": ("MASK",),
+            }
+        }
+
+    RETURN_TYPES = ("REGIONAL_ADAPTER", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method, mask=None):
+        require_face("PuLID", face_analysis, image, 256)
+
+        def apply_model(model):
+            return nodes.NODE_CLASS_MAPPINGS['ApplyPulid']().apply_pulid(model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at,
+                                                                        method=method, attn_mask=mask)[0]
+
+        return (RegionalAdapter(mask, apply_model=apply_model), )
+
+
+def keypoints_picture(image, mask):
+    """The first reference on a black picture of the mask's size, fitted to the mask's bounding box, centred across it
+    and with its centre at a third of its height."""
+    mask = mask.reshape(-1, *mask.shape[-2:])[0]
+    picture = torch.zeros((1, *mask.shape, 3))
+    ys, xs = torch.nonzero(mask, as_tuple=True)
+    if len(ys) == 0:
+        return picture
+
+    top, left = int(ys.min()), int(xs.min())
+    box_height, box_width = int(ys.max()) + 1 - top, int(xs.max()) + 1 - left
+    scale = min(box_width / image.shape[2], box_height / image.shape[1])
+    width, height = round(image.shape[2] * scale), round(image.shape[1] * scale)
+    x = left + (box_width - width) // 2
+    y = top + min(max(round(box_height / 3 - height / 2), 0), box_height - height)
+    picture[:, y:y + height, x:x + width] = comfy.utils.common_upscale(image[:1].movedim(-1, 1), width, height, "lanczos", "disabled").movedim(1, -1)
+    return picture
+
+
+class RegionalInstantID:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "instantid": ("INSTANTID",),
+                "insightface": ("FACEANALYSIS",),
+                "control_net": ("CONTROL_NET",),
+                "image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 3.0, "step": 0.05}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "controlnet_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "noise": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
+            },
+            "optional": {
+                "mask": ("MASK",),
+                "image_kps": ("IMAGE",),
+            }
+        }
+
+    RETURN_TYPES = ("REGIONAL_ADAPTER", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(instantid, insightface, control_net, image, weight, start_at, end_at, controlnet_strength, noise, mask=None, image_kps=None):
+        require_face("InstantID", insightface, image, 128)
+
+        def apply_model(model):
+            return nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, model, weight, start_at, end_at,
+                                                                                        noise=noise, mask=mask)[0]
+
+        def region_conditioning(positive, negative):
+            # weight 0 leaves the model alone and only gives the face embeds
+            face_embeds = nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, None, 0.0, start_at, end_at,
+                                                                                               noise=noise)[1]
+            kps = image_kps
+            if kps is None:
+                # without a mask, the reference itself, as Apply InstantID takes it
+                picture = image[:1] if mask is None else keypoints_picture(image, mask)
+                kps = nodes.NODE_CLASS_MAPPINGS['FaceKeypointsPreprocessor']().preprocess_image(insightface, picture)[0]
+            return nodes.NODE_CLASS_MAPPINGS['ApplyInstantIDControlNet']().apply_controlnet(face_embeds, control_net, kps, positive, negative,
+                                                                                          controlnet_strength, start_at, end_at, mask=mask)
+
+        return (RegionalAdapter(mask, apply_model=apply_model, region_conditioning=region_conditioning), )
+
+
 class RegionalSeedExplorerMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -676,6 +864,9 @@ NODE_CLASS_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": ToIPAdapterPipe,
     "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
+    "ApplyRegionalAdapters //Inspire": ApplyRegionalAdapters,
+    "RegionalPulid //Inspire": RegionalPulid,
+    "RegionalInstantID //Inspire": RegionalInstantID,
     "RegionalCFG //Inspire": RegionalCFG,
     "ColorMaskToDepthMask //Inspire": ColorMaskToDepthMask,
 }
@@ -694,6 +885,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ToIPAdapterPipe //Inspire": "ToIPAdapterPipe (Inspire)",
     "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
     "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
+    "ApplyRegionalAdapters //Inspire": "Apply Regional Adapters (Inspire)",
+    "RegionalPulid //Inspire": "Regional PuLID (Inspire)",
+    "RegionalInstantID //Inspire": "Regional InstantID (Inspire)",
     "RegionalCFG //Inspire": "Regional CFG (Inspire)",
     "ColorMaskToDepthMask //Inspire": "Color Mask To Depth Mask (Inspire)",
 }

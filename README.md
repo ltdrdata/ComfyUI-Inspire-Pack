@@ -116,6 +116,17 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * To use this node, you need to install the [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension.
     * `Regional IPAdapter Mask (Inspire)`, `Regional IPAdapter By Color Mask (Inspire)`
     * `Regional IPAdapter Encoded Mask (Inspire)`, `Regional IPAdapter Encoded By Color Mask (Inspire)`: accept `embeds` instead of `image`
+  * `Apply Regional Adapters (Inspire)` - Applies `REGIONAL_ADAPTER` entries to a `MODEL` in the order of its inputs. Each entry holds the models of its adapter, so no `IPADAPTER_PIPE` is needed. `REGIONAL_IPADAPTER` entries are applied by `Apply Regional IPAdapters (Inspire)`.
+    * An entry that changes the prompt needs `positive` and `negative`. An entry that adds to the prompt itself does so in the order of the inputs, before the copies below.
+    * An entry that gives its region its own copy of the prompt gets a copy of both, and the area that none of them covers keeps the plain prompt. Region masks of different sizes are stretched to one size, as the sampler stretches them to the latent.
+    * Without such an entry, `positive` and `negative` come out as they went in.
+    * Each entry node takes the helper's outputs, `image`, then `weight`, `start_at`, `end_at`, then what only its family has. `mask` is optional: without it the entry covers the whole picture.
+    * `Regional PuLID (Inspire)`: an entry that gives the masked region the face of `image` with [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) (SDXL). `method` and the ranges are those of `Apply PuLID`.
+    * `Regional InstantID (Inspire)`: an entry that gives the masked region the face of `image` with [ComfyUI InstantID](https://github.com/cubiq/ComfyUI_InstantID) (SDXL): the attention of `InstantID Patch Attention` on the model, and `InstantID Apply ControlNet` on the region's copy of the prompt. `weight` and `controlnet_strength` are `ip_weight` and `cn_strength` of `Apply InstantID Advanced`.
+      * Without `image_kps`, the keypoints are taken from `image` fitted to the mask's bounding box, with its centre at a third of the box's height; without a mask, from `image` itself, as in `Apply InstantID`. Link `image_kps` to put the face elsewhere.
+    * `Regional Redux (Inspire)`: an entry that adds the Redux tokens of `image` to the prompt (FLUX.1), as `Apply Style Model` does with `multiply`, and lets only the picture inside the mask attend to them. `weight` is that node's `strength`; `start_at` and `end_at` keep the tokens to that part of the sampling.
+      * Two unrelated scenes in two regions come out as two half pictures, two portraits as one picture. Sampling takes about 1.6 s/it against 1.0 s/it without it (FLUX.1-dev, 1024 x 1024).
+    * `Regional PuLID FLUX (Inspire)`: an entry that gives the masked region the face of `image` with PuLID FLUX (FLUX.1), which Inspire implements itself on ComfyUI's FLUX model. The faces of all pictures of `image` are averaged.
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
@@ -171,6 +182,18 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `IPAdapter Model Helper (Inspire)`: This provides presets that allow for easy loading of the IPAdapter related models. However, it is essential for the model's name to be accurate.
     * You can download the appropriate model through ComfyUI-Manager.
   * `IPAdapter Model Helper [Manual] (Inspire)`: Instead of a preset, you pick the IPAdapter, CLIP vision and LoRA model files and whether InsightFace is loaded. The lists also hold the folders added with the `ipadapter`, `clip_vision` and `loras` keys of `extra_model_paths.yaml`.
+    * An entry for `extra_model_paths.yaml` in the ComfyUI folder. The example file of ComfyUI has no `ipadapter` key, so add it to your own file:
+      ```yaml
+      my_models:
+          base_path: /path/to/models
+          ipadapter: ipadapter/
+          clip_vision: clip_vision/
+          loras: loras/
+      ```
+  * `PuLID Model Helper (Inspire)`: Loads the PuLID model, EVA-CLIP and the face analysis of [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) in one node. The outputs also fit the nodes of that pack. `cache_mode` keeps the face analysis, EVA-CLIP or both in the backend cache, so another workflow does not load them again.
+  * `InstantID Model Helper (Inspire)`: Loads the InstantID model and the face analysis of [ComfyUI InstantID](https://github.com/cubiq/ComfyUI_InstantID) and its ControlNet in one node. The outputs also fit the nodes of that pack. `cache_mode` keeps the face analysis in the backend cache, shared with `PuLID Model Helper (Inspire)` for the same provider.
+  * `Redux Model Helper (Inspire)`: Loads the Redux style model (`style_models/flux1-redux-dev.safetensors`) and its CLIP vision model (`clip_vision/sigclip_vision_patch14_384.safetensors`) with the loaders of ComfyUI. The outputs also fit `Apply Style Model` and `CLIP Vision Encode`. `cache_mode` keeps the CLIP vision model in the backend cache, shared with `IPAdapter Model Helper (Inspire)` for the same file.
+  * `PuLID FLUX Model Helper (Inspire)`: Loads the PuLID FLUX model (`pulid/pulid_flux_v0.9.1.safetensors`), and EVA-CLIP and the face analysis with the loaders of [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI), which must be installed. `cache_mode` keeps the face analysis in the backend cache, shared with `PuLID Model Helper (Inspire)` and `InstantID Model Helper (Inspire)` for the same provider.
 
 ### List - Nodes for List processing
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
