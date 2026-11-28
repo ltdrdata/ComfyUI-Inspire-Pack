@@ -111,6 +111,17 @@ def test_the_composition_presets_load_the_composition_adapters_with_vit_h(pack, 
     assert loaded == [("ipadapter", ipadapter), ("clip_vision", CLIP_VISION)]
 
 
+@pytest.mark.parametrize("preset,clip,files,label", [("SD1.5 Plus Composition", None, [], (1, "IPADAPTER (FAIL)")),
+                                                    ("SDXL", "sdxl", ["ipadapter/ip-adapter_sdxl.safetensors"], (2, "CLIP_VISION (FAIL)"))])
+def test_a_preset_whose_ipadapter_or_clip_vision_file_is_missing_stops_before_loading(pack, models, loaded, tmp_path, preset, clip, files, label):
+    for path in files:
+        (tmp_path / "models" / path).write_bytes(b"")
+    with pytest.raises(Exception, match="Failed to load several models"):
+        pack.model_nodes.IPAdapterModelHelper().doit("MODEL", preset, 1.0, 1.0, "CPU", clip=sdxl_clip() if clip else None, unique_id="7")
+    assert loaded == []
+    assert ("7", *label) in labels(pack)
+
+
 @pytest.mark.parametrize("preset,clip", [("SDXL", None), ("SD1.5", "sdxl")])
 def test_the_preset_helper_refuses_to_mix_sdxl_and_sd15(pack, models, loaded, preset, clip):
     with pytest.raises(Exception, match="cannot mix SDXL and SD1.5"):

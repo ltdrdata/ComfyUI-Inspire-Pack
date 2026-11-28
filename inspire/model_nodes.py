@@ -110,18 +110,8 @@ class IPAdapterModelHelper:
         clipvision, ok2 = lookup_model("clip_vision", clipvision)
         lora, ok3 = lookup_model("loras", lora)
 
-        if ok1 == "OK":
-            ok1 = "IPADAPTER"
-        else:
-            ok1 = f"IPADAPTER ({ok1})"
-
-        if ok2 == "OK":
-            ok2 = "CLIP_VISION"
-        else:
-            ok2 = f"CLIP_VISION ({ok2})"
-
-        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": ok1})
-        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": ok2})
+        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 1, "label": "IPADAPTER" if ok1 == "OK" else f"IPADAPTER ({ok1})"})
+        server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 2, "label": "CLIP_VISION" if ok2 == "OK" else f"CLIP_VISION ({ok2})"})
 
         if ok3 == "FAIL":
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 4, "label": "MODEL (fail)"})
