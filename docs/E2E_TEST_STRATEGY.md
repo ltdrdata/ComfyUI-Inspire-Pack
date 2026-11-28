@@ -65,6 +65,7 @@ list it. The names are those under which the files are published:
 | `lora_name` | `lcm-lora-sdv1-5.safetensors` |
 | `model_name` of the shared diffusion model loader | `lotus-depth-d-v-1-1-fp16.safetensors` |
 | `model_name1` of the shared text encoder loader | `clip_l.safetensors` |
+| `pulid_file` of PuLID Model Helper | `ip-adapter_pulid_sdxl_fp16.safetensors` |
 
 Run it:
 

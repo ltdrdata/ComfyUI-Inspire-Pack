@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 105,
+  "last_node_id": 107,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5085,6 +5085,116 @@
       "properties": {
         "Node name for S&R": "ApplyRegionalAdapters //Inspire"
       }
+    },
+    {
+      "id": 106,
+      "type": "RegionalPulid //Inspire",
+      "pos": [
+        5243.369506835939,
+        12430
+      ],
+      "size": [
+        302.185546875,
+        210
+      ],
+      "flags": {},
+      "order": 105,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pulid",
+          "type": "PULID",
+          "link": null
+        },
+        {
+          "name": "eva_clip",
+          "type": "EVA_CLIP",
+          "link": null
+        },
+        {
+          "name": "face_analysis",
+          "type": "FACEANALYSIS",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPulid //Inspire"
+      },
+      "widgets_values": [
+        "fidelity",
+        1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "method": "fidelity",
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1
+      }
+    },
+    {
+      "id": 107,
+      "type": "PulidModelHelper //Inspire",
+      "pos": [
+        4449.2227294921895,
+        12430
+      ],
+      "size": [
+        290.4791015625,
+        146
+      ],
+      "flags": {},
+      "order": 106,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pulid",
+          "type": "PULID",
+          "links": null
+        },
+        {
+          "name": "eva_clip",
+          "type": "EVA_CLIP",
+          "links": null
+        },
+        {
+          "name": "face_analysis",
+          "type": "FACEANALYSIS",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PulidModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "pulid_file": "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
     }
   ],
   "links": [],
@@ -5094,8 +5204,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -5675.099792480471,
-        -12180
+        -4144.462280273439,
+        -12240
       ]
     },
     "frontendVersion": "1.59.10"

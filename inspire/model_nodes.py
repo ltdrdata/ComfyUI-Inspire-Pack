@@ -211,12 +211,77 @@ class IPAdapterModelHelperManual(IPAdapterModelHelper):
         return self.load_models(model, clip, ipadapter_model, clip_vision_model, lora, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode, unique_id, insightface_model_name)
 
 
+# The node packs of the adapter families: the pack to ask for when it is missing, the model folder it reads, and its
+# loaders in the order of the helper's outputs as (node, function, inputs, cache name, cache key). cache_modes maps each
+# choice of the helper's cache_mode to the cache names it keeps in the backend cache.
+adapter_families = {
+    "PuLID": {
+        "pack": ("PuLID_ComfyUI", "https://github.com/cubiq/PuLID_ComfyUI"),
+        "folder": "pulid",
+        "loaders": [("PulidModelLoader", "load_model", ["pulid_file"], None, None),
+                    ("PulidEvaClipLoader", "load_eva_clip", [], "eva_clip", "pulid-eva_clip"),
+                    ("PulidInsightFaceLoader", "load_insightface", ["provider"], "insightface", "insightface-antelopev2-{provider}")],
+        "cache_modes": {"insightface only": ["insightface"], "eva_clip only": ["eva_clip"], "all": ["insightface", "eva_clip"], "none": []},
+    },
+}
+
+for family in adapter_families.values():
+    utils.add_folder_path_and_extensions(family["folder"], [os.path.join(folder_paths.models_dir, family["folder"])], folder_paths.supported_pt_extensions)
+
+
+def load_adapter_models(node_name, family, cache_mode, **inputs):
+    pack, url = family["pack"]
+    if any(loader not in nodes.NODE_CLASS_MAPPINGS for loader, *_ in family["loaders"]):
+        utils.try_install_custom_node(url, f"To use '{node_name}' node, '{pack}' extension is required.")
+        raise Exception(f"[ERROR] To use {node_name}, you need to install '{pack}'")
+
+    models = []
+    for loader, function, names, cache_name, cache_key in family["loaders"]:
+        def load():
+            return getattr(nodes.NODE_CLASS_MAPPINGS[loader](), function)(**{name: inputs[name] for name in names})[0]
+
+        if cache_name in family["cache_modes"][cache_mode]:
+            key = cache_key.format(**inputs)
+            if key not in backend_support.cache:
+                backend_support.update_cache(key, cache_name, (False, load()))
+            _, (_, model) = backend_support.cache[key]
+        else:
+            model = load()
+        models.append(model)
+
+    return tuple(models)
+
+
+class PulidModelHelper:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "pulid_file": (folder_paths.get_filename_list("pulid"),),
+                "provider": (["CPU", "CUDA", "ROCM"],),
+                "cache_mode": (list(adapter_families["PuLID"]["cache_modes"]),),
+            },
+        }
+
+    RETURN_TYPES = ("PULID", "EVA_CLIP", "FACEANALYSIS")
+    RETURN_NAMES = ("pulid", "eva_clip", "face_analysis")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/models"
+
+    @staticmethod
+    def doit(pulid_file, provider, cache_mode):
+        return load_adapter_models("PulidModelHelper", adapter_families["PuLID"], cache_mode, pulid_file=pulid_file, provider=provider)
+
+
 NODE_CLASS_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": IPAdapterModelHelper,
     "IPAdapterModelHelperManual //Inspire": IPAdapterModelHelperManual,
+    "PulidModelHelper //Inspire": PulidModelHelper,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": "IPAdapter Model Helper (Inspire)",
     "IPAdapterModelHelperManual //Inspire": "IPAdapter Model Helper [Manual] (Inspire)",
+    "PulidModelHelper //Inspire": "PuLID Model Helper (Inspire)",
 }

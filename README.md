@@ -119,6 +119,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `Apply Regional Adapters (Inspire)` - Applies `REGIONAL_ADAPTER` entries to a `MODEL` in the order of its inputs. Each entry holds the models of its adapter, so no `IPADAPTER_PIPE` is needed. `REGIONAL_IPADAPTER` entries are applied by `Apply Regional IPAdapters (Inspire)`.
     * An entry that also changes the prompt needs `positive` and `negative`. Each such region gets its own copy of both, and the area that none of them covers keeps the plain prompt. Region masks of different sizes are stretched to one size, as the sampler stretches them to the latent.
     * Without such an entry, `positive` and `negative` come out as they went in.
+    * `Regional PuLID (Inspire)`: an entry that gives the masked region the face of `image` with [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) (SDXL). Its settings are those of `Apply PuLID`.
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
@@ -182,6 +183,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
           clip_vision: clip_vision/
           loras: loras/
       ```
+  * `PuLID Model Helper (Inspire)`: Loads the PuLID model, EVA-CLIP and the face analysis of [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) in one node. The outputs also fit the nodes of that pack. `cache_mode` keeps the face analysis, EVA-CLIP or both in the backend cache, so another workflow does not load them again.
 
 ### List - Nodes for List processing
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.

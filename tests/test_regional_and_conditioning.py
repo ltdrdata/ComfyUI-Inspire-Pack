@@ -216,6 +216,25 @@ def test_apply_regional_adapters_asks_for_both_prompts_before_it_applies_an_entr
     assert applied == []
 
 
+def test_regional_pulid_applies_apply_pulid_with_its_mask_and_settings_in_apply_regional_adapters(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    class ApplyPulid:
+        def apply_pulid(self, model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method=None, noise=0.0, fidelity=None, projection=None, attn_mask=None):
+            calls.append((model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method, attn_mask))
+            return (model + (image,),)
+
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "ApplyPulid", ApplyPulid)
+    regional = pack.regional_nodes
+    (left,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", "FACEANALYSIS", "left mask", "face A", "fidelity", 0.8, 0.1, 0.9)
+    (right,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", "FACEANALYSIS", "right mask", "face B", "style", 1.2, 0.0, 1.0)
+    assert regional.ApplyRegionalAdapters.doit(("base",), "positive", "negative", regional_adapter1=left, regional_adapter2=right) == (
+        ("base", "face A", "face B"), "positive", "negative")
+    assert calls == [(("base",), "PULID", "EVA_CLIP", "FACEANALYSIS", "face A", 0.8, 0.1, 0.9, "fidelity", "left mask"),
+                     (("base", "face A"), "PULID", "EVA_CLIP", "FACEANALYSIS", "face B", 1.2, 0.0, 1.0, "style", "right mask")]
+
+
 def conditioning():
     return [[torch.ones(1, 2, 3), {"area": (8, 16, 0, 8), "strength": 1.0, "control": "net", "control_apply_to_uncond": True}],
             [torch.zeros(1, 2, 3), {"pooled_output": "pooled"}]]

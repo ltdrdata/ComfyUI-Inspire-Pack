@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 
 import pytest
@@ -169,3 +170,64 @@ def test_both_helpers_ask_for_ipadapter_plus_before_anything_else(pack, models, 
     with pytest.raises(Exception, match="install 'ComfyUI IPAdapter Plus'"):
         helpers.IPAdapterModelHelperManual().doit("MODEL", "ip-adapter-faceid_sd15.bin", CLIP_VISION, "None", False, 1.0, 1.0, "CPU", unique_id="9")
     assert labels(pack) == []
+
+
+PULID = "ip-adapter_pulid_sdxl_fp16.safetensors"
+
+
+@pytest.fixture
+def pulid_loaders(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    class PulidModelLoader:
+        def load_model(self, pulid_file):
+            calls.append(("pulid", pulid_file))
+            return (("PULID", pulid_file),)
+
+    class PulidEvaClipLoader:
+        def load_eva_clip(self):
+            calls.append(("eva_clip",))
+            return (("EVA_CLIP",),)
+
+    class PulidInsightFaceLoader:
+        def load_insightface(self, provider):
+            calls.append(("face_analysis", provider))
+            return (("FACEANALYSIS", provider),)
+
+    for loader in (PulidModelLoader, PulidEvaClipLoader, PulidInsightFaceLoader):
+        monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, loader.__name__, loader)
+    return calls
+
+
+@pytest.mark.parametrize("cache_mode,second_run", [("insightface only", ["pulid", "eva_clip"]), ("eva_clip only", ["pulid", "face_analysis"]),
+                                                   ("all", ["pulid"]), ("none", ["pulid", "eva_clip", "face_analysis"])])
+def test_the_pulid_helper_loads_the_models_of_pulid_and_keeps_those_its_cache_mode_names(pack, pulid_loaders, cache_mode, second_run):
+    helper = pack.model_nodes.PulidModelHelper()
+    models = helper.doit(PULID, "CUDA", cache_mode)
+    assert models == (("PULID", PULID), ("EVA_CLIP",), ("FACEANALYSIS", "CUDA"))
+    assert pulid_loaders == [("pulid", PULID), ("eva_clip",), ("face_analysis", "CUDA")]
+    pulid_loaders.clear()
+    assert helper.doit(PULID, "CUDA", cache_mode) == models
+    assert [call[0] for call in pulid_loaders] == second_run
+
+
+def test_the_pulid_helper_caches_the_face_analysis_under_its_model_and_provider(pack, pulid_loaders):
+    pack.model_nodes.PulidModelHelper().doit(PULID, "ROCM", "all")
+    assert pack.backend_support.cache["insightface-antelopev2-ROCM"] == ("insightface", (False, ("FACEANALYSIS", "ROCM")))
+    assert pack.backend_support.cache["pulid-eva_clip"] == ("eva_clip", (False, ("EVA_CLIP",)))
+
+
+def test_the_pulid_helper_asks_for_pulid_comfyui_when_it_is_missing(pack, monkeypatch):
+    requests = []
+    monkeypatch.setattr(pack.utils, "try_install_custom_node", lambda url, msg: requests.append(url))
+    with pytest.raises(Exception, match="install 'PuLID_ComfyUI'"):
+        pack.model_nodes.PulidModelHelper().doit(PULID, "CPU", "none")
+    assert requests == ["https://github.com/cubiq/PuLID_ComfyUI"]
+
+
+@pytest.mark.parametrize("folder", ["pulid"])
+def test_the_model_folder_of_an_adapter_family_is_listed_without_its_pack(pack, folder):
+    folder_paths = pack.folder_paths
+    assert os.path.join(folder_paths.models_dir, folder) in folder_paths.get_folder_paths(folder)
+    assert ".safetensors" in folder_paths.folder_names_and_paths[folder][1]

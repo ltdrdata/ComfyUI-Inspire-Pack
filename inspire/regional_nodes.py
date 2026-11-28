@@ -518,6 +518,37 @@ class ApplyRegionalAdapters:
         return model, positives, negatives
 
 
+class RegionalPulid:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "pulid": ("PULID",),
+                "eva_clip": ("EVA_CLIP",),
+                "face_analysis": ("FACEANALYSIS",),
+                "mask": ("MASK",),
+                "image": ("IMAGE",),
+                "method": (["fidelity", "style", "neutral"],),
+                "weight": ("FLOAT", {"default": 1.0, "min": -1.0, "max": 5.0, "step": 0.05}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+            },
+        }
+
+    RETURN_TYPES = ("REGIONAL_ADAPTER", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(pulid, eva_clip, face_analysis, mask, image, method, weight, start_at, end_at):
+        def apply_model(model):
+            return nodes.NODE_CLASS_MAPPINGS['ApplyPulid']().apply_pulid(model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at,
+                                                                        method=method, attn_mask=mask)[0]
+
+        return (RegionalAdapter(mask, apply_model=apply_model), )
+
+
 class RegionalSeedExplorerMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -742,6 +773,7 @@ NODE_CLASS_MAPPINGS = {
     "FromIPAdapterPipe //Inspire": FromIPAdapterPipe,
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
     "ApplyRegionalAdapters //Inspire": ApplyRegionalAdapters,
+    "RegionalPulid //Inspire": RegionalPulid,
     "RegionalCFG //Inspire": RegionalCFG,
     "ColorMaskToDepthMask //Inspire": ColorMaskToDepthMask,
 }
@@ -761,6 +793,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FromIPAdapterPipe //Inspire": "FromIPAdapterPipe (Inspire)",
     "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
     "ApplyRegionalAdapters //Inspire": "Apply Regional Adapters (Inspire)",
+    "RegionalPulid //Inspire": "Regional PuLID (Inspire)",
     "RegionalCFG //Inspire": "Regional CFG (Inspire)",
     "ColorMaskToDepthMask //Inspire": "Color Mask To Depth Mask (Inspire)",
 }
