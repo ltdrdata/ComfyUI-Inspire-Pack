@@ -91,6 +91,16 @@ def test_the_preset_helper_loads_the_picked_insightface_model_in_every_cache_mod
     assert insightface == ("INSIGHTFACE", "CUDA", "antelopev2")
 
 
+@pytest.mark.parametrize("preset,clip,ipadapter", [("SD1.5 Plus Composition", None, "ip_plus_composition_sd15.safetensors"),
+                                                   ("SDXL Plus Composition", "sdxl", "ip_plus_composition_sdxl.safetensors")])
+def test_the_composition_presets_load_the_composition_adapters_with_vit_h(pack, models, loaded, tmp_path, preset, clip, ipadapter):
+    for path in ("ipadapter/ip-adapter_sd15.safetensors", "ipadapter/ip-adapter_sdxl.safetensors", "ipadapter/ip_plus_composition_sd15.safetensors",
+                 "ipadapter/ip_plus_composition_sdxl.safetensors", "clip_vision/CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors"):
+        (tmp_path / "models" / path).write_bytes(b"")
+    pack.model_nodes.IPAdapterModelHelper().doit("MODEL", preset, 1.0, 1.0, "CPU", clip=sdxl_clip() if clip else None, unique_id="7")
+    assert loaded == [("ipadapter", ipadapter), ("clip_vision", CLIP_VISION)]
+
+
 @pytest.mark.parametrize("preset,clip", [("SDXL", None), ("SD1.5", "sdxl")])
 def test_the_preset_helper_refuses_to_mix_sdxl_and_sd15(pack, models, loaded, preset, clip):
     with pytest.raises(Exception, match="cannot mix SDXL and SD1.5"):

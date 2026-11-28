@@ -39,8 +39,8 @@ model_preset = {
     "Kolors FaceID Plus":          ("Kolors-IP-Adapter-FaceID-Plus",          "clip-vit-large-patch14-336", None, True),
 
     # composition
-    "SD1.5 Plus Composition":      ("ip-adapter_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
-    "SDXL Plus Composition":       ("ip-adapter_sdxl", "CLIP-ViT-bigG-14-laion2B-39B-b160k", None, False),
+    "SD1.5 Plus Composition":      ("ip_plus_composition_sd15", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
+    "SDXL Plus Composition":       ("ip_plus_composition_sdxl", "CLIP-ViT-H-14-laion2B-s32B-b79K", None, False),
     }
 
 
