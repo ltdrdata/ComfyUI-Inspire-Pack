@@ -34,7 +34,7 @@ Importing the pack creates `resources/prompt-builder.yaml` from its example, as 
 | `test_list_nodes.py` | Float Range, the Foreach List loop and Drop Items run by ComfyUI's executor, Bind [ImageList, PromptList] |
 | `test_prompt_nodes.py` | Prompt files from a folder of the test's own, Zip and Unzip Prompt, Prompt Extractor, Seed Logger |
 | `test_image_nodes.py` | Load Image (Inspire) from its data, the directory loaders, batch sizes, the splitters, Color Map To Masks, RGB Hex To HSV |
-| `test_regional_and_conditioning.py` | Color masks, Color Mask To Depth Mask, the Regional Seed Explorers, Regional CFG, Apply Regional IPAdapters with stand-ins for the nodes of IPAdapter Plus, Apply Regional Adapters with stand-in entries run by ComfyUI's executor, Remove ControlNet, Conditioning Upscale and Stretch |
+| `test_regional_and_conditioning.py` | Color masks, Color Mask To Depth Mask, the Regional Seed Explorers, Regional CFG, Apply Regional IPAdapters with stand-ins for the nodes of IPAdapter Plus, Apply Regional Adapters with stand-in entries: the order of the model parts in ComfyUI's executor, the copies of the prompt per region and the plain prompt where none lies, masks of different sizes, the prompts it asks for, Remove ControlNet, Conditioning Upscale and Stretch |
 | `test_segs_preprocessors.py` | NormalMap and DepthAnything Preprocessor Provider (SEGS) with stand-ins for the nodes of ControlNet Auxiliary Preprocessors: the node each choice runs, the widget values and resolution it gets, the request to install the pack when it is missing |
 | `test_model_nodes.py` | IPAdapter Model Helper with a preset and the SDXL check, IPAdapter Model Helper [Manual] with the picked files and the folders of `extra_model_paths.yaml`, with stand-ins for the loaders of IPAdapter Plus |
 | `test_registration.py` | The pack registers the node types of the widget catalog, each with a display name |
@@ -55,7 +55,7 @@ node --test tests/*.test.mjs
 | `lora_block_weight.test.mjs` | The preset combo fills `block_vector`, the category filter of the LoRA list, the test presets of the XY input |
 | `inspire_flex.test.mjs` | The outputs the batch splitters grow and the inputs and multipliers of Concat Conditionings with Multiplier |
 | `common.test.mjs` | The feedback of the server reaches the widget and the output it names |
-| `regional.test.mjs` | The numbered inputs of Apply Regional IPAdapters and Apply Regional Adapters: a free input after each linked entry, an unlinked entry goes away, unlinking the pipe or the model keeps its input |
+| `regional.test.mjs` | The numbered inputs of Apply Regional IPAdapters and Apply Regional Adapters: a free input after each linked entry, an unlinked entry goes away, unlinking the pipe, the model or a prompt keeps its input |
 
 ## Chrome suites
 

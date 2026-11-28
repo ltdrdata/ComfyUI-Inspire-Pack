@@ -15,7 +15,7 @@ app.registerExtension({
 				break;
 			case 'ApplyRegionalAdapters //Inspire':
 				input_name = "regional_adapter";
-				base_slot = 1;
+				base_slot = 3;
 				break;
 			}
 

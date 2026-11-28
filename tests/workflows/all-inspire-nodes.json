@@ -5035,7 +5035,7 @@
       ],
       "size": [
         261.275,
-        46
+        86
       ],
       "flags": {},
       "order": 104,
@@ -5047,7 +5047,20 @@
           "link": null
         },
         {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
           "name": "regional_adapter1",
+          "shape": 7,
           "type": "REGIONAL_ADAPTER",
           "link": null
         }
@@ -5056,6 +5069,16 @@
         {
           "name": "MODEL",
           "type": "MODEL",
+          "links": null
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": null
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
           "links": null
         }
       ],

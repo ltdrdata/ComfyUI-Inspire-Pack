@@ -116,7 +116,9 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * To use this node, you need to install the [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension.
     * `Regional IPAdapter Mask (Inspire)`, `Regional IPAdapter By Color Mask (Inspire)`
     * `Regional IPAdapter Encoded Mask (Inspire)`, `Regional IPAdapter Encoded By Color Mask (Inspire)`: accept `embeds` instead of `image`
-  * `Apply Regional Adapters (Inspire)` - Applies `REGIONAL_ADAPTER` entries to a `MODEL`, one after another. Each entry holds the models of its adapter, so no `IPADAPTER_PIPE` is needed. `REGIONAL_IPADAPTER` entries are applied by `Apply Regional IPAdapters (Inspire)`.
+  * `Apply Regional Adapters (Inspire)` - Applies `REGIONAL_ADAPTER` entries to a `MODEL` in the order of its inputs. Each entry holds the models of its adapter, so no `IPADAPTER_PIPE` is needed. `REGIONAL_IPADAPTER` entries are applied by `Apply Regional IPAdapters (Inspire)`.
+    * An entry that also changes the prompt needs `positive` and `negative`. Each such region gets its own copy of both, and the area that none of them covers keeps the plain prompt. Region masks of different sizes are stretched to one size, as the sampler stretches them to the latent.
+    * Without such an entry, `positive` and `negative` come out as they went in.
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`

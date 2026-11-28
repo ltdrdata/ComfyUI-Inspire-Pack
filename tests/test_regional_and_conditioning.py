@@ -1,5 +1,4 @@
 import copy
-from types import SimpleNamespace
 
 import pytest
 import torch
@@ -124,7 +123,7 @@ def test_apply_regional_ipadapters_applies_each_entry_with_the_models_of_the_pip
     ]
 
 
-def test_apply_regional_adapters_applies_each_entry_to_the_model_in_the_order_of_its_inputs(pack, comfyui, monkeypatch):
+def test_apply_regional_adapters_applies_the_model_parts_in_the_order_of_its_inputs_and_passes_the_prompts_on(pack, comfyui, monkeypatch):
     import nodes
 
     class Model:
@@ -137,6 +136,16 @@ def test_apply_regional_adapters_applies_each_entry_to_the_model_in_the_order_of
         def doit(self):
             return (("base",),)
 
+    class Prompt:
+        @classmethod
+        def INPUT_TYPES(s):
+            return {"required": {"text": ("STRING", {"default": ""})}}
+        RETURN_TYPES = ("CONDITIONING",)
+        FUNCTION = "doit"
+
+        def doit(self, text):
+            return ([[text, {}]],)
+
     class Entry:
         @classmethod
         def INPUT_TYPES(s):
@@ -145,21 +154,66 @@ def test_apply_regional_adapters_applies_each_entry_to_the_model_in_the_order_of
         FUNCTION = "doit"
 
         def doit(self, name):
-            return (SimpleNamespace(apply=lambda model: model + (name,)),)
+            return (pack.regional_nodes.RegionalAdapter(None, apply_model=lambda model: model + (name,)),)
 
     monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "UnitModel", Model)
+    monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "UnitPrompt", Prompt)
     monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "UnitRegionalAdapter", Entry)
     prompt = {
         "1": {"class_type": "UnitModel", "inputs": {}},
         "2": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "face of the left person"}},
         "3": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "face of the right person"}},
         "4": {"class_type": "UnitRegionalAdapter", "inputs": {"name": "background"}},
-        "5": {"class_type": "ApplyRegionalAdapters //Inspire", "inputs": {"model": ["1", 0], "regional_adapter1": ["3", 0],
+        "5": {"class_type": "UnitPrompt", "inputs": {"text": "two people in a park"}},
+        "6": {"class_type": "UnitPrompt", "inputs": {"text": "blurry"}},
+        "7": {"class_type": "ApplyRegionalAdapters //Inspire", "inputs": {"model": ["1", 0], "positive": ["5", 0], "negative": ["6", 0], "regional_adapter1": ["3", 0],
                                                                           "regional_adapter2": ["2", 0], "regional_adapter3": ["4", 0]}},
-        "6": {"class_type": "CacheBackendData //Inspire", "inputs": {"key": "unit model", "tag": "model", "data": ["5", 0]}},
     }
-    comfyui.execute(prompt, ["6"])
-    assert pack.backend_support.cache["unit model"][1][1] == ("base", "face of the right person", "face of the left person", "background")
+    for index, key in enumerate(("unit model", "unit positive", "unit negative")):
+        prompt[str(8 + index)] = {"class_type": "CacheBackendData //Inspire", "inputs": {"key": key, "tag": "unit", "data": ["7", index]}}
+    comfyui.execute(prompt, ["8", "9", "10"])
+    cached = {key: data for key, (_, (_, data)) in pack.backend_support.cache.items()}
+    assert cached == {"unit model": ("base", "face of the right person", "face of the left person", "background"),
+                      "unit positive": [["two people in a park", {}]], "unit negative": [["blurry", {}]]}
+
+
+def region(pack, name, mask, changes_prompt=True):
+    def apply_conditioning(positive, negative):
+        return [[c, d | {"region": name, "mask": mask}] for c, d in positive], [[c, d | {"region": name}] for c, d in negative]
+    return pack.regional_nodes.RegionalAdapter(mask, apply_model=lambda model: model + (name,), apply_conditioning=apply_conditioning if changes_prompt else None)
+
+
+def test_apply_regional_adapters_gives_each_region_its_copy_of_the_prompt_and_the_plain_prompt_where_no_such_region_lies(pack):
+    left = columns((0, 24, 1.0), width=64, height=64)
+    middle = columns((24, 40, 1.0), width=64, height=64)
+    right_at_half_size = columns((20, 32, 1.0), width=32, height=32)
+    positive, negative = [[torch.ones(1), {"text": "two people in a park"}]], [[torch.zeros(1), {"text": "blurry"}]]
+    model, positives, negatives = pack.regional_nodes.ApplyRegionalAdapters.doit(
+        ("base",), positive, negative, regional_adapter1=region(pack, "left", left), regional_adapter2=region(pack, "middle", middle, changes_prompt=False),
+        regional_adapter3=region(pack, "right", right_at_half_size))
+    assert model == ("base", "left", "middle", "right")
+    assert [(d.get("region"), d["text"]) for _, d in positives] == [("left", "two people in a park"), ("right", "two people in a park"), (None, "two people in a park")]
+    assert [d["region"] for _, d in negatives] == ["left", "right"]
+    rest = positives[2][1]["mask"]
+    assert rest.shape[-2:] == (64, 64)
+    assert (rest[..., :24] == 0).all() and (rest[..., 24:39] == 1).all() and (rest[..., 41:] == 0).all()
+    assert positive == [[torch.ones(1), {"text": "two people in a park"}]]
+
+
+def test_apply_regional_adapters_adds_no_plain_prompt_when_the_regions_cover_the_picture(pack):
+    positive, negative = [[torch.ones(1), {"text": "two people in a park"}]], [[torch.zeros(1), {"text": "blurry"}]]
+    _, positives, _ = pack.regional_nodes.ApplyRegionalAdapters.doit(
+        ("base",), positive, negative, regional_adapter1=region(pack, "left", columns((0, 8, 1.0))), regional_adapter2=region(pack, "right", columns((8, 16, 1.0))))
+    assert [d["region"] for _, d in positives] == ["left", "right"]
+
+
+@pytest.mark.parametrize("positive,negative", [(None, None), ([[torch.ones(1), {}]], None), (None, [[torch.ones(1), {}]])])
+def test_apply_regional_adapters_asks_for_both_prompts_before_it_applies_an_entry_that_changes_them(pack, positive, negative):
+    applied = []
+    entry = pack.regional_nodes.RegionalAdapter(columns((0, 8, 1.0)), apply_model=applied.append, apply_conditioning=lambda positive, negative: (positive, negative))
+    with pytest.raises(Exception, match="link `positive` and `negative`"):
+        pack.regional_nodes.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=entry)
+    assert applied == []
 
 
 def conditioning():

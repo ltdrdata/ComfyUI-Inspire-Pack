@@ -453,26 +453,69 @@ class ApplyRegionalIPAdapters:
         return (model, )
 
 
+class RegionalAdapter:
+    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, and `apply_conditioning(positive, negative) -> (positive, negative)`
+    that gives the region its own copies of the prompt, the positive one limited to `mask`. Either part may be None."""
+    def __init__(self, mask, apply_model=None, apply_conditioning=None):
+        self.mask = mask
+        self.apply_model = apply_model
+        self.apply_conditioning = apply_conditioning
+
+
+def uncovered_area(masks):
+    # the sampler stretches every mask to the latent, so masks of other sizes are stretched to one size here
+    size = max(mask.shape[-2] for mask in masks), max(mask.shape[-1] for mask in masks)
+    rest = torch.ones(size)
+    for mask in masks:
+        rest = rest - torch.nn.functional.interpolate(mask.reshape(-1, 1, *mask.shape[-2:]), size=size, mode="bilinear").squeeze(1)
+    return torch.clamp(rest, 0.0, 1.0)
+
+
 class ApplyRegionalAdapters:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
                     "model": ("MODEL",),
+                    },
+                "optional": {
+                    "positive": ("CONDITIONING",),
+                    "negative": ("CONDITIONING",),
                     "regional_adapter1": ("REGIONAL_ADAPTER", ),
                     },
                 }
 
-    RETURN_TYPES = ("MODEL", )
+    RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("MODEL", "positive", "negative")
     FUNCTION = "doit"
 
     CATEGORY = "InspirePack/Regional"
 
     @staticmethod
-    def doit(model, **kwargs):
-        for regional_adapter in kwargs.values():
-            model = regional_adapter.apply(model)
+    def doit(model, positive=None, negative=None, **kwargs):
+        regional_adapters = list(kwargs.values())
+        conditioned = [x for x in regional_adapters if x.apply_conditioning is not None]
+        if conditioned and (positive is None or negative is None):
+            raise Exception("[Inspire Pack] Apply Regional Adapters: link `positive` and `negative`, because an entry gives its region its own copy of the prompt.")
 
-        return (model, )
+        for regional_adapter in regional_adapters:
+            if regional_adapter.apply_model is not None:
+                model = regional_adapter.apply_model(model)
+
+        if not conditioned:
+            return model, positive, negative
+
+        positives, negatives = [], []
+        for regional_adapter in conditioned:
+            region_positive, region_negative = regional_adapter.apply_conditioning(positive, negative)
+            positives += region_positive
+            negatives += region_negative
+
+        # without the plain prompt on the area that no region covers, the whole picture turns grey
+        rest = uncovered_area([x.mask for x in conditioned])
+        if rest.any():
+            positives += nodes.ConditioningSetMask().append(positive, rest, "default", 1.0)[0]
+
+        return model, positives, negatives
 
 
 class RegionalSeedExplorerMask:
