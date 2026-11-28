@@ -36,7 +36,7 @@ app.registerExtension({
 					}
 				}
 
-				if (!connected && (this.inputs.length > base_slot+1)) {
+				if (!connected && index >= base_slot && (this.inputs.length > base_slot+1)) {
 					const stackTrace = new Error().stack;
 
 					if(

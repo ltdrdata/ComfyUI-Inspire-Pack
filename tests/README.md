@@ -55,6 +55,7 @@ node --test tests/*.test.mjs
 | `lora_block_weight.test.mjs` | The preset combo fills `block_vector`, the category filter of the LoRA list, the test presets of the XY input |
 | `inspire_flex.test.mjs` | The outputs the batch splitters grow and the inputs and multipliers of Concat Conditionings with Multiplier |
 | `common.test.mjs` | The feedback of the server reaches the widget and the output it names |
+| `regional.test.mjs` | The numbered inputs of Apply Regional IPAdapters: unlinking the pipe keeps its input |
 
 ## Chrome suites
 
