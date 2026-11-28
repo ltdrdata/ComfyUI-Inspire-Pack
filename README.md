@@ -171,6 +171,14 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
   * `IPAdapter Model Helper (Inspire)`: This provides presets that allow for easy loading of the IPAdapter related models. However, it is essential for the model's name to be accurate.
     * You can download the appropriate model through ComfyUI-Manager.
   * `IPAdapter Model Helper [Manual] (Inspire)`: Instead of a preset, you pick the IPAdapter, CLIP vision and LoRA model files and whether InsightFace is loaded. The lists also hold the folders added with the `ipadapter`, `clip_vision` and `loras` keys of `extra_model_paths.yaml`.
+    * An entry for `extra_model_paths.yaml` in the ComfyUI folder. The example file of ComfyUI has no `ipadapter` key, so add it to your own file:
+      ```yaml
+      my_models:
+          base_path: /path/to/models
+          ipadapter: ipadapter/
+          clip_vision: clip_vision/
+          loras: loras/
+      ```
 
 ### List - Nodes for List processing
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.
