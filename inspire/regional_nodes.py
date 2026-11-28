@@ -455,12 +455,13 @@ class ApplyRegionalIPAdapters:
 
 
 class RegionalAdapter:
-    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, and `apply_conditioning(positive, negative) -> (positive, negative)`
-    that gives the region its own copies of the prompt, the positive one limited to `mask`. Either part may be None."""
-    def __init__(self, mask, apply_model=None, apply_conditioning=None):
+    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, and `region_conditioning(positive, negative) -> (positive, negative)`
+    that gives the region its own copies of the prompt, the positive one limited to `mask`. Either part may be None.
+    Without a mask the entry covers the whole picture."""
+    def __init__(self, mask, apply_model=None, region_conditioning=None):
         self.mask = mask
         self.apply_model = apply_model
-        self.apply_conditioning = apply_conditioning
+        self.region_conditioning = region_conditioning
 
 
 def uncovered_area(masks):
@@ -493,30 +494,43 @@ class ApplyRegionalAdapters:
 
     @staticmethod
     def doit(model, positive=None, negative=None, **kwargs):
-        regional_adapters = list(kwargs.values())
-        conditioned = [x for x in regional_adapters if x.apply_conditioning is not None]
-        if conditioned and (positive is None or negative is None):
-            raise Exception("[Inspire Pack] Apply Regional Adapters: link `positive` and `negative`, because an entry gives its region its own copy of the prompt.")
+        copying = {name: x for name, x in kwargs.items() if x.region_conditioning is not None}
+        if copying and (positive is None or negative is None):
+            raise Exception(f"[Inspire Pack] Apply Regional Adapters: {next(iter(copying))} needs `positive` and `negative` linked, "
+                            "because it gives its region its own copy of the prompt.")
 
-        for regional_adapter in regional_adapters:
+        for regional_adapter in kwargs.values():
             if regional_adapter.apply_model is not None:
                 model = regional_adapter.apply_model(model)
 
-        if not conditioned:
+        if not copying:
             return model, positive, negative
 
         positives, negatives = [], []
-        for regional_adapter in conditioned:
-            region_positive, region_negative = regional_adapter.apply_conditioning(positive, negative)
+        for regional_adapter in copying.values():
+            region_positive, region_negative = regional_adapter.region_conditioning(positive, negative)
             positives += region_positive
             negatives += region_negative
 
-        # without the plain prompt on the area that no region covers, the whole picture turns grey
-        rest = uncovered_area([x.mask for x in conditioned])
-        if rest.any():
-            positives += nodes.ConditioningSetMask().append(positive, rest, "default", 1.0)[0]
+        # without the plain prompt on the area that no region covers, the whole picture turns grey;
+        # a copy without a mask covers the whole picture
+        masks = [x.mask for x in copying.values()]
+        if all(mask is not None for mask in masks):
+            rest = uncovered_area(masks)
+            if rest.any():
+                positives += nodes.ConditioningSetMask().append(positive, rest, "default", 1.0)[0]
 
         return model, positives, negatives
+
+
+def require_face(family, face_analysis, image, stop):
+    """Stops when no picture of `image` shows a face at the detector sizes the family's pack tries: 640 down to `stop`, in steps of 64."""
+    for picture in image.mul(255).clamp(0, 255).byte().cpu()[..., [2, 1, 0]].numpy():
+        for size in range(640, stop, -64):
+            face_analysis.det_model.input_size = (size, size)
+            if face_analysis.get(picture):
+                return
+    raise Exception(f"[Inspire Pack] Regional {family}: no face was found in the reference image.")
 
 
 class RegionalPulid:
@@ -527,13 +541,15 @@ class RegionalPulid:
                 "pulid": ("PULID",),
                 "eva_clip": ("EVA_CLIP",),
                 "face_analysis": ("FACEANALYSIS",),
-                "mask": ("MASK",),
                 "image": ("IMAGE",),
-                "method": (["fidelity", "style", "neutral"],),
                 "weight": ("FLOAT", {"default": 1.0, "min": -1.0, "max": 5.0, "step": 0.05}),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "method": (["fidelity", "style", "neutral"],),
             },
+            "optional": {
+                "mask": ("MASK",),
+            }
         }
 
     RETURN_TYPES = ("REGIONAL_ADAPTER", )
@@ -542,7 +558,9 @@ class RegionalPulid:
     CATEGORY = "InspirePack/Regional"
 
     @staticmethod
-    def doit(pulid, eva_clip, face_analysis, mask, image, method, weight, start_at, end_at):
+    def doit(pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method, mask=None):
+        require_face("PuLID", face_analysis, image, 256)
+
         def apply_model(model):
             return nodes.NODE_CLASS_MAPPINGS['ApplyPulid']().apply_pulid(model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at,
                                                                         method=method, attn_mask=mask)[0]
@@ -577,15 +595,15 @@ class RegionalInstantID:
                 "instantid": ("INSTANTID",),
                 "insightface": ("FACEANALYSIS",),
                 "control_net": ("CONTROL_NET",),
-                "mask": ("MASK",),
                 "image": ("IMAGE",),
-                "ip_weight": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 3.0, "step": 0.01}),
-                "cn_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "weight": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 3.0, "step": 0.05}),
                 "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                 "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "controlnet_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 10.0, "step": 0.01}),
                 "noise": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
             },
             "optional": {
+                "mask": ("MASK",),
                 "image_kps": ("IMAGE",),
             }
         }
@@ -596,22 +614,26 @@ class RegionalInstantID:
     CATEGORY = "InspirePack/Regional"
 
     @staticmethod
-    def doit(instantid, insightface, control_net, mask, image, ip_weight, cn_strength, start_at, end_at, noise, image_kps=None):
+    def doit(instantid, insightface, control_net, image, weight, start_at, end_at, controlnet_strength, noise, mask=None, image_kps=None):
+        require_face("InstantID", insightface, image, 128)
+
         def apply_model(model):
-            return nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, model, ip_weight, start_at, end_at,
+            return nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, model, weight, start_at, end_at,
                                                                                         noise=noise, mask=mask)[0]
 
-        def apply_conditioning(positive, negative):
+        def region_conditioning(positive, negative):
             # weight 0 leaves the model alone and only gives the face embeds
             face_embeds = nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, None, 0.0, start_at, end_at,
                                                                                                noise=noise)[1]
             kps = image_kps
             if kps is None:
-                kps = nodes.NODE_CLASS_MAPPINGS['FaceKeypointsPreprocessor']().preprocess_image(insightface, keypoints_picture(image, mask))[0]
+                # without a mask, the reference itself, as Apply InstantID takes it
+                picture = image[:1] if mask is None else keypoints_picture(image, mask)
+                kps = nodes.NODE_CLASS_MAPPINGS['FaceKeypointsPreprocessor']().preprocess_image(insightface, picture)[0]
             return nodes.NODE_CLASS_MAPPINGS['ApplyInstantIDControlNet']().apply_controlnet(face_embeds, control_net, kps, positive, negative,
-                                                                                          cn_strength, start_at, end_at, mask=mask)
+                                                                                          controlnet_strength, start_at, end_at, mask=mask)
 
-        return (RegionalAdapter(mask, apply_model=apply_model, apply_conditioning=apply_conditioning), )
+        return (RegionalAdapter(mask, apply_model=apply_model, region_conditioning=region_conditioning), )
 
 
 class RegionalSeedExplorerMask:

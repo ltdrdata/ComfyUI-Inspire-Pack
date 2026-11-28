@@ -2,6 +2,8 @@ import os
 from types import SimpleNamespace
 
 import pytest
+import safetensors.torch
+import torch
 
 CLIP_VISION = "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
 EXTRA_MODEL_PATHS = """unit:
@@ -175,9 +177,18 @@ def test_both_helpers_ask_for_ipadapter_plus_before_anything_else(pack, models, 
 PULID = "ip-adapter_pulid_sdxl_fp16.safetensors"
 
 
+def pulid_folder(pack, tmp_path, monkeypatch, files):
+    for name, key in files.items():
+        (tmp_path / "pulid").mkdir(exist_ok=True)
+        safetensors.torch.save_file({key: torch.zeros(1)}, str(tmp_path / "pulid" / name))
+    monkeypatch.setattr(pack.folder_paths, "filename_list_cache", {})
+    monkeypatch.setitem(pack.folder_paths.folder_names_and_paths, "pulid", ([str(tmp_path / "pulid")], pack.folder_paths.supported_pt_extensions))
+
+
 @pytest.fixture
-def pulid_loaders(pack, monkeypatch):
+def pulid_loaders(pack, tmp_path, monkeypatch):
     import nodes
+    pulid_folder(pack, tmp_path, monkeypatch, {PULID: "image_proj.mapping_0.0.weight"})
     calls = []
 
     class PulidModelLoader:
@@ -216,6 +227,13 @@ def test_the_pulid_helper_caches_the_face_analysis_under_its_model_and_provider(
     pack.model_nodes.PulidModelHelper().doit(PULID, "ROCM", "all")
     assert pack.backend_support.cache["insightface-antelopev2-ROCM"] == ("insightface", (False, ("FACEANALYSIS", "ROCM")))
     assert pack.backend_support.cache["pulid-eva_clip"] == ("eva_clip", (False, ("EVA_CLIP",)))
+
+
+def test_the_pulid_helper_says_which_file_is_not_a_pulid_model_for_sdxl_before_it_loads_anything(pack, pulid_loaders, tmp_path, monkeypatch):
+    pulid_folder(pack, tmp_path, monkeypatch, {"pulid_flux_v0.9.1.safetensors": "pulid_encoder.id_embedding_mapping.0.weight"})
+    with pytest.raises(Exception, match="pulid_flux_v0.9.1.safetensors is not a PuLID model for SDXL"):
+        pack.model_nodes.PulidModelHelper().doit("pulid_flux_v0.9.1.safetensors", "CPU", "none")
+    assert pulid_loaders == []
 
 
 def test_the_pulid_helper_asks_for_pulid_comfyui_when_it_is_missing(pack, monkeypatch):

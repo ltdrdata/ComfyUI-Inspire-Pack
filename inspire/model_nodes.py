@@ -1,6 +1,7 @@
 import nodes
 import folder_paths
 import os
+import safetensors
 import server
 from .libs import utils
 from . import backend_support
@@ -213,7 +214,8 @@ class IPAdapterModelHelperManual(IPAdapterModelHelper):
 
 # The node packs of the adapter families: the pack to ask for when it is missing, the model folder it reads, and its
 # loaders in the order of the helper's outputs as (node, function, inputs, cache name, cache key). cache_modes maps each
-# choice of the helper's cache_mode to the cache names it keeps in the backend cache.
+# choice of the helper's cache_mode to the cache names it keeps in the backend cache. signatures are (input, key prefix,
+# base model): a .safetensors file picked in that input must have a key with that prefix.
 adapter_families = {
     "PuLID": {
         "pack": ("PuLID_ComfyUI", "https://github.com/cubiq/PuLID_ComfyUI"),
@@ -222,6 +224,7 @@ adapter_families = {
                     ("PulidEvaClipLoader", "load_eva_clip", [], "eva_clip", "pulid-eva_clip"),
                     ("PulidInsightFaceLoader", "load_insightface", ["provider"], "insightface", "insightface-antelopev2-{provider}")],
         "cache_modes": {"insightface only": ["insightface"], "eva_clip only": ["eva_clip"], "all": ["insightface", "eva_clip"], "none": []},
+        "signatures": [("pulid_file", "image_proj.mapping_", "SDXL")],
     },
     "InstantID": {
         "pack": ("ComfyUI InstantID", "https://github.com/cubiq/ComfyUI_InstantID"),
@@ -230,6 +233,7 @@ adapter_families = {
                     ("InstantIDFaceAnalysis", "load_insight_face", ["provider"], "insightface", "insightface-antelopev2-{provider}"),
                     ("ControlNetLoader", "load_controlnet", ["control_net_name"], None, None)],
         "cache_modes": {"insightface only": ["insightface"], "none": []},
+        "signatures": [],
     },
 }
 
@@ -237,11 +241,19 @@ for family in adapter_families.values():
     utils.add_folder_path_and_extensions(family["folder"], [os.path.join(folder_paths.models_dir, family["folder"])], folder_paths.supported_pt_extensions)
 
 
-def load_adapter_models(node_name, family, cache_mode, **inputs):
+def load_adapter_models(node_name, family_name, cache_mode, **inputs):
+    family = adapter_families[family_name]
     pack, url = family["pack"]
     if any(loader not in nodes.NODE_CLASS_MAPPINGS for loader, *_ in family["loaders"]):
         utils.try_install_custom_node(url, f"To use '{node_name}' node, '{pack}' extension is required.")
         raise Exception(f"[ERROR] To use {node_name}, you need to install '{pack}'")
+
+    for name, prefix, base in family["signatures"]:
+        path = folder_paths.get_full_path_or_raise(family["folder"], inputs[name])
+        if path.endswith(".safetensors"):
+            with safetensors.safe_open(path, framework="pt") as f:
+                if not any(key.startswith(prefix) for key in f.keys()):
+                    raise Exception(f"[Inspire Pack] {inputs[name]} is not a {family_name} model for {base}")
 
     models = []
     for loader, function, names, cache_name, cache_key in family["loaders"]:
@@ -279,7 +291,7 @@ class PulidModelHelper:
 
     @staticmethod
     def doit(pulid_file, provider, cache_mode):
-        return load_adapter_models("PulidModelHelper", adapter_families["PuLID"], cache_mode, pulid_file=pulid_file, provider=provider)
+        return load_adapter_models("PulidModelHelper", "PuLID", cache_mode, pulid_file=pulid_file, provider=provider)
 
 
 class InstantIDModelHelper:
@@ -302,7 +314,7 @@ class InstantIDModelHelper:
 
     @staticmethod
     def doit(instantid_file, control_net_name, provider, cache_mode):
-        return load_adapter_models("InstantIDModelHelper", adapter_families["InstantID"], cache_mode,
+        return load_adapter_models("InstantIDModelHelper", "InstantID", cache_mode,
                                    instantid_file=instantid_file, control_net_name=control_net_name, provider=provider)
 
 

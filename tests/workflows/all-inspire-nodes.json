@@ -5090,8 +5090,8 @@
       "id": 106,
       "type": "RegionalPulid //Inspire",
       "pos": [
-        5243.369506835939,
-        12430
+        5174.007019042971,
+        12370
       ],
       "size": [
         302.185546875,
@@ -5117,13 +5117,14 @@
           "link": null
         },
         {
-          "name": "mask",
-          "type": "MASK",
+          "name": "image",
+          "type": "IMAGE",
           "link": null
         },
         {
-          "name": "image",
-          "type": "IMAGE",
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
           "link": null
         }
       ],
@@ -5138,31 +5139,104 @@
         "Node name for S&R": "RegionalPulid //Inspire"
       },
       "widgets_values": [
-        "fidelity",
         1,
         0,
-        1
+        1,
+        "fidelity"
       ],
       "widgets_values_named": {
-        "method": "fidelity",
         "weight": 1,
         "start_at": 0,
-        "end_at": 1
+        "end_at": 1,
+        "method": "fidelity"
       }
     },
     {
       "id": 107,
+      "type": "RegionalInstantID //Inspire",
+      "pos": [
+        4380.402526855471,
+        12370
+      ],
+      "size": [
+        289.39453125,
+        254
+      ],
+      "flags": {},
+      "order": 106,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "instantid",
+          "type": "INSTANTID",
+          "link": null
+        },
+        {
+          "name": "insightface",
+          "type": "FACEANALYSIS",
+          "link": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "image_kps",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalInstantID //Inspire"
+      },
+      "widgets_values": [
+        0.8,
+        0,
+        1,
+        0.8,
+        0
+      ],
+      "widgets_values_named": {
+        "weight": 0.8,
+        "start_at": 0,
+        "end_at": 1,
+        "controlnet_strength": 0.8,
+        "noise": 0
+      }
+    },
+    {
+      "id": 108,
       "type": "PulidModelHelper //Inspire",
       "pos": [
-        4449.2227294921895,
-        12430
+        3579.8602416992208,
+        12370
       ],
       "size": [
         290.4791015625,
         146
       ],
       "flags": {},
-      "order": 106,
+      "order": 107,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -5197,83 +5271,11 @@
       }
     },
     {
-      "id": 108,
-      "type": "RegionalInstantID //Inspire",
-      "pos": [
-        3704.5255126953143,
-        12490
-      ],
-      "size": [
-        289.39453125,
-        254
-      ],
-      "flags": {},
-      "order": 107,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "instantid",
-          "type": "INSTANTID",
-          "link": null
-        },
-        {
-          "name": "insightface",
-          "type": "FACEANALYSIS",
-          "link": null
-        },
-        {
-          "name": "control_net",
-          "type": "CONTROL_NET",
-          "link": null
-        },
-        {
-          "name": "mask",
-          "type": "MASK",
-          "link": null
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "image_kps",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "REGIONAL_ADAPTER",
-          "type": "REGIONAL_ADAPTER",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "RegionalInstantID //Inspire"
-      },
-      "widgets_values": [
-        0.8,
-        0.8,
-        0,
-        1,
-        0
-      ],
-      "widgets_values_named": {
-        "ip_weight": 0.8,
-        "cn_strength": 0.8,
-        "start_at": 0,
-        "end_at": 1,
-        "noise": 0
-      }
-    },
-    {
       "id": 109,
       "type": "InstantIDModelHelper //Inspire",
       "pos": [
-        2894.1599853515645,
-        12490
+        2770.0369995117208,
+        12370
       ],
       "size": [
         310.1255859375,
@@ -5324,8 +5326,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -2599.2227783203143,
-        -12300
+        -2475.0997924804706,
+        -12180
       ]
     },
     "frontendVersion": "1.59.10"

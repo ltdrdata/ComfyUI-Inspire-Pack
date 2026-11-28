@@ -1,4 +1,5 @@
 import copy
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -178,9 +179,9 @@ def test_apply_regional_adapters_applies_the_model_parts_in_the_order_of_its_inp
 
 
 def region(pack, name, mask, changes_prompt=True):
-    def apply_conditioning(positive, negative):
+    def region_conditioning(positive, negative):
         return [[c, d | {"region": name, "mask": mask}] for c, d in positive], [[c, d | {"region": name}] for c, d in negative]
-    return pack.regional_nodes.RegionalAdapter(mask, apply_model=lambda model: model + (name,), apply_conditioning=apply_conditioning if changes_prompt else None)
+    return pack.regional_nodes.RegionalAdapter(mask, apply_model=lambda model: model + (name,), region_conditioning=region_conditioning if changes_prompt else None)
 
 
 def test_apply_regional_adapters_gives_each_region_its_copy_of_the_prompt_and_the_plain_prompt_where_no_such_region_lies(pack):
@@ -200,39 +201,57 @@ def test_apply_regional_adapters_gives_each_region_its_copy_of_the_prompt_and_th
     assert positive == [[torch.ones(1), {"text": "two people in a park"}]]
 
 
-def test_apply_regional_adapters_adds_no_plain_prompt_when_the_regions_cover_the_picture(pack):
+@pytest.mark.parametrize("right", [columns((8, 16, 1.0)), None], ids=["the other half", "no mask"])
+def test_apply_regional_adapters_adds_no_plain_prompt_when_the_regions_cover_the_picture(pack, right):
     positive, negative = [[torch.ones(1), {"text": "two people in a park"}]], [[torch.zeros(1), {"text": "blurry"}]]
     _, positives, _ = pack.regional_nodes.ApplyRegionalAdapters.doit(
-        ("base",), positive, negative, regional_adapter1=region(pack, "left", columns((0, 8, 1.0))), regional_adapter2=region(pack, "right", columns((8, 16, 1.0))))
+        ("base",), positive, negative, regional_adapter1=region(pack, "left", columns((0, 8, 1.0))), regional_adapter2=region(pack, "right", right))
     assert [d["region"] for _, d in positives] == ["left", "right"]
 
 
 @pytest.mark.parametrize("positive,negative", [(None, None), ([[torch.ones(1), {}]], None), (None, [[torch.ones(1), {}]])])
-def test_apply_regional_adapters_asks_for_both_prompts_before_it_applies_an_entry_that_changes_them(pack, positive, negative):
+def test_apply_regional_adapters_names_the_entry_that_needs_both_prompts_before_it_applies_anything(pack, positive, negative):
     applied = []
-    entry = pack.regional_nodes.RegionalAdapter(columns((0, 8, 1.0)), apply_model=applied.append, apply_conditioning=lambda positive, negative: (positive, negative))
-    with pytest.raises(Exception, match="link `positive` and `negative`"):
-        pack.regional_nodes.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=entry)
+    model_only = pack.regional_nodes.RegionalAdapter(None, apply_model=applied.append)
+    copying = pack.regional_nodes.RegionalAdapter(columns((0, 8, 1.0)), apply_model=applied.append, region_conditioning=lambda positive, negative: (positive, negative))
+    with pytest.raises(Exception, match="regional_adapter2 needs `positive` and `negative` linked"):
+        pack.regional_nodes.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=model_only, regional_adapter2=copying)
     assert applied == []
 
 
-def test_regional_pulid_applies_apply_pulid_with_its_mask_and_settings_in_apply_regional_adapters(pack, monkeypatch):
+def face_analysis(found=True):
+    return SimpleNamespace(det_model=SimpleNamespace(input_size=None), get=lambda picture: ["face"] if found else [])
+
+
+def faces(count):
+    return [torch.full((1, 8, 8, 3), index / count) for index in range(count)]
+
+
+@pytest.fixture
+def apply_pulid(pack, monkeypatch):
     import nodes
     calls = []
 
     class ApplyPulid:
         def apply_pulid(self, model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method=None, noise=0.0, fidelity=None, projection=None, attn_mask=None):
-            calls.append((model, pulid, eva_clip, face_analysis, image, weight, start_at, end_at, method, attn_mask))
-            return (model + (image,),)
+            calls.append((model, pulid, eva_clip, image, weight, start_at, end_at, method, attn_mask))
+            return (model + (len(calls),),)
 
     monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, "ApplyPulid", ApplyPulid)
+    return calls
+
+
+def test_regional_pulid_applies_apply_pulid_with_its_mask_and_settings_in_apply_regional_adapters(pack, apply_pulid):
     regional = pack.regional_nodes
-    (left,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", "FACEANALYSIS", "left mask", "face A", "fidelity", 0.8, 0.1, 0.9)
-    (right,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", "FACEANALYSIS", "right mask", "face B", "style", 1.2, 0.0, 1.0)
-    assert regional.ApplyRegionalAdapters.doit(("base",), "positive", "negative", regional_adapter1=left, regional_adapter2=right) == (
-        ("base", "face A", "face B"), "positive", "negative")
-    assert calls == [(("base",), "PULID", "EVA_CLIP", "FACEANALYSIS", "face A", 0.8, 0.1, 0.9, "fidelity", "left mask"),
-                     (("base", "face A"), "PULID", "EVA_CLIP", "FACEANALYSIS", "face B", 1.2, 0.0, 1.0, "style", "right mask")]
+    face_a, face_b = faces(2)
+    left = columns((0, 8, 1.0))
+    (a,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", face_analysis(), face_a, 0.8, 0.1, 0.9, "fidelity", mask=left)
+    (b,) = regional.RegionalPulid.doit("PULID", "EVA_CLIP", face_analysis(), face_b, 1.2, 0.0, 1.0, "style")
+    assert regional.ApplyRegionalAdapters.doit(("base",), "positive", "negative", regional_adapter1=a, regional_adapter2=b) == (("base", 1, 2), "positive", "negative")
+    assert [(call[0], call[1:3], call[4:8]) for call in apply_pulid] == [(("base",), ("PULID", "EVA_CLIP"), (0.8, 0.1, 0.9, "fidelity")),
+                                                                          (("base", 1), ("PULID", "EVA_CLIP"), (1.2, 0.0, 1.0, "style"))]
+    assert apply_pulid[0][3] is face_a and apply_pulid[1][3] is face_b
+    assert apply_pulid[0][8] is left and apply_pulid[1][8] is None
 
 
 @pytest.fixture
@@ -244,7 +263,7 @@ def instantid_nodes(pack, monkeypatch):
         def patch_attention(self, instantid, insightface, image, model, weight, start_at, end_at, noise=0.0, mask=None):
             if model is not None:
                 calls.append(("attention", image, weight, start_at, end_at, noise, mask))
-                model = model + (image,)
+                model = model + (weight,)
             return (model, {"cond": image, "noise": noise})
 
     class FaceKeypointsPreprocessor:
@@ -264,29 +283,51 @@ def instantid_nodes(pack, monkeypatch):
 
 def test_regional_instantid_patches_the_model_and_gives_its_region_a_copy_of_the_prompt_with_the_controlnet(pack, instantid_nodes):
     regional = pack.regional_nodes
+    face_a, face_b = faces(2)
     left, right = columns((0, 6, 1.0)), columns((10, 16, 1.0))
-    (a,) = regional.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", left, "face A", 0.8, 0.6, 0.1, 0.9, 0.2, image_kps="pose A")
-    (b,) = regional.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", right, "face B", 1.2, 1.5, 0.0, 1.0, 0.0, image_kps="pose B")
+    (a,) = regional.RegionalInstantID.doit("INSTANTID", face_analysis(), "CONTROL_NET", face_a, 0.8, 0.1, 0.9, 0.6, 0.2, mask=left, image_kps="pose A")
+    (b,) = regional.RegionalInstantID.doit("INSTANTID", face_analysis(), "CONTROL_NET", face_b, 1.2, 0.0, 1.0, 1.5, 0.0, mask=right, image_kps="pose B")
     positive, negative = [[torch.ones(1), {"text": "two people in a park"}]], [[torch.zeros(1), {"text": "blurry"}]]
     model, positives, negatives = regional.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=a, regional_adapter2=b)
-    assert model == ("base", "face A", "face B")
-    assert [(d.get("face"), d["text"]) for _, d in positives] == [("face A", "two people in a park"), ("face B", "two people in a park"), (None, "two people in a park")]
-    assert [d["face"] for _, d in negatives] == ["face A", "face B"]
+    assert model == ("base", 0.8, 1.2)
+    assert [(d.get("face"), d["text"]) for _, d in positives] == [(face_a, "two people in a park"), (face_b, "two people in a park"), (None, "two people in a park")]
+    assert [d["face"] for _, d in negatives] == [face_a, face_b]
     assert torch.equal(positives[2][1]["mask"], columns((6, 10, 1.0)))
-    assert [call[:-1] for call in instantid_nodes] == [
-        ("attention", "face A", 0.8, 0.1, 0.9, 0.2), ("attention", "face B", 1.2, 0.0, 1.0, 0.0),
-        ("controlnet", {"cond": "face A", "noise": 0.2}, "pose A", 0.6, 0.1, 0.9), ("controlnet", {"cond": "face B", "noise": 0.0}, "pose B", 1.5, 0.0, 1.0)]
+    assert [(call[0], call[2:6]) for call in instantid_nodes if call[0] == "attention"] == [("attention", (0.8, 0.1, 0.9, 0.2)), ("attention", (1.2, 0.0, 1.0, 0.0))]
+    assert [(call[2:6], call[1]["noise"]) for call in instantid_nodes if call[0] == "controlnet"] == [(("pose A", 0.6, 0.1, 0.9), 0.2), (("pose B", 1.5, 0.0, 1.0), 0.0)]
     assert [call[-1] for call in instantid_nodes] == [left, right, left, right]
 
 
 def test_regional_instantid_places_the_reference_in_its_mask_for_the_keypoints_when_none_are_linked(pack, instantid_nodes):
     region = columns((8, 16, 1.0), width=32, height=24)
-    (entry,) = pack.regional_nodes.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", region, torch.ones(1, 8, 8, 3), 0.8, 0.8, 0.0, 1.0, 0.0)
-    entry.apply_conditioning([[torch.ones(1), {}]], [[torch.zeros(1), {}]])
+    (entry,) = pack.regional_nodes.RegionalInstantID.doit("INSTANTID", face_analysis(), "CONTROL_NET", torch.ones(1, 8, 8, 3), 0.8, 0.0, 1.0, 0.8, 0.0, mask=region)
+    entry.region_conditioning([[torch.ones(1), {}]], [[torch.zeros(1), {}]])
     placed = torch.zeros(1, 24, 32, 3)
     placed[:, 4:12, 8:16] = 1.0
     assert [torch.equal(call[1], placed) for call in instantid_nodes if call[0] == "keypoints"] == [True]
     assert [call[2] for call in instantid_nodes if call[0] == "controlnet"] == ["keypoints of the placed reference"]
+
+
+def test_regional_instantid_without_a_mask_covers_the_whole_picture_with_the_keypoints_of_the_reference(pack, instantid_nodes):
+    (reference,) = faces(1)
+    (entry,) = pack.regional_nodes.RegionalInstantID.doit("INSTANTID", face_analysis(), "CONTROL_NET", reference, 0.8, 0.0, 1.0, 0.8, 0.0)
+    positive, negative = [[torch.ones(1), {"text": "a person in a park"}]], [[torch.zeros(1), {}]]
+    model, positives, _ = pack.regional_nodes.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=entry)
+    assert model == ("base", 0.8)
+    assert [(d["face"] is reference, d["mask"]) for _, d in positives] == [(True, None)]
+    assert [call[0] for call in instantid_nodes] == ["attention", "keypoints", "controlnet"]
+    assert instantid_nodes[0][-1] is None and instantid_nodes[2][-1] is None
+    assert torch.equal(instantid_nodes[1][1], reference)
+
+
+@pytest.mark.parametrize("family", ["PuLID", "InstantID"])
+def test_both_regional_nodes_say_alike_that_the_reference_shows_no_face(pack, family):
+    regional = pack.regional_nodes
+    with pytest.raises(Exception, match=f"Regional {family}: no face was found in the reference image."):
+        if family == "PuLID":
+            regional.RegionalPulid.doit("PULID", "EVA_CLIP", face_analysis(found=False), torch.zeros(1, 8, 8, 3), 1.0, 0.0, 1.0, "fidelity")
+        else:
+            regional.RegionalInstantID.doit("INSTANTID", face_analysis(found=False), "CONTROL_NET", torch.zeros(1, 8, 8, 3), 0.8, 0.0, 1.0, 0.8, 0.0)
 
 
 def conditioning():

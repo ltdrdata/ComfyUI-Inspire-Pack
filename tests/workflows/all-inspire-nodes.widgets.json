@@ -2312,10 +2312,6 @@
       "type": "RegionalPulid //Inspire",
       "widgets": [
         {
-          "name": "method",
-          "value": "fidelity"
-        },
-        {
           "name": "weight",
           "value": 1
         },
@@ -2326,11 +2322,41 @@
         {
           "name": "end_at",
           "value": 1
+        },
+        {
+          "name": "method",
+          "value": "fidelity"
         }
       ]
     },
     {
       "id": "107",
+      "type": "RegionalInstantID //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 0.8
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "controlnet_strength",
+          "value": 0.8
+        },
+        {
+          "name": "noise",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "108",
       "type": "PulidModelHelper //Inspire",
       "widgets": [
         {
@@ -2344,32 +2370,6 @@
         {
           "name": "cache_mode",
           "value": "insightface only"
-        }
-      ]
-    },
-    {
-      "id": "108",
-      "type": "RegionalInstantID //Inspire",
-      "widgets": [
-        {
-          "name": "ip_weight",
-          "value": 0.8
-        },
-        {
-          "name": "cn_strength",
-          "value": 0.8
-        },
-        {
-          "name": "start_at",
-          "value": 0
-        },
-        {
-          "name": "end_at",
-          "value": 1
-        },
-        {
-          "name": "noise",
-          "value": 0
         }
       ]
     },
