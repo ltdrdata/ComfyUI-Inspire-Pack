@@ -2258,7 +2258,7 @@
       ],
       "size": [
         337.7974609375,
-        194
+        214
       ],
       "flags": {},
       "order": 49,
@@ -2266,18 +2266,23 @@
       "inputs": [],
       "outputs": [
         {
-          "name": "IMAGE",
+          "name": "images",
           "type": "IMAGE",
           "links": null
         },
         {
-          "name": "MASK",
+          "name": "masks",
           "type": "MASK",
           "links": null
         },
         {
-          "name": "INT",
+          "name": "count",
           "type": "INT",
+          "links": null
+        },
+        {
+          "name": "image_paths_json",
+          "type": "STRING",
           "links": null
         }
       ],
@@ -4934,8 +4939,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -7264.908386230469,
-        -12060
+        -7264.174743652344,
+        -12120
       ]
     },
     "frontendVersion": "1.59.10"
