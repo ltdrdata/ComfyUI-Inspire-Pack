@@ -178,7 +178,7 @@ class IPAdapterModelHelper:
                     backend_support.update_cache(icache_key, "insightface", (False, insight_face_loader(provider=insightface_provider, model_name=insightface_model_name)[0]))
                 _, (_, insightface) = backend_support.cache[icache_key]
             else:
-                insightface = insight_face_loader(insightface_provider)[0]
+                insightface = insight_face_loader(provider=insightface_provider, model_name=insightface_model_name)[0]
 
             server.PromptServer.instance.send_sync("inspire-node-output-label", {"node_id": unique_id, "output_idx": 3, "label": "INSIGHTFACE"})
         else:

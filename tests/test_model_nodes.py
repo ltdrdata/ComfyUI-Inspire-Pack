@@ -83,6 +83,14 @@ def test_the_preset_helper_loads_the_files_of_its_preset(pack, models, loaded):
     assert labels(pack) == [("7", 1, "IPADAPTER"), ("7", 2, "CLIP_VISION"), ("7", 4, "MODEL"), ("7", 5, "CLIP"), ("7", 3, "INSIGHTFACE")]
 
 
+@pytest.mark.parametrize("cache_mode", ["insightface only", "clip_vision only", "all", "none"])
+def test_the_preset_helper_loads_the_picked_insightface_model_in_every_cache_mode(pack, models, loaded, cache_mode):
+    _, _, _, insightface, _, _, _, _ = pack.model_nodes.IPAdapterModelHelper().doit(
+        "MODEL", "SD1.5 FaceID", 1.0, 1.0, "CUDA", clip=SimpleNamespace(tokenizer=None), cache_mode=cache_mode, unique_id="7", insightface_model_name="antelopev2")
+    assert loaded[-1] == ("insightface", "CUDA", "antelopev2")
+    assert insightface == ("INSIGHTFACE", "CUDA", "antelopev2")
+
+
 @pytest.mark.parametrize("preset,clip", [("SDXL", None), ("SD1.5", "sdxl")])
 def test_the_preset_helper_refuses_to_mix_sdxl_and_sd15(pack, models, loaded, preset, clip):
     with pytest.raises(Exception, match="cannot mix SDXL and SD1.5"):
