@@ -2430,6 +2430,42 @@
           "value": 1
         }
       ]
+    },
+    {
+      "id": "112",
+      "type": "PulidFluxModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "pulid_file",
+          "value": "ip-adapter_pulid_sdxl_fp16.safetensors"
+        },
+        {
+          "name": "provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        }
+      ]
+    },
+    {
+      "id": "113",
+      "type": "RegionalPulidFlux //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 1
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        }
+      ]
     }
   ]
 }

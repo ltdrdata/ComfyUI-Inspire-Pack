@@ -65,7 +65,7 @@ list it. The names are those under which the files are published:
 | `lora_name` | `lcm-lora-sdv1-5.safetensors` |
 | `model_name` of the shared diffusion model loader | `lotus-depth-d-v-1-1-fp16.safetensors` |
 | `model_name1` of the shared text encoder loader | `clip_l.safetensors` |
-| `pulid_file` of PuLID Model Helper | `ip-adapter_pulid_sdxl_fp16.safetensors` |
+| `pulid_file` of PuLID Model Helper and PuLID FLUX Model Helper | `ip-adapter_pulid_sdxl_fp16.safetensors` |
 | `instantid_file`, `control_net_name` of InstantID Model Helper | `ip-adapter.bin`, `diffusion_pytorch_model.safetensors` |
 | `style_model_file`, `clip_vision_file` of Redux Model Helper | `flux1-redux-dev.safetensors`, `sigclip_vision_patch14_384.safetensors` |
 

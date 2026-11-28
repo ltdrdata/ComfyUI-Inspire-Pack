@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 111,
+  "last_node_id": 113,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5416,6 +5416,95 @@
         "start_at": 0,
         "end_at": 1
       }
+    },
+    {
+      "id": 112,
+      "type": "PulidFluxModelHelper //Inspire",
+      "pos": [
+        359.8172729492205,
+        12370
+      ],
+      "size": [
+        330.5650390625,
+        106
+      ],
+      "flags": {},
+      "order": 111,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pulid_flux",
+          "type": "PULID_FLUX",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PulidFluxModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "pulid_file": "ip-adapter_pulid_sdxl_fp16.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
+    },
+    {
+      "id": 113,
+      "type": "RegionalPulidFlux //Inspire",
+      "pos": [
+        375.9193237304705,
+        13870
+      ],
+      "size": [
+        298.3609375,
+        146
+      ],
+      "flags": {},
+      "order": 112,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pulid_flux",
+          "type": "PULID_FLUX",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalPulidFlux //Inspire"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1
+      }
     }
   ],
   "links": [],
@@ -5425,8 +5514,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -875.0997924804706,
-        -12180
+        -75.09979248047057,
+        -13680
       ]
     },
     "frontendVersion": "1.59.10"

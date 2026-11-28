@@ -345,14 +345,16 @@ def test_regional_instantid_without_a_mask_covers_the_whole_picture_with_the_key
     assert torch.equal(instantid_nodes[1][1], reference)
 
 
-@pytest.mark.parametrize("family", ["PuLID", "InstantID"])
-def test_both_regional_nodes_say_alike_that_the_reference_shows_no_face(pack, family):
-    regional = pack.regional_nodes
+@pytest.mark.parametrize("family", ["PuLID", "InstantID", "PuLID FLUX"])
+def test_the_face_regional_nodes_say_alike_that_the_reference_shows_no_face(pack, family):
+    nothing, image = face_analysis(found=False), torch.zeros(1, 8, 8, 3)
     with pytest.raises(Exception, match=f"Regional {family}: no face was found in the reference image."):
         if family == "PuLID":
-            regional.RegionalPulid.doit("PULID", "EVA_CLIP", face_analysis(found=False), torch.zeros(1, 8, 8, 3), 1.0, 0.0, 1.0, "fidelity")
+            pack.regional_nodes.RegionalPulid.doit("PULID", "EVA_CLIP", nothing, image, 1.0, 0.0, 1.0, "fidelity")
+        elif family == "InstantID":
+            pack.regional_nodes.RegionalInstantID.doit("INSTANTID", nothing, "CONTROL_NET", image, 0.8, 0.0, 1.0, 0.8, 0.0)
         else:
-            regional.RegionalInstantID.doit("INSTANTID", face_analysis(found=False), "CONTROL_NET", torch.zeros(1, 8, 8, 3), 0.8, 0.0, 1.0, 0.8, 0.0)
+            pack.regional_adapters.RegionalPulidFlux.doit(SimpleNamespace(face_analysis=nothing), image, 1.0, 0.0, 1.0)
 
 
 class ReduxStandIn:

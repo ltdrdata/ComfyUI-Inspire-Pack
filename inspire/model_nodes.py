@@ -213,9 +213,9 @@ class IPAdapterModelHelperManual(IPAdapterModelHelper):
 
 
 # The node packs of the adapter families: the pack to ask for when a loader is missing (none for the core loaders), the
-# model folder it reads, and its loaders in the order of the helper's outputs as (node, function, inputs, cache name,
-# cache key). cache_modes maps each choice of the helper's cache_mode to the cache names it keeps in the backend cache.
-# signatures are (input, key prefix, base model): a .safetensors file picked in that input must have a key with that prefix.
+# model folder it reads, and the loaders whose models load_adapter_models returns, in order, as (node, function, inputs,
+# cache name, cache key). cache_modes maps each choice of the helper's cache_mode to the cache names it keeps in the backend
+# cache. signatures are (input, key prefix, base model): a .safetensors file picked in that input must have a key with that prefix.
 adapter_families = {
     "PuLID": {
         "pack": ("PuLID_ComfyUI", "https://github.com/cubiq/PuLID_ComfyUI"),
@@ -241,6 +241,14 @@ adapter_families = {
                     ("CLIPVisionLoader", "load_clip", ["clip_name"], "clipvision", "{clip_name}")],
         "cache_modes": {"clip_vision only": ["clipvision"], "none": []},
         "signatures": [],
+    },
+    "PuLID FLUX": {
+        "pack": ("PuLID_ComfyUI", "https://github.com/cubiq/PuLID_ComfyUI"),
+        "folder": "pulid",
+        "loaders": [("PulidEvaClipLoader", "load_eva_clip", [], None, None),
+                    ("PulidInsightFaceLoader", "load_insightface", ["provider"], "insightface", "insightface-antelopev2-{provider}")],
+        "cache_modes": {"insightface only": ["insightface"], "none": []},
+        "signatures": [("pulid_file", "pulid_encoder.", "FLUX.1")],
     },
 }
 

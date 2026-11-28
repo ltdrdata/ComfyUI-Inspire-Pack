@@ -236,12 +236,20 @@ def test_the_pulid_helper_says_which_file_is_not_a_pulid_model_for_sdxl_before_i
     assert pulid_loaders == []
 
 
-def test_the_pulid_helper_asks_for_pulid_comfyui_when_it_is_missing(pack, monkeypatch):
+@pytest.mark.parametrize("module,helper", [("model_nodes", "PulidModelHelper"), ("regional_adapters", "PulidFluxModelHelper")])
+def test_the_pulid_helpers_ask_for_pulid_comfyui_when_it_is_missing(pack, monkeypatch, module, helper):
     requests = []
     monkeypatch.setattr(pack.utils, "try_install_custom_node", lambda url, msg: requests.append(url))
-    with pytest.raises(Exception, match="install 'PuLID_ComfyUI'"):
-        pack.model_nodes.PulidModelHelper().doit(PULID, "CPU", "none")
+    with pytest.raises(Exception, match=f"To use {helper}, you need to install 'PuLID_ComfyUI'"):
+        getattr(getattr(pack, module), helper)().doit(PULID, "CPU", "none")
     assert requests == ["https://github.com/cubiq/PuLID_ComfyUI"]
+
+
+def test_the_pulid_flux_helper_says_which_file_is_not_a_pulid_flux_model_before_it_loads_anything(pack, pulid_loaders):
+    with pytest.raises(Exception, match=f"{PULID} is not a PuLID FLUX model for FLUX.1"):
+        pack.regional_adapters.PulidFluxModelHelper().doit(PULID, "CPU", "insightface only")
+    assert pulid_loaders == []
+    assert "insightface-antelopev2-CPU" not in pack.backend_support.cache
 
 
 @pytest.mark.parametrize("folder", ["pulid", "instantid"])
