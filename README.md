@@ -120,6 +120,8 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
     * An entry that also changes the prompt needs `positive` and `negative`. Each such region gets its own copy of both, and the area that none of them covers keeps the plain prompt. Region masks of different sizes are stretched to one size, as the sampler stretches them to the latent.
     * Without such an entry, `positive` and `negative` come out as they went in.
     * `Regional PuLID (Inspire)`: an entry that gives the masked region the face of `image` with [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) (SDXL). Its settings are those of `Apply PuLID`.
+    * `Regional InstantID (Inspire)`: an entry that gives the masked region the face of `image` with [ComfyUI InstantID](https://github.com/cubiq/ComfyUI_InstantID) (SDXL): the attention of `InstantID Patch Attention` on the model, and `InstantID Apply ControlNet` on the region's copy of the prompt. Its settings are those of `Apply InstantID Advanced`.
+      * Without `image_kps`, the keypoints are taken from `image` fitted to the mask's bounding box, with its centre at a third of the box's height. Link `image_kps` to put the face elsewhere.
   * Regional Seed Explorer - These nodes restrict the variation through a seed prompt, applying it only to the masked areas.
     * `Regional Seed Explorer By Mask (Inspire)` 
     * `Regional Seed Explorer By Color Mask (Inspire)`
@@ -184,6 +186,7 @@ This repository offers various extension nodes for ComfyUI. Nodes here have diff
           loras: loras/
       ```
   * `PuLID Model Helper (Inspire)`: Loads the PuLID model, EVA-CLIP and the face analysis of [PuLID_ComfyUI](https://github.com/cubiq/PuLID_ComfyUI) in one node. The outputs also fit the nodes of that pack. `cache_mode` keeps the face analysis, EVA-CLIP or both in the backend cache, so another workflow does not load them again.
+  * `InstantID Model Helper (Inspire)`: Loads the InstantID model and the face analysis of [ComfyUI InstantID](https://github.com/cubiq/ComfyUI_InstantID) and its ControlNet in one node. The outputs also fit the nodes of that pack. `cache_mode` keeps the face analysis in the backend cache, shared with `PuLID Model Helper (Inspire)` for the same provider.
 
 ### List - Nodes for List processing
   * `Float Range (Inspire)`: Create a float list that increases the value by `step` from `start` to `stop`. A list as large as the maximum limit is created, and when `ensure_end` is enabled, the last value of the list becomes the stop value.

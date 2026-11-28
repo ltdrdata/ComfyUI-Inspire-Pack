@@ -1,6 +1,7 @@
 import traceback
 
 import comfy
+import comfy.utils
 import nodes
 import torch
 import re
@@ -549,6 +550,70 @@ class RegionalPulid:
         return (RegionalAdapter(mask, apply_model=apply_model), )
 
 
+def keypoints_picture(image, mask):
+    """The first reference on a black picture of the mask's size, fitted to the mask's bounding box, centred across it
+    and with its centre at a third of its height."""
+    mask = mask.reshape(-1, *mask.shape[-2:])[0]
+    picture = torch.zeros((1, *mask.shape, 3))
+    ys, xs = torch.nonzero(mask, as_tuple=True)
+    if len(ys) == 0:
+        return picture
+
+    top, left = int(ys.min()), int(xs.min())
+    box_height, box_width = int(ys.max()) + 1 - top, int(xs.max()) + 1 - left
+    scale = min(box_width / image.shape[2], box_height / image.shape[1])
+    width, height = round(image.shape[2] * scale), round(image.shape[1] * scale)
+    x = left + (box_width - width) // 2
+    y = top + min(max(round(box_height / 3 - height / 2), 0), box_height - height)
+    picture[:, y:y + height, x:x + width] = comfy.utils.common_upscale(image[:1].movedim(-1, 1), width, height, "lanczos", "disabled").movedim(1, -1)
+    return picture
+
+
+class RegionalInstantID:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "instantid": ("INSTANTID",),
+                "insightface": ("FACEANALYSIS",),
+                "control_net": ("CONTROL_NET",),
+                "mask": ("MASK",),
+                "image": ("IMAGE",),
+                "ip_weight": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 3.0, "step": 0.01}),
+                "cn_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 10.0, "step": 0.01}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001}),
+                "noise": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.1}),
+            },
+            "optional": {
+                "image_kps": ("IMAGE",),
+            }
+        }
+
+    RETURN_TYPES = ("REGIONAL_ADAPTER", )
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/Regional"
+
+    @staticmethod
+    def doit(instantid, insightface, control_net, mask, image, ip_weight, cn_strength, start_at, end_at, noise, image_kps=None):
+        def apply_model(model):
+            return nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, model, ip_weight, start_at, end_at,
+                                                                                        noise=noise, mask=mask)[0]
+
+        def apply_conditioning(positive, negative):
+            # weight 0 leaves the model alone and only gives the face embeds
+            face_embeds = nodes.NODE_CLASS_MAPPINGS['InstantIDAttentionPatch']().patch_attention(instantid, insightface, image, None, 0.0, start_at, end_at,
+                                                                                               noise=noise)[1]
+            kps = image_kps
+            if kps is None:
+                kps = nodes.NODE_CLASS_MAPPINGS['FaceKeypointsPreprocessor']().preprocess_image(insightface, keypoints_picture(image, mask))[0]
+            return nodes.NODE_CLASS_MAPPINGS['ApplyInstantIDControlNet']().apply_controlnet(face_embeds, control_net, kps, positive, negative,
+                                                                                          cn_strength, start_at, end_at, mask=mask)
+
+        return (RegionalAdapter(mask, apply_model=apply_model, apply_conditioning=apply_conditioning), )
+
+
 class RegionalSeedExplorerMask:
     @classmethod
     def INPUT_TYPES(s):
@@ -774,6 +839,7 @@ NODE_CLASS_MAPPINGS = {
     "ApplyRegionalIPAdapters //Inspire": ApplyRegionalIPAdapters,
     "ApplyRegionalAdapters //Inspire": ApplyRegionalAdapters,
     "RegionalPulid //Inspire": RegionalPulid,
+    "RegionalInstantID //Inspire": RegionalInstantID,
     "RegionalCFG //Inspire": RegionalCFG,
     "ColorMaskToDepthMask //Inspire": ColorMaskToDepthMask,
 }
@@ -794,6 +860,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ApplyRegionalIPAdapters //Inspire": "Apply Regional IPAdapters (Inspire)",
     "ApplyRegionalAdapters //Inspire": "Apply Regional Adapters (Inspire)",
     "RegionalPulid //Inspire": "Regional PuLID (Inspire)",
+    "RegionalInstantID //Inspire": "Regional InstantID (Inspire)",
     "RegionalCFG //Inspire": "Regional CFG (Inspire)",
     "ColorMaskToDepthMask //Inspire": "Color Mask To Depth Mask (Inspire)",
 }

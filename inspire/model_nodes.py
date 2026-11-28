@@ -223,6 +223,14 @@ adapter_families = {
                     ("PulidInsightFaceLoader", "load_insightface", ["provider"], "insightface", "insightface-antelopev2-{provider}")],
         "cache_modes": {"insightface only": ["insightface"], "eva_clip only": ["eva_clip"], "all": ["insightface", "eva_clip"], "none": []},
     },
+    "InstantID": {
+        "pack": ("ComfyUI InstantID", "https://github.com/cubiq/ComfyUI_InstantID"),
+        "folder": "instantid",
+        "loaders": [("InstantIDModelLoader", "load_model", ["instantid_file"], None, None),
+                    ("InstantIDFaceAnalysis", "load_insight_face", ["provider"], "insightface", "insightface-antelopev2-{provider}"),
+                    ("ControlNetLoader", "load_controlnet", ["control_net_name"], None, None)],
+        "cache_modes": {"insightface only": ["insightface"], "none": []},
+    },
 }
 
 for family in adapter_families.values():
@@ -274,14 +282,40 @@ class PulidModelHelper:
         return load_adapter_models("PulidModelHelper", adapter_families["PuLID"], cache_mode, pulid_file=pulid_file, provider=provider)
 
 
+class InstantIDModelHelper:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "instantid_file": (folder_paths.get_filename_list("instantid"),),
+                "control_net_name": (folder_paths.get_filename_list("controlnet"),),
+                "provider": (["CPU", "CUDA", "ROCM", "CoreML"],),
+                "cache_mode": (list(adapter_families["InstantID"]["cache_modes"]),),
+            },
+        }
+
+    RETURN_TYPES = ("INSTANTID", "FACEANALYSIS", "CONTROL_NET")
+    RETURN_NAMES = ("instantid", "insightface", "control_net")
+    FUNCTION = "doit"
+
+    CATEGORY = "InspirePack/models"
+
+    @staticmethod
+    def doit(instantid_file, control_net_name, provider, cache_mode):
+        return load_adapter_models("InstantIDModelHelper", adapter_families["InstantID"], cache_mode,
+                                   instantid_file=instantid_file, control_net_name=control_net_name, provider=provider)
+
+
 NODE_CLASS_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": IPAdapterModelHelper,
     "IPAdapterModelHelperManual //Inspire": IPAdapterModelHelperManual,
     "PulidModelHelper //Inspire": PulidModelHelper,
+    "InstantIDModelHelper //Inspire": InstantIDModelHelper,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "IPAdapterModelHelper //Inspire": "IPAdapter Model Helper (Inspire)",
     "IPAdapterModelHelperManual //Inspire": "IPAdapter Model Helper [Manual] (Inspire)",
     "PulidModelHelper //Inspire": "PuLID Model Helper (Inspire)",
+    "InstantIDModelHelper //Inspire": "InstantID Model Helper (Inspire)",
 }

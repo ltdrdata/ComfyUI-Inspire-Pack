@@ -2346,6 +2346,54 @@
           "value": "insightface only"
         }
       ]
+    },
+    {
+      "id": "108",
+      "type": "RegionalInstantID //Inspire",
+      "widgets": [
+        {
+          "name": "ip_weight",
+          "value": 0.8
+        },
+        {
+          "name": "cn_strength",
+          "value": 0.8
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        },
+        {
+          "name": "noise",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "109",
+      "type": "InstantIDModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "instantid_file",
+          "value": "ip-adapter.bin"
+        },
+        {
+          "name": "control_net_name",
+          "value": "diffusion_pytorch_model.safetensors"
+        },
+        {
+          "name": "provider",
+          "value": "CPU"
+        },
+        {
+          "name": "cache_mode",
+          "value": "insightface only"
+        }
+      ]
     }
   ]
 }

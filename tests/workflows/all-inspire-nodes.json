@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 107,
+  "last_node_id": 109,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5195,6 +5195,126 @@
         "provider": "CPU",
         "cache_mode": "insightface only"
       }
+    },
+    {
+      "id": 108,
+      "type": "RegionalInstantID //Inspire",
+      "pos": [
+        3704.5255126953143,
+        12490
+      ],
+      "size": [
+        289.39453125,
+        254
+      ],
+      "flags": {},
+      "order": 107,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "instantid",
+          "type": "INSTANTID",
+          "link": null
+        },
+        {
+          "name": "insightface",
+          "type": "FACEANALYSIS",
+          "link": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image_kps",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalInstantID //Inspire"
+      },
+      "widgets_values": [
+        0.8,
+        0.8,
+        0,
+        1,
+        0
+      ],
+      "widgets_values_named": {
+        "ip_weight": 0.8,
+        "cn_strength": 0.8,
+        "start_at": 0,
+        "end_at": 1,
+        "noise": 0
+      }
+    },
+    {
+      "id": 109,
+      "type": "InstantIDModelHelper //Inspire",
+      "pos": [
+        2894.1599853515645,
+        12490
+      ],
+      "size": [
+        310.1255859375,
+        170
+      ],
+      "flags": {},
+      "order": 108,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "instantid",
+          "type": "INSTANTID",
+          "links": null
+        },
+        {
+          "name": "insightface",
+          "type": "FACEANALYSIS",
+          "links": null
+        },
+        {
+          "name": "control_net",
+          "type": "CONTROL_NET",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InstantIDModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "ip-adapter.bin",
+        "diffusion_pytorch_model.safetensors",
+        "CPU",
+        "insightface only"
+      ],
+      "widgets_values_named": {
+        "instantid_file": "ip-adapter.bin",
+        "control_net_name": "diffusion_pytorch_model.safetensors",
+        "provider": "CPU",
+        "cache_mode": "insightface only"
+      }
     }
   ],
   "links": [],
@@ -5204,8 +5324,8 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -4144.462280273439,
-        -12240
+        -2599.2227783203143,
+        -12300
       ]
     },
     "frontendVersion": "1.59.10"

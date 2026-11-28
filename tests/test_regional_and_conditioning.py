@@ -235,6 +235,60 @@ def test_regional_pulid_applies_apply_pulid_with_its_mask_and_settings_in_apply_
                      (("base", "face A"), "PULID", "EVA_CLIP", "FACEANALYSIS", "face B", 1.2, 0.0, 1.0, "style", "right mask")]
 
 
+@pytest.fixture
+def instantid_nodes(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    class InstantIDAttentionPatch:
+        def patch_attention(self, instantid, insightface, image, model, weight, start_at, end_at, noise=0.0, mask=None):
+            if model is not None:
+                calls.append(("attention", image, weight, start_at, end_at, noise, mask))
+                model = model + (image,)
+            return (model, {"cond": image, "noise": noise})
+
+    class FaceKeypointsPreprocessor:
+        def preprocess_image(self, faceanalysis, image):
+            calls.append(("keypoints", image))
+            return ("keypoints of the placed reference",)
+
+    class ApplyInstantIDControlNet:
+        def apply_controlnet(self, face_embeds, control_net, image_kps, positive, negative, strength, start_at, end_at, mask=None):
+            calls.append(("controlnet", face_embeds, image_kps, strength, start_at, end_at, mask))
+            return ([[c, d | {"face": face_embeds["cond"], "mask": mask}] for c, d in positive], [[c, d | {"face": face_embeds["cond"]}] for c, d in negative])
+
+    for node in (InstantIDAttentionPatch, FaceKeypointsPreprocessor, ApplyInstantIDControlNet):
+        monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, node.__name__, node)
+    return calls
+
+
+def test_regional_instantid_patches_the_model_and_gives_its_region_a_copy_of_the_prompt_with_the_controlnet(pack, instantid_nodes):
+    regional = pack.regional_nodes
+    left, right = columns((0, 6, 1.0)), columns((10, 16, 1.0))
+    (a,) = regional.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", left, "face A", 0.8, 0.6, 0.1, 0.9, 0.2, image_kps="pose A")
+    (b,) = regional.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", right, "face B", 1.2, 1.5, 0.0, 1.0, 0.0, image_kps="pose B")
+    positive, negative = [[torch.ones(1), {"text": "two people in a park"}]], [[torch.zeros(1), {"text": "blurry"}]]
+    model, positives, negatives = regional.ApplyRegionalAdapters.doit(("base",), positive, negative, regional_adapter1=a, regional_adapter2=b)
+    assert model == ("base", "face A", "face B")
+    assert [(d.get("face"), d["text"]) for _, d in positives] == [("face A", "two people in a park"), ("face B", "two people in a park"), (None, "two people in a park")]
+    assert [d["face"] for _, d in negatives] == ["face A", "face B"]
+    assert torch.equal(positives[2][1]["mask"], columns((6, 10, 1.0)))
+    assert [call[:-1] for call in instantid_nodes] == [
+        ("attention", "face A", 0.8, 0.1, 0.9, 0.2), ("attention", "face B", 1.2, 0.0, 1.0, 0.0),
+        ("controlnet", {"cond": "face A", "noise": 0.2}, "pose A", 0.6, 0.1, 0.9), ("controlnet", {"cond": "face B", "noise": 0.0}, "pose B", 1.5, 0.0, 1.0)]
+    assert [call[-1] for call in instantid_nodes] == [left, right, left, right]
+
+
+def test_regional_instantid_places_the_reference_in_its_mask_for_the_keypoints_when_none_are_linked(pack, instantid_nodes):
+    region = columns((8, 16, 1.0), width=32, height=24)
+    (entry,) = pack.regional_nodes.RegionalInstantID.doit("INSTANTID", "FACEANALYSIS", "CONTROL_NET", region, torch.ones(1, 8, 8, 3), 0.8, 0.8, 0.0, 1.0, 0.0)
+    entry.apply_conditioning([[torch.ones(1), {}]], [[torch.zeros(1), {}]])
+    placed = torch.zeros(1, 24, 32, 3)
+    placed[:, 4:12, 8:16] = 1.0
+    assert [torch.equal(call[1], placed) for call in instantid_nodes if call[0] == "keypoints"] == [True]
+    assert [call[2] for call in instantid_nodes if call[0] == "controlnet"] == ["keypoints of the placed reference"]
+
+
 def conditioning():
     return [[torch.ones(1, 2, 3), {"area": (8, 16, 0, 8), "strength": 1.0, "control": "net", "control_apply_to_uncond": True}],
             [torch.zeros(1, 2, 3), {"pooled_output": "pooled"}]]

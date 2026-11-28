@@ -226,8 +226,62 @@ def test_the_pulid_helper_asks_for_pulid_comfyui_when_it_is_missing(pack, monkey
     assert requests == ["https://github.com/cubiq/PuLID_ComfyUI"]
 
 
-@pytest.mark.parametrize("folder", ["pulid"])
+@pytest.mark.parametrize("folder", ["pulid", "instantid"])
 def test_the_model_folder_of_an_adapter_family_is_listed_without_its_pack(pack, folder):
     folder_paths = pack.folder_paths
     assert os.path.join(folder_paths.models_dir, folder) in folder_paths.get_folder_paths(folder)
     assert ".safetensors" in folder_paths.folder_names_and_paths[folder][1]
+
+
+INSTANTID_CN = "instantid/diffusion_pytorch_model.safetensors"
+
+
+@pytest.fixture
+def instantid_loaders(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    class InstantIDModelLoader:
+        def load_model(self, instantid_file):
+            calls.append(("instantid", instantid_file))
+            return (("INSTANTID", instantid_file),)
+
+    class InstantIDFaceAnalysis:
+        def load_insight_face(self, provider):
+            calls.append(("insightface", provider))
+            return (("FACEANALYSIS", provider),)
+
+    class ControlNetLoader:
+        def load_controlnet(self, control_net_name):
+            calls.append(("control_net", control_net_name))
+            return (("CONTROL_NET", control_net_name),)
+
+    for loader in (InstantIDModelLoader, InstantIDFaceAnalysis, ControlNetLoader):
+        monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, loader.__name__, loader)
+    return calls
+
+
+@pytest.mark.parametrize("cache_mode,second_run", [("insightface only", ["instantid", "control_net"]), ("none", ["instantid", "insightface", "control_net"])])
+def test_the_instantid_helper_loads_the_models_of_instantid_and_keeps_those_its_cache_mode_names(pack, instantid_loaders, cache_mode, second_run):
+    helper = pack.model_nodes.InstantIDModelHelper()
+    models = helper.doit("ip-adapter.bin", INSTANTID_CN, "CoreML", cache_mode)
+    assert models == (("INSTANTID", "ip-adapter.bin"), ("FACEANALYSIS", "CoreML"), ("CONTROL_NET", INSTANTID_CN))
+    assert instantid_loaders == [("instantid", "ip-adapter.bin"), ("insightface", "CoreML"), ("control_net", INSTANTID_CN)]
+    instantid_loaders.clear()
+    assert helper.doit("ip-adapter.bin", INSTANTID_CN, "CoreML", cache_mode) == models
+    assert [call[0] for call in instantid_loaders] == second_run
+
+
+def test_the_pulid_and_instantid_helpers_share_the_cached_face_analysis(pack, pulid_loaders, instantid_loaders):
+    _, _, face_analysis = pack.model_nodes.PulidModelHelper().doit(PULID, "CPU", "insightface only")
+    _, insightface, _ = pack.model_nodes.InstantIDModelHelper().doit("ip-adapter.bin", INSTANTID_CN, "CPU", "insightface only")
+    assert insightface is face_analysis
+    assert [call[0] for call in instantid_loaders] == ["instantid", "control_net"]
+
+
+def test_the_instantid_helper_asks_for_comfyui_instantid_when_it_is_missing(pack, monkeypatch):
+    requests = []
+    monkeypatch.setattr(pack.utils, "try_install_custom_node", lambda url, msg: requests.append(url))
+    with pytest.raises(Exception, match="install 'ComfyUI InstantID'"):
+        pack.model_nodes.InstantIDModelHelper().doit("ip-adapter.bin", INSTANTID_CN, "CPU", "none")
+    assert requests == ["https://github.com/cubiq/ComfyUI_InstantID"]
