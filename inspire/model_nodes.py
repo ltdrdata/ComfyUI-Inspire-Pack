@@ -173,7 +173,7 @@ class IPAdapterModelHelper:
                 raise Exception("[ERROR] 'ComfyUI IPAdapter Plus' extension is either too outdated or not installed.")
 
             if cache_mode in ["insightface only", "all"]:
-                icache_key = 'insightface-' + insightface_provider
+                icache_key = 'insightface-' + insightface_model_name + '-' + insightface_provider
                 if icache_key not in backend_support.cache:
                     backend_support.update_cache(icache_key, "insightface", (False, insight_face_loader(provider=insightface_provider, model_name=insightface_model_name)[0]))
                 _, (_, insightface) = backend_support.cache[icache_key]

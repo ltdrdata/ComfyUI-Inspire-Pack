@@ -78,7 +78,7 @@ def test_the_preset_helper_loads_the_files_of_its_preset(pack, models, loaded):
     assert (ipadapter, clip_vision, insightface) == (("IPADAPTER", "ip-adapter-faceid_sd15.bin"), ("CLIP_VISION", CLIP_VISION), ("INSIGHTFACE", "CPU", "buffalo_l"))
     assert (model, lora_clip) == (("MODEL", "ip-adapter-faceid_sd15_lora.safetensors"), (clip, "ip-adapter-faceid_sd15_lora.safetensors"))
     assert pipe[:4] == (ipadapter, model, clip_vision, insightface)
-    assert (icache_key, ccache_key) == ("insightface-CPU", CLIP_VISION)
+    assert (icache_key, ccache_key) == ("insightface-buffalo_l-CPU", CLIP_VISION)
     assert pack.backend_support.cache[CLIP_VISION] == ("clipvision", (False, clip_vision))
     assert labels(pack) == [("7", 1, "IPADAPTER"), ("7", 2, "CLIP_VISION"), ("7", 4, "MODEL"), ("7", 5, "CLIP"), ("7", 3, "INSIGHTFACE")]
 
@@ -89,6 +89,16 @@ def test_the_preset_helper_loads_the_picked_insightface_model_in_every_cache_mod
         "MODEL", "SD1.5 FaceID", 1.0, 1.0, "CUDA", clip=SimpleNamespace(tokenizer=None), cache_mode=cache_mode, unique_id="7", insightface_model_name="antelopev2")
     assert loaded[-1] == ("insightface", "CUDA", "antelopev2")
     assert insightface == ("INSIGHTFACE", "CUDA", "antelopev2")
+
+
+@pytest.mark.parametrize("cache_mode", ["insightface only", "all"])
+def test_the_cache_keeps_each_insightface_model_apart(pack, models, loaded, cache_mode):
+    helper = pack.model_nodes.IPAdapterModelHelper()
+    runs = [helper.doit("MODEL", "SD1.5 FaceID", 1.0, 1.0, "CPU", clip=SimpleNamespace(tokenizer=None), cache_mode=cache_mode, unique_id="7",
+                        insightface_model_name=name) for name in ("buffalo_l", "antelopev2", "buffalo_l")]
+    assert [run[3] for run in runs] == [("INSIGHTFACE", "CPU", "buffalo_l"), ("INSIGHTFACE", "CPU", "antelopev2"), ("INSIGHTFACE", "CPU", "buffalo_l")]
+    assert [run[6] for run in runs] == ["insightface-buffalo_l-CPU", "insightface-antelopev2-CPU", "insightface-buffalo_l-CPU"]
+    assert [call for call in loaded if call[0] == "insightface"] == [("insightface", "CPU", "buffalo_l"), ("insightface", "CPU", "antelopev2")]
 
 
 @pytest.mark.parametrize("preset,clip,ipadapter", [("SD1.5 Plus Composition", None, "ip_plus_composition_sd15.safetensors"),
@@ -125,7 +135,7 @@ def test_the_manual_helper_loads_the_picked_files(pack, models, loaded):
     assert (ipadapter, clip_vision, insightface) == (("IPADAPTER", "unit/unit-ipadapter.safetensors"), ("CLIP_VISION", "unit-clip-vision.safetensors"), ("INSIGHTFACE", "CUDA", "antelopev2"))
     assert (model, clip) == (("MODEL", "unit-lora.safetensors"), ("CLIP", "unit-lora.safetensors"))
     assert pipe[:4] == (ipadapter, model, clip_vision, insightface)
-    assert (icache_key, ccache_key) == ("insightface-CUDA", "unit-clip-vision.safetensors")
+    assert (icache_key, ccache_key) == ("insightface-antelopev2-CUDA", "unit-clip-vision.safetensors")
     assert labels(pack) == [("9", 3, "INSIGHTFACE")]
 
 
