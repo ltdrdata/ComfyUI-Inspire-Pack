@@ -212,10 +212,10 @@ class IPAdapterModelHelperManual(IPAdapterModelHelper):
         return self.load_models(model, clip, ipadapter_model, clip_vision_model, lora, is_insightface, lora_strength_model, lora_strength_clip, insightface_provider, cache_mode, unique_id, insightface_model_name)
 
 
-# The node packs of the adapter families: the pack to ask for when it is missing, the model folder it reads, and its
-# loaders in the order of the helper's outputs as (node, function, inputs, cache name, cache key). cache_modes maps each
-# choice of the helper's cache_mode to the cache names it keeps in the backend cache. signatures are (input, key prefix,
-# base model): a .safetensors file picked in that input must have a key with that prefix.
+# The node packs of the adapter families: the pack to ask for when a loader is missing (none for the core loaders), the
+# model folder it reads, and its loaders in the order of the helper's outputs as (node, function, inputs, cache name,
+# cache key). cache_modes maps each choice of the helper's cache_mode to the cache names it keeps in the backend cache.
+# signatures are (input, key prefix, base model): a .safetensors file picked in that input must have a key with that prefix.
 adapter_families = {
     "PuLID": {
         "pack": ("PuLID_ComfyUI", "https://github.com/cubiq/PuLID_ComfyUI"),
@@ -235,6 +235,13 @@ adapter_families = {
         "cache_modes": {"insightface only": ["insightface"], "none": []},
         "signatures": [],
     },
+    "Redux": {
+        "folder": "style_models",
+        "loaders": [("StyleModelLoader", "load_style_model", ["style_model_name"], None, None),
+                    ("CLIPVisionLoader", "load_clip", ["clip_name"], "clipvision", "{clip_name}")],
+        "cache_modes": {"clip_vision only": ["clipvision"], "none": []},
+        "signatures": [],
+    },
 }
 
 for family in adapter_families.values():
@@ -243,8 +250,8 @@ for family in adapter_families.values():
 
 def load_adapter_models(node_name, family_name, cache_mode, **inputs):
     family = adapter_families[family_name]
-    pack, url = family["pack"]
     if any(loader not in nodes.NODE_CLASS_MAPPINGS for loader, *_ in family["loaders"]):
+        pack, url = family["pack"]
         utils.try_install_custom_node(url, f"To use '{node_name}' node, '{pack}' extension is required.")
         raise Exception(f"[ERROR] To use {node_name}, you need to install '{pack}'")
 

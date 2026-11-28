@@ -303,3 +303,46 @@ def test_the_instantid_helper_asks_for_comfyui_instantid_when_it_is_missing(pack
     with pytest.raises(Exception, match="install 'ComfyUI InstantID'"):
         pack.model_nodes.InstantIDModelHelper().doit("ip-adapter.bin", INSTANTID_CN, "CPU", "none")
     assert requests == ["https://github.com/cubiq/ComfyUI_InstantID"]
+
+
+REDUX, SIGLIP = "flux1-redux-dev.safetensors", "sigclip_vision_patch14_384.safetensors"
+
+
+@pytest.fixture
+def core_loaders(pack, monkeypatch):
+    import nodes
+    calls = []
+
+    class StyleModelLoader:
+        def load_style_model(self, style_model_name):
+            calls.append(("style_model", style_model_name))
+            return (("STYLE_MODEL", style_model_name),)
+
+    class CLIPVisionLoader:
+        def load_clip(self, clip_name):
+            calls.append(("clip_vision", clip_name))
+            return (("CLIP_VISION", clip_name),)
+
+    for loader in (StyleModelLoader, CLIPVisionLoader):
+        monkeypatch.setitem(nodes.NODE_CLASS_MAPPINGS, loader.__name__, loader)
+    monkeypatch.setattr(nodes, "CLIPVisionLoader", CLIPVisionLoader)
+    return calls
+
+
+@pytest.mark.parametrize("cache_mode,second_run", [("clip_vision only", ["style_model"]), ("none", ["style_model", "clip_vision"])])
+def test_the_redux_helper_loads_the_style_model_and_clip_vision_of_core_and_keeps_those_its_cache_mode_names(pack, core_loaders, cache_mode, second_run):
+    helper = pack.regional_adapters.ReduxModelHelper()
+    models = helper.doit(REDUX, SIGLIP, cache_mode)
+    assert models == (("STYLE_MODEL", REDUX), ("CLIP_VISION", SIGLIP))
+    assert core_loaders == [("style_model", REDUX), ("clip_vision", SIGLIP)]
+    core_loaders.clear()
+    assert helper.doit(REDUX, SIGLIP, cache_mode) == models
+    assert [call[0] for call in core_loaders] == second_run
+
+
+def test_the_redux_and_ipadapter_helpers_share_the_cached_clip_vision(pack, models, loaded, core_loaders):
+    _, clip_vision = pack.regional_adapters.ReduxModelHelper().doit(REDUX, CLIP_VISION, "clip_vision only")
+    _, _, ipadapter_clip_vision, *_ = pack.model_nodes.IPAdapterModelHelperManual().doit(
+        "MODEL", "ip-adapter-faceid_sd15.bin", CLIP_VISION, "None", False, 1.0, 1.0, "CPU", cache_mode="clip_vision only", unique_id="9")
+    assert ipadapter_clip_vision is clip_vision
+    assert core_loaders == [("style_model", REDUX), ("clip_vision", CLIP_VISION)]

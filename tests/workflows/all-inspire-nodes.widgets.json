@@ -2394,6 +2394,42 @@
           "value": "insightface only"
         }
       ]
+    },
+    {
+      "id": "110",
+      "type": "ReduxModelHelper //Inspire",
+      "widgets": [
+        {
+          "name": "style_model_file",
+          "value": "flux1-redux-dev.safetensors"
+        },
+        {
+          "name": "clip_vision_file",
+          "value": "sigclip_vision_patch14_384.safetensors"
+        },
+        {
+          "name": "cache_mode",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "111",
+      "type": "RegionalRedux //Inspire",
+      "widgets": [
+        {
+          "name": "weight",
+          "value": 1
+        },
+        {
+          "name": "start_at",
+          "value": 0
+        },
+        {
+          "name": "end_at",
+          "value": 1
+        }
+      ]
     }
   ]
 }

@@ -455,12 +455,14 @@ class ApplyRegionalIPAdapters:
 
 
 class RegionalAdapter:
-    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, and `region_conditioning(positive, negative) -> (positive, negative)`
-    that gives the region its own copies of the prompt, the positive one limited to `mask`. Either part may be None.
+    """A REGIONAL_ADAPTER entry: `apply_model(model) -> model`, `apply_conditioning(positive, negative) -> (positive, negative)`
+    that changes the prompt itself, and `region_conditioning(positive, negative) -> (positive, negative)` that gives the region
+    its own copies of the prompt, the positive one limited to `mask`. Each part may be None.
     Without a mask the entry covers the whole picture."""
-    def __init__(self, mask, apply_model=None, region_conditioning=None):
+    def __init__(self, mask, apply_model=None, apply_conditioning=None, region_conditioning=None):
         self.mask = mask
         self.apply_model = apply_model
+        self.apply_conditioning = apply_conditioning
         self.region_conditioning = region_conditioning
 
 
@@ -494,27 +496,30 @@ class ApplyRegionalAdapters:
 
     @staticmethod
     def doit(model, positive=None, negative=None, **kwargs):
-        copying = {name: x for name, x in kwargs.items() if x.region_conditioning is not None}
-        if copying and (positive is None or negative is None):
-            raise Exception(f"[Inspire Pack] Apply Regional Adapters: {next(iter(copying))} needs `positive` and `negative` linked, "
-                            "because it gives its region its own copy of the prompt.")
+        prompting = [name for name, x in kwargs.items() if x.apply_conditioning is not None or x.region_conditioning is not None]
+        if prompting and (positive is None or negative is None):
+            raise Exception(f"[Inspire Pack] Apply Regional Adapters: {prompting[0]} needs `positive` and `negative` linked, "
+                            "because it changes the prompt.")
 
         for regional_adapter in kwargs.values():
             if regional_adapter.apply_model is not None:
                 model = regional_adapter.apply_model(model)
+            if regional_adapter.apply_conditioning is not None:
+                positive, negative = regional_adapter.apply_conditioning(positive, negative)
 
+        copying = [x for x in kwargs.values() if x.region_conditioning is not None]
         if not copying:
             return model, positive, negative
 
         positives, negatives = [], []
-        for regional_adapter in copying.values():
+        for regional_adapter in copying:
             region_positive, region_negative = regional_adapter.region_conditioning(positive, negative)
             positives += region_positive
             negatives += region_negative
 
         # without the plain prompt on the area that no region covers, the whole picture turns grey;
         # a copy without a mask covers the whole picture
-        masks = [x.mask for x in copying.values()]
+        masks = [x.mask for x in copying]
         if all(mask is not None for mask in masks):
             rest = uncovered_area(masks)
             if rest.any():

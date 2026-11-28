@@ -1,7 +1,7 @@
 {
   "id": "bfd6c846-4715-4f57-9cdf-d78afc1b4274",
   "revision": 0,
-  "last_node_id": 109,
+  "last_node_id": 111,
   "last_link_id": 0,
   "nodes": [
     {
@@ -5317,6 +5317,105 @@
         "provider": "CPU",
         "cache_mode": "insightface only"
       }
+    },
+    {
+      "id": 110,
+      "type": "ReduxModelHelper //Inspire",
+      "pos": [
+        1978.6297729492208,
+        12370
+      ],
+      "size": [
+        292.9400390625,
+        126
+      ],
+      "flags": {},
+      "order": 109,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "style_model",
+          "type": "STYLE_MODEL",
+          "links": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ReduxModelHelper //Inspire"
+      },
+      "widgets_values": [
+        "flux1-redux-dev.safetensors",
+        "sigclip_vision_patch14_384.safetensors",
+        "none"
+      ],
+      "widgets_values_named": {
+        "style_model_file": "flux1-redux-dev.safetensors",
+        "clip_vision_file": "sigclip_vision_patch14_384.safetensors",
+        "cache_mode": "none"
+      }
+    },
+    {
+      "id": 111,
+      "type": "RegionalRedux //Inspire",
+      "pos": [
+        1178.0734252929706,
+        12370
+      ],
+      "size": [
+        294.052734375,
+        166
+      ],
+      "flags": {},
+      "order": 110,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "style_model",
+          "type": "STYLE_MODEL",
+          "link": null
+        },
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "REGIONAL_ADAPTER",
+          "type": "REGIONAL_ADAPTER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RegionalRedux //Inspire"
+      },
+      "widgets_values": [
+        1,
+        0,
+        1
+      ],
+      "widgets_values_named": {
+        "weight": 1,
+        "start_at": 0,
+        "end_at": 1
+      }
     }
   ],
   "links": [],
@@ -5326,7 +5425,7 @@
     "ds": {
       "scale": 1,
       "offset": [
-        -2475.0997924804706,
+        -875.0997924804706,
         -12180
       ]
     },
